@@ -5,6 +5,11 @@
 
 
 
+//global variable
+std::string inputString;
+
+
+
 // Structure to represent a node in the suffix tree
 struct SuffixTreeNode {
     int label;
@@ -47,29 +52,46 @@ int edgeLength(SuffixTreeNode* node) {
 
 
 //split edge function
-void splitEdge(SuffixTreeNode* originalChild, int startIdx, int splitIdx, int endIdx) {
+void splitEdge(SuffixTreeNode* originalChild, int startIdx, int splitIdx, int endIdx, char newLabel) {
+
+    std::cout << newLabel << std::endl;
+    std::cout << "Splitting edge" << std::endl;
+    std::cout << "Original child start idx: " << originalChild->startIdx << " split idx: " << splitIdx << " end idx: " << originalChild->endIdx << std::endl;
+
+
     //create a new child
     SuffixTreeNode* newChild = new SuffixTreeNode(splitIdx, nullptr, std::unordered_map<char, SuffixTreeNode*>(), splitIdx, endIdx);
 
+
+    std::cout << "New child start idx: " << newChild->startIdx << " end idx: " << newChild->endIdx << std::endl;
+
     //create new internal node
-    std::unordered_map<char, SuffixTreeNode*> internalChildren;
-    internalChildren[originalChild->label] = originalChild;
-    internalChildren[newChild->label] = newChild;
-    SuffixTreeNode* internalNode = new SuffixTreeNode(splitIdx-1, originalChild->parent, internalChildren, startIdx, splitIdx-1);
+    SuffixTreeNode* internalNode = new SuffixTreeNode(splitIdx-1, originalChild->parent, std::unordered_map<char, SuffixTreeNode*>(), startIdx, splitIdx-1);
 
     //add internal node as parent to new child
     newChild->parent = internalNode;
 
-    std::unordered_map<char, SuffixTreeNode*> originalParentChildren;
-    //remove originalChild from originalParent->children
-    originalParentChildren.erase(originalChild->label);
-    //add internal node as child instead
-    originalParentChildren[internalNode->label] = internalNode;
-    originalChild->parent->children = originalParentChildren;
+        
+
+    //update parent by removing original child and adding internal node
+    originalChild->parent->children.erase(originalChild->label);
+    originalChild->parent->children[newLabel] = internalNode;
+
+
 
     //update original child
     originalChild->parent = internalNode;
-    originalChild->startIdx = splitIdx;
+    originalChild->startIdx = splitIdx-startIdx;
+
+
+
+    std::unordered_map<char, SuffixTreeNode*> internalChildren;
+    std::cout << "Creating internal node " << originalChild->label << " hugo" << std::endl;
+    std::cout << "Creating internal node " << newChild->label << " hugo" << std::endl;
+    internalChildren[(inputString)[originalChild->startIdx]] = originalChild;
+    internalChildren[inputString[newChild->startIdx]] = newChild;
+
+    internalNode->children = internalChildren;
 }
 
 
@@ -93,7 +115,7 @@ void insertSuffix(std::string* strPointer, int suffixOffset, SuffixTreeNode* roo
                 if ((*strPointer)[suffixOffset + depth + j] != (*strPointer)[(currentNode->children[(*strPointer)[suffixOffset + depth]])->startIdx + j]) {
                     
                     //if the characters do not match, split the edge and insert the suffix
-                    splitEdge(currentNode->children[(*strPointer)[suffixOffset + depth]], suffixOffset + depth, suffixOffset + depth + j, suffixLength - 1);
+                    splitEdge(currentNode->children[(*strPointer)[suffixOffset + depth]], suffixOffset + depth, suffixOffset + depth + j, (*strPointer).length()-1, (*strPointer)[suffixOffset + depth + j - 1]);
                     return;
                 } 
             }
@@ -102,10 +124,11 @@ void insertSuffix(std::string* strPointer, int suffixOffset, SuffixTreeNode* roo
         } else {            
             //if it does not, create a new node and insert it as a child of the current node
             //note that we will always end here if we match completely (as we have $ character)
-            SuffixTreeNode* newNode = new SuffixTreeNode(suffixOffset + depth, currentNode, std::unordered_map<char, SuffixTreeNode*>(), suffixOffset + depth + 1, suffixLength - 1);
+            std::cout << "Inserting new node" << std::endl;
+            SuffixTreeNode* newNode = new SuffixTreeNode(suffixOffset, currentNode, std::unordered_map<char, SuffixTreeNode*>(), suffixOffset + depth, (*strPointer).length()-1);
             currentNode->children[(*strPointer)[suffixOffset + depth]] = newNode;
 
-            currentNode = newNode;
+            std::cout << "test" << suffixOffset + depth << (*strPointer)[suffixOffset + depth] << std::endl;
 
             return;
         }
@@ -144,7 +167,7 @@ void printSuffixTree(SuffixTreeNode* root) {
 
 int main() {
 
-    std::string inputString = "abcd$";
+    inputString = "banana$";
     SuffixTreeNode* root = createSuffixTree(inputString);
     std::cout << "Suffix tree created" << std::endl;
     printSuffixTree(root);
