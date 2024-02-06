@@ -47,51 +47,53 @@ struct SuffixTree {
 
 //get length of edge
 int edgeLength(SuffixTreeNode* node) {
-    return node->endIdx - node->startIdx; //start and end index are inclusive
+    return node->endIdx - node->startIdx  + 1; //start and end idx are inclusive
 }
 
 
 //split edge function
-void splitEdge(SuffixTreeNode* originalChild, int startIdx, int splitIdx, int endIdx, char newLabel) {
+void splitEdge(SuffixTreeNode* originalChild, int startIdx, int splitIdx, int endIdx) {
 
-    std::cout << newLabel << std::endl;
     std::cout << "Splitting edge" << std::endl;
     std::cout << "Original child start idx: " << originalChild->startIdx << " split idx: " << splitIdx << " end idx: " << originalChild->endIdx << std::endl;
-
+    std::cout << "the values to the function:" << startIdx << " " << splitIdx << " " << endIdx << " " << std::endl;
 
     //create a new child
-    SuffixTreeNode* newChild = new SuffixTreeNode(splitIdx, nullptr, std::unordered_map<char, SuffixTreeNode*>(), splitIdx, endIdx);
+    SuffixTreeNode* newChild = new SuffixTreeNode(startIdx + splitIdx, nullptr, std::unordered_map<char, SuffixTreeNode*>(), startIdx + splitIdx, endIdx);
 
 
-    std::cout << "New child start idx: " << newChild->startIdx << " end idx: " << newChild->endIdx << std::endl;
+    std::cout << "New child start idx: " << startIdx + splitIdx << " end idx: " << newChild->endIdx << std::endl;
 
     //create new internal node
-    SuffixTreeNode* internalNode = new SuffixTreeNode(splitIdx-1, originalChild->parent, std::unordered_map<char, SuffixTreeNode*>(), startIdx, splitIdx-1);
+    SuffixTreeNode* internalNode = new SuffixTreeNode(originalChild->startIdx, originalChild->parent, std::unordered_map<char, SuffixTreeNode*>(), originalChild->startIdx, originalChild->startIdx+splitIdx-1);
 
     //add internal node as parent to new child
     newChild->parent = internalNode;
 
         
-
     //update parent by removing original child and adding internal node
-    originalChild->parent->children.erase(originalChild->label);
-    originalChild->parent->children[newLabel] = internalNode;
-
-
+    //this is done by overwriting the original child with the internal node
+    originalChild->parent->children[inputString[internalNode->startIdx]] = internalNode;
 
     //update original child
     originalChild->parent = internalNode;
-    originalChild->startIdx = splitIdx-startIdx;
+    originalChild->startIdx += splitIdx;
 
-
+    //check if they have the same starting character
+    if (inputString[originalChild->startIdx] == inputString[newChild->startIdx]) {
+        std::cout << "problemo mister" << std::endl;
+    }
 
     std::unordered_map<char, SuffixTreeNode*> internalChildren;
     std::cout << "Creating internal node " << originalChild->label << " hugo" << std::endl;
     std::cout << "Creating internal node " << newChild->label << " hugo" << std::endl;
-    internalChildren[(inputString)[originalChild->startIdx]] = originalChild;
+    internalChildren[inputString[originalChild->startIdx]] = originalChild;
     internalChildren[inputString[newChild->startIdx]] = newChild;
 
     internalNode->children = internalChildren;
+    std::cout << "hugo" << std::endl;
+
+    std::cout << "Internal node start idx: " << internalNode->startIdx << " end idx: " << internalNode->endIdx << std::endl;
 }
 
 
@@ -99,6 +101,7 @@ void splitEdge(SuffixTreeNode* originalChild, int startIdx, int splitIdx, int en
 
 //insert suffix beginning at idx into the suffix tree
 void insertSuffix(std::string* strPointer, int suffixOffset, SuffixTreeNode* root) {
+    std::cout << "Inserting suffix no: " << suffixOffset << std::endl;
     //get the length of the suffix
     int suffixLength = strPointer->length() - suffixOffset;
 
@@ -108,27 +111,45 @@ void insertSuffix(std::string* strPointer, int suffixOffset, SuffixTreeNode* roo
     int depth = 0;
     while(true){
         //check if the current node has a child with the first character of the suffix
-        if (currentNode->children.find((*strPointer)[suffixOffset + depth]) != currentNode->children.end()) {
+        char letter = (*strPointer)[suffixOffset + depth];
+        std::cout << "Checking if current node has a child with the first character of the suffix" << std::endl;
+        std::cout << "Current node start idx: " << letter << std::endl;
+        if (currentNode->children.find(letter) != currentNode->children.end()) {
+            std::cout << "Current node " << currentNode->children[letter]->startIdx << " "<< currentNode->children[letter]->endIdx << std::endl;
+            std::cout << "Current node start idx: " << (*strPointer)[currentNode->children[letter]->startIdx] << std::endl;
+            
             //if it is, slowscan through edge
             //if edge is longer than our string, we are guaranteed to mismatch on $ character anyways.
-            for (int j = 0; j < edgeLength(currentNode->children[(*strPointer)[suffixOffset + depth]]); j++) {
-                if ((*strPointer)[suffixOffset + depth + j] != (*strPointer)[(currentNode->children[(*strPointer)[suffixOffset + depth]])->startIdx + j]) {
+            int currentEdgeSize = edgeLength(currentNode->children[letter]);
+            for (int j = 0; j < currentEdgeSize; j++) {
+                std::cout << j << " " << currentEdgeSize << std::endl;
+                std::cout << suffixOffset + depth + j << " " << (*strPointer).length() << std::endl;
+                std::cout << currentNode->children[letter]->startIdx << " " << std::endl;
+                std::cout << (*strPointer)[suffixOffset + depth + j] << " " << (*strPointer)[currentNode->children[letter]->startIdx + j] << std::endl;
+                if ((*strPointer)[suffixOffset + depth + j] != (*strPointer)[currentNode->children[letter]->startIdx + j]) {
                     
                     //if the characters do not match, split the edge and insert the suffix
-                    splitEdge(currentNode->children[(*strPointer)[suffixOffset + depth]], suffixOffset + depth, suffixOffset + depth + j, (*strPointer).length()-1, (*strPointer)[suffixOffset + depth + j - 1]);
+                    std::cout << "now calling splitedge to insert new node on an edge" << std::endl;
+                    std::cout << suffixOffset << " " << depth << " " << j << std::endl;
+                    splitEdge(currentNode->children[letter], suffixOffset + depth, j, (*strPointer).length()-1);
                     return;
                 } 
             }
-            depth = depth + edgeLength(currentNode->children[(*strPointer)[suffixOffset + depth]]);
-            currentNode = currentNode->children[(*strPointer)[suffixOffset + depth]];
+            currentNode = currentNode->children[letter];
+            depth = depth + currentEdgeSize;
+            //check if current node exists 
+            std::cout << currentNode->endIdx << std::endl;
         } else {            
             //if it does not, create a new node and insert it as a child of the current node
             //note that we will always end here if we match completely (as we have $ character)
-            std::cout << "Inserting new node" << std::endl;
+            std::cout << "Inserting new node on a node" << std::endl;
             SuffixTreeNode* newNode = new SuffixTreeNode(suffixOffset, currentNode, std::unordered_map<char, SuffixTreeNode*>(), suffixOffset + depth, (*strPointer).length()-1);
             currentNode->children[(*strPointer)[suffixOffset + depth]] = newNode;
+            
 
             std::cout << "test" << suffixOffset + depth << (*strPointer)[suffixOffset + depth] << std::endl;
+            std::cout << "test" << (*strPointer)[suffixOffset + depth] << std::endl;
+            std::cout << newNode->startIdx << " " << newNode->endIdx << std::endl;
 
             return;
         }
@@ -153,8 +174,24 @@ SuffixTreeNode* createSuffixTree(std::string inputString) {
 }
 
 
+int printSuffixTree2(SuffixTreeNode* root, int depth = 0) {
+    int size = 1;
+    
+    //print this node start and end
+    for (int i = 0; i < depth; i++) {
+        std::cout << "-";
+    }
+    std::cout << " Start index: " << root->startIdx << " End index: " << root->endIdx << std::endl;
+    for (auto it = root->children.begin(); it != root->children.end(); it++) {
+        size += printSuffixTree2(it->second, depth + 1);
+    }
+    return size;
+}
+
+
 //print suffix tree
 void printSuffixTree(SuffixTreeNode* root) {
+    int level = 0;
     std::cout << "Printing suffix tree" << std::endl;
     std::cout << "Root" << std::endl;
     for (auto it = root->children.begin(); it != root->children.end(); it++) {
@@ -167,10 +204,11 @@ void printSuffixTree(SuffixTreeNode* root) {
 
 int main() {
 
-    inputString = "banana$";
+    inputString = "abccdkdsngjkdgasgaxgaaksdnfkdlslfaaadvldsmkvldsmklfdnsjfdsfndsabaaabab$";
     SuffixTreeNode* root = createSuffixTree(inputString);
     std::cout << "Suffix tree created" << std::endl;
     printSuffixTree(root);
+    std::cout << printSuffixTree2(root) << std::endl;
 
 
     return 0;
