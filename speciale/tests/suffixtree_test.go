@@ -1,5 +1,5 @@
 // suffixtree_test.go
-package suffixtree
+package suffixtreeimpl
 
 import (
 	"speciale/suffixtree"
@@ -7,7 +7,7 @@ import (
 )
 
 // Test functions must start with the word "Test" and take a *testing.T parameter.
-// Run tests using the `go test` command in your terminal
+// Run tests using the `go test tests` command in your terminal
 
 // TestSuffixTreeNodeCreation tests the creation of SuffixTreeNode instances.
 func TestSuffixTreeNodeCreation(t *testing.T) {
