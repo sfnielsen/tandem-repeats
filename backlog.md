@@ -1,8 +1,26 @@
 
+Strings
+* Implement some random string generator
+* Fibonacci strings
+* abab...
+* aaaaaa...
 
-* labels on our suffix trees should probably a set of indexes such that the Tandem Repeat simple algorithm can be implemented
+
+Suffix tree
+* Ensure all strings have sentinel $
+* verify naive suffix tree construction
+* Add dfsorder to Suffix tree
+* more tests:
+* test: - Tjek at suffix nummer e.g. n=6, er den samme string som at gå fra roden til leaf.
+* test: tjek at ingen har flere børn end alfabetstørrelsen.
 
 
-* In splitedge endidx is probably not needed
 
-* In splitedge we also need to apply the label on the new node.
+
+Suffix tree node
+* nodes should have a LL (linkedlist)
+* nodes should have a dfs-interval (leaves just have single value)
+
+
+Tandem Repeats
+* Implement simple O(n)^3 for verification later
