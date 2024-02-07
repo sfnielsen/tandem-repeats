@@ -1,0 +1,1 @@
+g++ -o SuffixTreeTest SuffixTreeTest.cpp SuffixTreeSimple.cpp
