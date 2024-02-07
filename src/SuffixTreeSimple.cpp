@@ -49,7 +49,6 @@ int SuffixTree::edgeLength(SuffixTreeNode* node) const {
 }
 
 
-
 //split edge function
 void SuffixTree::splitEdge(SuffixTreeNode* originalChild, int startIdx, int splitIdx, int endIdx, const std::string& inputString, int suffixOffset) {
     //create a new child
