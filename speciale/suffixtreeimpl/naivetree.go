@@ -1,4 +1,4 @@
-package naive
+package suffixtreeimpl
 
 import "speciale/suffixtree"
 

@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"speciale/naive"
 	"speciale/suffixtree"
+	"speciale/suffixtreeimpl"
 )
 
 func main() {
 	// Create an instance of NaiveTree
-	naiveTree := &naive.NaiveTree{}
+	naiveTree := &suffixtreeimpl.NaiveTree{}
 	random_node := new(suffixtree.SuffixTreeNode)
 
 	// Call functions on the NaiveTree instance
