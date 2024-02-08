@@ -97,3 +97,28 @@ func TestNaiveSuffixTreeLeafLabels(t *testing.T) {
 		}
 	}
 }
+
+// test to ensure that all paths from root match all suffixes in a string
+func TestNaiveSuffixTreeSuffixes(t *testing.T) {
+	// Create a NaiveSuffixTree instance
+	const teststring string = "bababababbbbaaaaa$"
+	st := suffixtreeimpl.ConstructNaiveSuffixTree(teststring)
+	//walk a path down to a leaf and verify that it is the suffix
+	var dfs func(node *suffixtree.SuffixTreeNode, suffix string)
+	dfs = func(node *suffixtree.SuffixTreeNode, suffix string) {
+		//guard to not check the root
+		if (node.StartIdx != -1) && (node.EndIdx != -1) {
+			//if we are at a leaf, verify that the suffix is correct
+			if len(node.Children) == 0 {
+				if suffix != teststring[node.StartIdx:] {
+					t.Errorf("Expected suffix %s, got %s", teststring[node.StartIdx:], suffix)
+				}
+			}
+		}
+		for _, child := range node.Children {
+			dfs(child, suffix+teststring[child.StartIdx:child.EndIdx+1])
+		}
+	}
+	dfs(st.GetRoot(), "")
+
+}
