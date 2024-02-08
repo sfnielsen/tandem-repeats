@@ -7,19 +7,25 @@ on:
     branches: [main]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Print current directory
+      run: pwd
+
+    - name: List contents of speciale directory
+      run: ls -l speciale
 
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
         go-version: '1.17'
 
-    - name: Navigate to speciale directory (where the go.mod file is located)
+    - name: Navigate to speciale directory
       run: cd speciale
 
     - name: Build
@@ -27,3 +33,6 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+
+    - name: Navigate back to root directory
+      run: cd ..
