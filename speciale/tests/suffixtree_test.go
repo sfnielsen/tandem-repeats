@@ -1,5 +1,5 @@
 // suffixtree_test.go
-package suffixtreeimpl
+package tests
 
 import (
 	"speciale/stringgenerators"
@@ -13,9 +13,9 @@ import (
 
 var (
 	setupCompleted     bool
-	alphabetGenerator  suffixtree.StringGenerator
-	randomGenerator    suffixtree.StringGenerator
-	fibonacciGenerator suffixtree.StringGenerator
+	alphabetGenerator  stringgenerators.StringGenerator
+	randomGenerator    stringgenerators.StringGenerator
+	fibonacciGenerator stringgenerators.StringGenerator
 )
 
 func init() {
@@ -23,12 +23,12 @@ func init() {
 		// Perform setup steps here
 		// ...
 		alphaGen := &stringgenerators.AlphabetStringGenerator{
-			Alphabet: suffixtree.AlphabetDNA,
+			Alphabet: stringgenerators.AlphabetDNA,
 		}
 		alphabetGenerator = alphaGen
 
 		randGen := &stringgenerators.RandomStringGenerator{
-			Alphabet: suffixtree.AlphabetDNA,
+			Alphabet: stringgenerators.AlphabetDNA,
 		}
 		randomGenerator = randGen
 
@@ -59,9 +59,9 @@ func TestSuffixTreeNodeCreation(t *testing.T) {
 }
 
 // Test creation of a NaiveSuffixTree instance
-func TestNaiveSuffixTreeCreation(t *testing.T) {
+func TestNaiveSuffixTreeCreationDoesntFail(t *testing.T) {
 	//generate some random string
-	test_str := randomGenerator.GenerateString(1000)
+	test_str := randomGenerator.GenerateString(100000)
 
 	// Create a NaiveSuffixTree instance
 	st := suffixtreeimpl.ConstructNaiveSuffixTree(test_str)
@@ -77,19 +77,16 @@ func TestNaiveSuffixTreeCreation(t *testing.T) {
 
 // Test that size of the suffix tree has correct number of leaves
 func TestNaiveSuffixTreeSize(t *testing.T) {
-	//generate some random string
-	test_str := randomGenerator.GenerateString(1000)
-
 	// Create a NaiveSuffixTree instance
-	st := suffixtreeimpl.ConstructNaiveSuffixTree(test_str)
+	st := suffixtreeimpl.ConstructNaiveSuffixTree("abab$")
 
-	if st.GetSize() < 0 {
-		t.Errorf("Expected size to be 1000, got %d", st.GetSize())
+	if st.GetSize() != 8 {
+		t.Errorf("Expected size to be 7, got %d", st.GetSize())
 	}
 }
 
 // verify that we have n leaves
-func TestNaiveSuffixTreeLeaves(t *testing.T) {
+func TestNaiveSuffixTreeLeavesSizeIsN(t *testing.T) {
 	//generate some random string
 	test_str := randomGenerator.GenerateString(1000)
 
@@ -147,7 +144,7 @@ func TestNaiveSuffixTreeSuffixes(t *testing.T) {
 		First:  "b",
 		Second: "a",
 	}
-	var _ suffixtree.StringGenerator = fibonacciGenerator
+	var _ stringgenerators.StringGenerator = fibonacciGenerator
 	var teststring string = fibonacciGenerator.GenerateString(20)
 
 	st := suffixtreeimpl.ConstructNaiveSuffixTree(teststring)
@@ -171,33 +168,33 @@ func TestNaiveSuffixTreeSuffixes(t *testing.T) {
 
 }
 
-func TestMultipleFibonnaciStrings(t *testing.T) {
-	var teststring_slice []string = stringgenerators.GenerateStringArray(100, 20, []suffixtree.StringGenerator{fibonacciGenerator})
+func TestNaiveSuffixTreeOnMultipleFibonnaciStrings(t *testing.T) {
+	fibonacciString := fibonacciGenerator.GenerateString(10)
 
-	for _, teststring := range teststring_slice {
-		st := suffixtreeimpl.ConstructNaiveSuffixTree(teststring)
-		//walk a path down to a leaf and verify that it is the suffix
-		var dfs func(node *suffixtree.SuffixTreeNode, suffix string)
-		dfs = func(node *suffixtree.SuffixTreeNode, suffix string) {
-			//guard to not check the root
-			if (node.StartIdx != -1) && (node.EndIdx != -1) {
-				//if we are at a leaf, verify that the suffix is correct
-				if len(node.Children) == 0 {
-					if suffix != teststring[node.Label:] {
-						t.Errorf("Expected suffix %s, got %s", teststring[node.StartIdx:], suffix)
-					}
+	fibonacciGenerator.GenerateString(10)
+
+	st := suffixtreeimpl.ConstructNaiveSuffixTree(fibonacciString)
+	//walk a path down to a leaf and verify that it is the suffix
+	var dfs func(node *suffixtree.SuffixTreeNode, suffix string)
+	dfs = func(node *suffixtree.SuffixTreeNode, suffix string) {
+		//guard to not check the root
+		if (node.StartIdx != -1) && (node.EndIdx != -1) {
+			//if we are at a leaf, verify that the suffix is correct
+			if len(node.Children) == 0 {
+				if suffix != fibonacciString[node.Label:] {
+					t.Errorf("Expected suffix %s, got %s", fibonacciString[node.StartIdx:], suffix)
 				}
 			}
-			for _, child := range node.Children {
-				dfs(child, suffix+teststring[child.StartIdx:child.EndIdx+1])
-			}
 		}
-		dfs(st.GetRoot(), "")
+		for _, child := range node.Children {
+			dfs(child, suffix+fibonacciString[child.StartIdx:child.EndIdx+1])
+		}
 	}
+	dfs(st.GetRoot(), "")
 }
 
-func TestMultipleRandomStringTypes(t *testing.T) {
-	var teststring_slice []string = stringgenerators.GenerateStringArray(100, 20, []suffixtree.StringGenerator{fibonacciGenerator, alphabetGenerator, randomGenerator})
+func TestNaiveSuffixTreeOnMultipleRandomStringTypes(t *testing.T) {
+	var teststring_slice []string = stringgenerators.GenerateStringArray(100, 20, []stringgenerators.StringGenerator{alphabetGenerator, randomGenerator})
 
 	for _, teststring := range teststring_slice {
 		st := suffixtreeimpl.ConstructNaiveSuffixTree(teststring)

@@ -2,10 +2,9 @@ package stringgenerators
 
 import (
 	"math/rand"
-	"speciale/suffixtree"
 )
 
-func GenerateStringArray(numberOfStrings int, stringLength int, generators []suffixtree.StringGenerator) []string {
+func GenerateStringArray(numberOfStrings int, stringLength int, generators []StringGenerator) []string {
 	// Create a slice of strings of length numberOfStrings
 	strings := make([]string, numberOfStrings)
 
