@@ -7,12 +7,8 @@ type SuffixTree interface {
 	GetInputString() string
 	GetSize() int
 
-
-
 	//TODO
 	//PrintTree()
-
-
 
 	// Function to search for a substring in the suffix tree
 	// Should write the indices of the occurrences of the substring in the input string to the standard output
