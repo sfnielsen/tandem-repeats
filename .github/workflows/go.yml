@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+defaults:
+  run:
+    shell: bash
+    working-directory: ./speciale
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,25 +19,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Print current directory
-      run: pwd
-
-    - name: List contents of speciale directory
-      #print contents in current directory
-      run: ls
-
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: '1.17'
-
-    - name: List contents of speciale directory
-      run: pwd
-
     - name: Build
       run: go build -v -o speciale ./...
-      working-directory: ./speciale
-
+      
     - name: Test
       run: go test -v ./...
-      working-directory: ./speciale
