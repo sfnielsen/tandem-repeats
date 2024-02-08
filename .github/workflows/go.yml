@@ -28,6 +28,9 @@ jobs:
     - name: Navigate to speciale directory
       run: cd speciale
 
+    - name: List contents of speciale directory
+      run: pwd
+
     - name: Build
       run: go build -v ./...
 
