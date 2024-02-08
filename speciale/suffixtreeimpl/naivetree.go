@@ -30,6 +30,12 @@ func (n NaiveSuffixTree) PrintTree() {
 
 // NewNaiveSuffixTree creates a new NaiveSuffixTree instance with the given input string.
 func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
+
+	//ensure that the input string ends with a $ character
+	if inputString[len(inputString)-1] != '$' {
+		inputString += "$"
+	}
+
 	// Create a root node
 	root := &suffixtree.SuffixTreeNode{
 		Label:    -1,
