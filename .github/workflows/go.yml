@@ -18,7 +18,8 @@ jobs:
       run: pwd
 
     - name: List contents of speciale directory
-      run: ls -l speciale
+      #print contents in current directory
+      run: ls
 
     - name: Set up Go
       uses: actions/setup-go@v2
