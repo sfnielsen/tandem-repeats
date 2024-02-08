@@ -9,4 +9,7 @@ type TandemRepeat struct {
 	Repeats int
 }
 
-
+// return the actual tandem repeat as a string
+func GetTandemRepeatSubstring(tr TandemRepeat, inputString string) string {
+	return inputString[tr.Start : tr.Start+tr.length]
+}
