@@ -56,8 +56,8 @@ func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
 		// Insert all suffixes of inputString into the suffix tree
 		st.InsertSuffix(i)
 	}
-	println("this is the size of the tree: ", st.Size)
 
+	// Add DFS labels
 	st.AddDFSLabels(st.Root)
 
 	// Return the interface value

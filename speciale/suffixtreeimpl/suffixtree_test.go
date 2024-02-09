@@ -1,6 +1,7 @@
 package suffixtreeimpl
 
 import (
+	"sort"
 	"speciale/stringgenerators"
 	"speciale/suffixtree"
 	"testing"
@@ -234,10 +235,43 @@ func TestNaiveSuffixTreeOnMultipleRandomStringTypes(t *testing.T) {
 	}
 }
 
-// Test that dfs intervals are correct
+// test That dfs labels on leaves are lexicographically ordered
+func TestNaiveSuffixTreeDfsLeafLabelsIsLexicographic(t *testing.T) {
+	// Create a NaiveSuffixTree instance
+	str := randomGenerator.GenerateString(1000)
+	st := ConstructNaiveSuffixTree(str)
+	//first create a slice of all suffixes of str
+	suffixes := make([]string, len(str))
+	for i := 0; i < len(str); i++ {
+		suffixes[i] = str[i:]
+	}
+	//then sort the slice
+	sort.Strings(suffixes)
+
+	// then verify that the dfs labels are in the same order
+	var dfs func(node *suffixtree.SuffixTreeNode)
+	var idx int
+	dfs = func(node *suffixtree.SuffixTreeNode) {
+		if node.IsLeaf() {
+			if suffixes[idx] != str[node.Label:] {
+				t.Errorf("Expected suffix %s, got %s", suffixes[idx], str[node.Label:])
+			}
+			idx += 1
+		}
+		for _, child := range node.Children {
+			if child != nil {
+				dfs(child)
+			}
+		}
+	}
+	dfs(st.GetRoot())
+
+}
+
+// Test that dfs intervals corrospond to the range of the children of the node
 func TestNaiveSuffixTreeDfsIntervals(t *testing.T) {
 	// Create a NaiveSuffixTree instance
-	st := ConstructNaiveSuffixTree("abab$")
+	st := ConstructNaiveSuffixTree(alphabetGenerator.GenerateString(1000))
 
 	//check that each internal node has a start and end corrosponding to the range of its children
 	var dfs func(node *suffixtree.SuffixTreeNode) (int, int)
