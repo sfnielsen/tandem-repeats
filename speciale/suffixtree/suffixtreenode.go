@@ -12,7 +12,7 @@ type SuffixTreeNode struct {
 	// Fields required for tandem repeats O(nlogn) tandem repeats
 	Marked      bool // probably not necessary
 	DfsInterval DfsInterval
-	LinkedList  map[int]*SuffixTreeNode
+	LeafList  map[int]*SuffixTreeNode
 }
 
 type DfsInterval struct {

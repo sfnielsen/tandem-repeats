@@ -41,3 +41,15 @@ func TestNaiveTrThreeRepeats(t *testing.T) {
 		t.Errorf("Expected tandem repeat to be 'ab', got %s", GetTandemRepeatSubstring(tr[2], s))
 	}
 }
+
+// test that we get "amount" of tandem repeats
+func TestNaiveTrAmountIsX(t *testing.T) {
+	s := "aaaaaaaa$"
+	// Create a NaiveTandemRepeat instance
+	tr := FindTandemRepeatsNaive(s)
+	
+	if len(tr) != 16 {
+		t.Errorf("Expected 4 tandem repeats, got %d", len(tr))
+	}
+
+}
