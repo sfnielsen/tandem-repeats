@@ -35,7 +35,7 @@ func TestNaiveTrThreeRepeats(t *testing.T) {
 		t.Errorf("Expected tandem repeat to be 'ab', got %s", GetTandemRepeatSubstring(tr[0], s))
 	}
 	if GetTandemRepeatSubstring(tr[1], s) != "ba" {
-		t.Errorf("Expected tandem repeat to be 'ab', got %s", GetTandemRepeatSubstring(tr[1], s))
+		t.Errorf("Expected tandem repeat to be 'ba', got %s", GetTandemRepeatSubstring(tr[1], s))
 	}
 	if GetTandemRepeatSubstring(tr[2], s) != "ab" {
 		t.Errorf("Expected tandem repeat to be 'ab', got %s", GetTandemRepeatSubstring(tr[2], s))

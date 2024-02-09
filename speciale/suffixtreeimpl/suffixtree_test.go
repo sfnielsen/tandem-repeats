@@ -48,7 +48,6 @@ func TestSuffixTreeNodeCreation(t *testing.T) {
 		Parent:   nil,
 		StartIdx: 0,
 		EndIdx:   10,
-		Children: make(map[rune]*suffixtree.SuffixTreeNode),
 	}
 
 	if node.Label != 42 {
@@ -74,13 +73,25 @@ func TestNaiveSuffixTreeCreationDoesntFail(t *testing.T) {
 }
 
 // Test that size of the suffix tree has correct number of leaves
-func TestNaiveSuffixTreeSize(t *testing.T) {
+func TestNaiveSuffixTreeSizeSmall(t *testing.T) {
 	// Create a NaiveSuffixTree instance
 	st := ConstructNaiveSuffixTree("abab$")
 
 	if st.GetSize() != 8 {
 		t.Errorf("Expected size to be 7, got %d", st.GetSize())
 	}
+}
+
+func TestNaiveSuffixTreeSizeLarge(t *testing.T) {
+
+	// Create a NaiveSuffixTree instance
+	st := ConstructNaiveSuffixTree("cabacbabbacaccabbababababbaaabababababaabacbaababababababaabacbaabaccbabcbba$")
+
+	//in this example there is 77 leaves and 60 internal nodes
+	if st.GetSize() != 77+60 {
+		t.Errorf("Expected size to be 100, got %d", st.GetSize())
+	}
+
 }
 
 // verify that we have n leaves
@@ -94,17 +105,16 @@ func TestNaiveSuffixTreeLeavesSizeIsN(t *testing.T) {
 	leaves := 0
 	var dfs func(node *suffixtree.SuffixTreeNode)
 	dfs = func(node *suffixtree.SuffixTreeNode) {
-		if len(node.Children) == 0 {
-			leaves++
+		if node.IsLeaf() {
+			for _, child := range node.Children {
+				dfs(child)
+			}
 		}
-		for _, child := range node.Children {
-			dfs(child)
-		}
-	}
-	dfs(st.GetRoot())
+		dfs(st.GetRoot())
 
-	if leaves != len(test_str) {
-		t.Errorf("Expected 4 leaves, got %d", leaves)
+		if leaves != len(test_str) {
+			t.Errorf("Expected 4 leaves, got %d", leaves)
+		}
 	}
 }
 
@@ -119,11 +129,13 @@ func TestNaiveSuffixTreeLeafLabels(t *testing.T) {
 	leafLabels := make(map[int]bool)
 	var dfs func(node *suffixtree.SuffixTreeNode)
 	dfs = func(node *suffixtree.SuffixTreeNode) {
-		if len(node.Children) == 0 {
+		if node.IsLeaf() {
 			leafLabels[node.Label] = true
 		}
 		for _, child := range node.Children {
-			dfs(child)
+			if child != nil {
+				dfs(child)
+			}
 		}
 	}
 	dfs(st.GetRoot())
@@ -152,14 +164,16 @@ func TestNaiveSuffixTreeSuffixes(t *testing.T) {
 		//guard to not check the root
 		if (node.StartIdx != -1) && (node.EndIdx != -1) {
 			//if we are at a leaf, verify that the suffix is correct
-			if len(node.Children) == 0 {
+			if node.IsLeaf() {
 				if suffix != teststring[node.Label:] {
 					t.Errorf("Expected suffix %s, got %s", teststring[node.StartIdx:], suffix)
 				}
 			}
 		}
 		for _, child := range node.Children {
-			dfs(child, suffix+teststring[child.StartIdx:child.EndIdx+1])
+			if child != nil {
+				dfs(child, suffix+teststring[child.StartIdx:child.EndIdx+1])
+			}
 		}
 	}
 	dfs(st.GetRoot(), "")
@@ -178,14 +192,16 @@ func TestNaiveSuffixTreeOnMultipleFibonnaciStrings(t *testing.T) {
 		//guard to not check the root
 		if (node.StartIdx != -1) && (node.EndIdx != -1) {
 			//if we are at a leaf, verify that the suffix is correct
-			if len(node.Children) == 0 {
+			if node.IsLeaf() {
 				if suffix != fibonacciString[node.Label:] {
 					t.Errorf("Expected suffix %s, got %s", fibonacciString[node.StartIdx:], suffix)
 				}
 			}
 		}
 		for _, child := range node.Children {
-			dfs(child, suffix+fibonacciString[child.StartIdx:child.EndIdx+1])
+			if child != nil {
+				dfs(child, suffix+fibonacciString[child.StartIdx:child.EndIdx+1])
+			}
 		}
 	}
 	dfs(st.GetRoot(), "")
@@ -202,16 +218,66 @@ func TestNaiveSuffixTreeOnMultipleRandomStringTypes(t *testing.T) {
 			//guard to not check the root
 			if (node.StartIdx != -1) && (node.EndIdx != -1) {
 				//if we are at a leaf, verify that the suffix is correct
-				if len(node.Children) == 0 {
+				if node.IsLeaf() {
 					if suffix != teststring[node.Label:] {
 						t.Errorf("Expected suffix %s, got %s", teststring[node.StartIdx:], suffix)
 					}
 				}
 			}
 			for _, child := range node.Children {
-				dfs(child, suffix+teststring[child.StartIdx:child.EndIdx+1])
+				if child != nil {
+					dfs(child, suffix+teststring[child.StartIdx:child.EndIdx+1])
+				}
 			}
 		}
 		dfs(st.GetRoot(), "")
 	}
+}
+
+// Test that dfs intervals are correct
+func TestNaiveSuffixTreeDfsIntervals(t *testing.T) {
+	// Create a NaiveSuffixTree instance
+	st := ConstructNaiveSuffixTree("abab$")
+
+	//check that each internal node has a start and end corrosponding to the range of its children
+	var dfs func(node *suffixtree.SuffixTreeNode) (int, int)
+	dfs = func(node *suffixtree.SuffixTreeNode) (int, int) {
+
+		// case for leaf node
+		if node.IsLeaf() {
+			if node.DfsInterval.Start != node.DfsInterval.End {
+				t.Errorf("Expected start and end to be equal, got %d and %d", node.DfsInterval.Start, node.DfsInterval.End)
+			}
+			//return value
+			return node.DfsInterval.Start, node.DfsInterval.End
+		}
+
+		// keep track on smallest and largest value found in children
+		smallestDfs := st.GetSize() + 1
+		largestDfs := -1
+		for _, child := range node.Children {
+			if child != nil {
+				childMin, childMax := dfs(child)
+				if childMin < smallestDfs {
+					smallestDfs = childMin
+				}
+				if childMax > largestDfs {
+					largestDfs = childMax
+				}
+			}
+		}
+
+		//verify that the start and end is correct
+		if node.DfsInterval.Start != smallestDfs {
+			t.Errorf("Expected start to be %d, got %d", smallestDfs, node.DfsInterval.Start)
+		}
+		if node.DfsInterval.End != largestDfs {
+			t.Errorf("Expected end to be %d, got %d", largestDfs, node.DfsInterval.End)
+		}
+
+		//return value
+		return node.DfsInterval.Start, node.DfsInterval.End
+	}
+	dfs(st.GetRoot())
+
 }

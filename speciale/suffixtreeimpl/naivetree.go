@@ -39,10 +39,10 @@ func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
 	// Create a root node
 	root := &suffixtree.SuffixTreeNode{
 		Label:    -1,
-		Parent:   nil,
 		StartIdx: -1,
 		EndIdx:   -1,
-		Children: make(map[rune]*suffixtree.SuffixTreeNode),
+		//parent is nil by default
+		//Children is an array of pointers to SuffixTreeNode which is initialized on creation
 	}
 
 	// Create a NaiveSuffixTree
@@ -56,23 +56,43 @@ func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
 		// Insert all suffixes of inputString into the suffix tree
 		st.InsertSuffix(i)
 	}
+	println("this is the size of the tree: ", st.Size)
 
-	// run through tree to find the size
+	st.AddDFSLabels(st.Root)
+
+	// Return the interface value
+	return st
+}
+
+// Adds DFS labels.
+// Leaves are assigned a single number, and internal nodes are assigned a range of numbers
+// corresponding to the leaves in their subtree.
+func (st *NaiveSuffixTree) AddDFSLabels(node *suffixtree.SuffixTreeNode) {
+	// assign dfs intervals and count up the size of the tree
 	// this can easily be done during construction, but this is just a naive implementation
-	// we can always optimize later
-	st.Size = 0
+	dfsNumber := 0
 	var dfs func(node *suffixtree.SuffixTreeNode) int
 	dfs = func(node *suffixtree.SuffixTreeNode) int {
-		st.Size++
-		for _, child := range node.Children {
-			dfs(child)
+		// if leaf node
+		if node.IsLeaf() {
+			node.DfsInterval.Start = dfsNumber
+			node.DfsInterval.End = dfsNumber
+			dfsNumber++
+		} else {
+			//if NOT leaf node
+			node.DfsInterval.Start = dfsNumber
+			for _, child := range node.Children {
+				if child != nil {
+					dfs(child)
+				}
+			}
+			node.DfsInterval.End = dfsNumber - 1 // -1 because we have already incremented dfsNumber for the next leaf
 		}
+		st.Size++ // increment size of tree
 		return 0
 	}
 	dfs(st.Root)
 
-	// Return the interface value
-	return st
 }
 
 // InsertSuffix inserts the suffix starting at the given index into the suffix tree.
@@ -83,12 +103,15 @@ func (st *NaiveSuffixTree) InsertSuffix(suffixStartIdx int) {
 	currentNode := st.Root
 
 	depth := 0
+	// infinite loop
 	for {
+
 		// Check if the current node has a child with the first character of the suffix
 		letter := rune(suffix[depth])
-
-		if child, ok := currentNode.Children[letter]; ok {
-			// If it does, slow scan through the edge
+		// Check if there is an edge to follow
+		child := currentNode.Children[letter]
+		if child != nil {
+			// If there is, slow scan through the edge
 			// If the edge is longer than our string, we are guaranteed to mismatch on $ character anyways.
 			currentEdgeSize := child.EdgeLength()
 			for j := 0; j < currentEdgeSize; j++ {
@@ -107,7 +130,6 @@ func (st *NaiveSuffixTree) InsertSuffix(suffixStartIdx int) {
 			newNode := &suffixtree.SuffixTreeNode{
 				Label:    suffixStartIdx,
 				Parent:   currentNode,
-				Children: make(map[rune]*suffixtree.SuffixTreeNode),
 				StartIdx: suffixStartIdx + depth,
 				EndIdx:   len(st.InputString) - 1,
 			}
@@ -118,14 +140,12 @@ func (st *NaiveSuffixTree) InsertSuffix(suffixStartIdx int) {
 }
 
 func (st *NaiveSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, startIdx, splitIdx, endIdx, suffixOffset int) {
-
 	// Create a new child
 	newChild := &suffixtree.SuffixTreeNode{
 		Label:    suffixOffset,
 		Parent:   nil,
 		StartIdx: startIdx + splitIdx,
 		EndIdx:   endIdx,
-		Children: make(map[rune]*suffixtree.SuffixTreeNode),
 	}
 
 	// Create a new internal node
@@ -134,7 +154,6 @@ func (st *NaiveSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, s
 		Parent:   originalChild.Parent,
 		StartIdx: originalChild.StartIdx,
 		EndIdx:   originalChild.StartIdx + splitIdx - 1,
-		Children: make(map[rune]*suffixtree.SuffixTreeNode),
 	}
 
 	// Add internal node as parent to new child
