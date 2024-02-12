@@ -40,7 +40,7 @@ func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
 	root := &suffixtree.SuffixTreeNode{
 		Label:    -1,
 		StartIdx: -1,
-		EndIdx:   -1,
+		EndIdx:   -2,
 		//parent is nil by default
 		//Children is an array of pointers to SuffixTreeNode which is initialized on creation
 	}
