@@ -6,7 +6,6 @@ type SuffixTree interface {
 	GetRoot() *SuffixTreeNode
 	GetInputString() string
 	GetSize() int
-
 	//TODO
 	//PrintTree()
 

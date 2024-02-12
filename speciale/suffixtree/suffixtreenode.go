@@ -10,9 +10,10 @@ type SuffixTreeNode struct {
 	Children [256]*SuffixTreeNode // assume ASCII characters
 
 	// Fields required for tandem repeats O(nlogn) tandem repeats
-	Marked      bool // probably not necessary
-	DfsInterval DfsInterval
-	LeafList  map[int]*SuffixTreeNode
+	Marked       bool // probably not necessary
+	DfsInterval  DfsInterval
+	LeafList     []int
+	BiggestChild *SuffixTreeNode
 }
 
 type DfsInterval struct {
