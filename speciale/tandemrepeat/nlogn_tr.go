@@ -157,7 +157,6 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 	allRepeatsMap := getAllTandemRepeats(allBranchingRepeats, st)
 	//convert map to slice
 	allRepeatsSlice := convertRepeatsMapToSlice(allRepeatsMap)
-
 	return allRepeatsSlice
 }
 

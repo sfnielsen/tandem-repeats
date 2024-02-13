@@ -8,7 +8,7 @@ import (
 
 func main() {
 	utils.TakeTimeAndSave(utils.AlgorithmSetup{
-		SuffixArrayConstructor: suffixtreeimpl.ConstructNaiveSuffixTree,
-		TandemRepeatFinder:     tandemrepeat.FindTandemRepeatsLogarithmic,
-	}, 150000, 150)
+		SuffixTreeConstructor: suffixtreeimpl.ConstructNaiveSuffixTree,
+		TandemRepeatFinder:    tandemrepeat.FindTandemRepeatsLogarithmic,
+	}, 300000, 150)
 }

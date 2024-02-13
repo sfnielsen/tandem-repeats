@@ -11,11 +11,20 @@ def get_latest_file(folder_path:str):
     return max(files, key=os.path.getmtime, default=None)
 
 def plot_tandem_repeats(data: pd.DataFrame):
-    #Group based column "Algorithm" and get the mean of the "Time" column for each "input" value
-    grouped_data = data.groupby(['Algorithm', 'InputSize']).mean().reset_index()
+    #Group based column "Algorithm" and get the mean of the "Time" column for each "InputSize" 
+        # Convert 'InputSize' to numeric
+    data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
+
+    # Clean and convert 'RunningTime' to numeric
+    data['RunningTime'] = pd.to_numeric(data['RunningTime'].str.replace(r'[^0-9.]', ''), errors='coerce')
+
+    # Convert 'InputSize' to categorical for better grouping
+    data['InputSize'] = pd.Categorical(data['InputSize'])
+    grouped_data = data.groupby(['Algorithm', 'InputSize'])['RunningTime'].mean().reset_index()
     #Plot the data
     for algorithm in grouped_data['Algorithm'].unique():
         algorithm_data = grouped_data[grouped_data['Algorithm'] == algorithm]
+        print(algorithm_data)
         plt.plot(algorithm_data['InputSize'], algorithm_data['RunningTime'], label=algorithm)
         
     plt.xlabel('Input Size')
@@ -25,4 +34,4 @@ def plot_tandem_repeats(data: pd.DataFrame):
 
 folder_path = 'speciale/time_csvs'
 latest_file_path = get_latest_file(folder_path)
-plot_tandem_repeats(pd.read_csv(latest_file_path))
+plot_tandem_repeats(pd.read_csv(latest_file_path, sep=","))
