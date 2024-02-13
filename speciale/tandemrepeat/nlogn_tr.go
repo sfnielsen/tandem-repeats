@@ -59,10 +59,10 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 				}
 
 				// step 2b
-				//for _, child := range node.Children {
-				//j := child.Label + depth
-
-				//}
+				for _, child := range node.Children {
+					j := child.Label + depth
+					dfsIndex := st.LabelToDFSMap[j]
+				}
 
 			}
 		}

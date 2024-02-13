@@ -4,10 +4,9 @@ import "speciale/suffixtree"
 
 // NaiveTree implements the SuffixTree interface using a naive construction algorithm.
 type NaiveSuffixTree struct {
-	Root          *suffixtree.SuffixTreeNode
-	InputString   string
-	Size          int
-	LabelToDFSMap []int
+	Root        *suffixtree.SuffixTreeNode
+	InputString string
+	Size        int
 }
 
 // GetRoot returns the root node of the suffix tree.
