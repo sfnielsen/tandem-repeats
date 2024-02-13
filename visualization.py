@@ -17,8 +17,10 @@ def plot_tandem_repeats(data: pd.DataFrame):
     for algorithm in grouped_data['Algorithm'].unique():
         algorithm_data = grouped_data[grouped_data['Algorithm'] == algorithm]
         plt.plot(algorithm_data['InputSize'], algorithm_data['RunningTime'], label=algorithm)
+        
     plt.xlabel('Input Size')
     plt.ylabel('Running Time (ms)')
+    plt.legend()
     plt.show()
 
 folder_path = 'speciale/time_csvs'
