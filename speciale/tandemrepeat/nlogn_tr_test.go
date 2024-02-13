@@ -26,7 +26,7 @@ func init() {
 		alphabetGenerator = alphaGen
 
 		randGen := &stringgenerators.RandomStringGenerator{
-			Alphabet: stringgenerators.AlphabetAB,
+			Alphabet: stringgenerators.AlphabetDNA,
 		}
 		randomGenerator = randGen
 
@@ -90,9 +90,6 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 	//find the tandem repeats
 	tr := FindTandemRepeatsLogarithmic(st)
 
-	for _, v := range tr {
-		println(GetTandemRepeatSubstring(v, s), v.length)
-	}
 	if len(tr) != 2 {
 		t.Errorf("Expected 2 tandem repeat, got %d", len(tr))
 	}
@@ -109,7 +106,7 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 // test that we can find ALL tandem repeats
 func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	//generate some big strings from the stringgenerators
-	s := randomGenerator.GenerateString(1000)
+	s := randomGenerator.GenerateString(5000)
 
 	// find tandem repeats with the naive_tr
 	tr1 := FindTandemRepeatsNaive(s)
@@ -133,21 +130,23 @@ func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	}
 	//not print difference if they are not equal
 	if len(set1) != len(set2) {
-		mismatches := 0
 		t.Errorf("Sets are not equal. Set1: %d, Set2: %d", len(set1), len(set2))
-		for k, _ := range set1 {
-			if !set2[k] {
-				t.Errorf("Set2 does not contain %v", k)
-				mismatches++
-			}
-		}
-		for k, _ := range set2 {
-			if !set1[k] {
-				t.Errorf("Set1 does not contain %v", k)
-				mismatches++
-			}
-		}
-		t.Errorf("Total mismatches: %d", mismatches)
 	}
+	mismatches := 0
+	for k, _ := range set1 {
+		if !set2[k] {
+			t.Errorf("Set2 does not contain %v", k)
+			mismatches++
+		}
+	}
+	for k, _ := range set2 {
+		if !set1[k] {
+			t.Errorf("Set1 does not contain %v", k)
+			mismatches++
+		}
+	}
+	if mismatches > 0 {
+		t.Errorf("Total mismatches: %d", mismatches)
 
+	}
 }
