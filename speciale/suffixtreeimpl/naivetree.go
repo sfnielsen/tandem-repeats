@@ -24,10 +24,6 @@ func (n NaiveSuffixTree) GetSize() int {
 	return n.Size
 }
 
-func (n NaiveSuffixTree) PrintTree() {
-	println("Printing tree")
-}
-
 // NewNaiveSuffixTree creates a new NaiveSuffixTree instance with the given input string.
 func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
 
@@ -167,10 +163,6 @@ func (st *NaiveSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, s
 	originalChild.Parent = internalNode
 	originalChild.StartIdx += splitIdx
 
-	// Check if they have the same starting character
-	if st.InputString[originalChild.StartIdx] == st.InputString[newChild.StartIdx] {
-		println("problems :D")
-	}
 
 	// Add original child and new child to internal node
 	internalNode.Children[rune(st.InputString[originalChild.StartIdx])] = originalChild

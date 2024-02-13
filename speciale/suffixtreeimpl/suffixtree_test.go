@@ -56,6 +56,22 @@ func TestSuffixTreeNodeCreation(t *testing.T) {
 	}
 }
 
+// test that $ is added to the input string
+func TestNoSentinelInputString(t *testing.T) {
+	// Create a NaiveSuffixTree instance without sentinel
+	st := ConstructNaiveSuffixTree("abab")
+
+	if st.GetInputString() != "abab$" {
+		t.Errorf("Expected input string to be 'abab$', got %s", st.GetInputString())
+	}
+	// Create a NaiveSuffixTree instance with sentinel
+	st = ConstructNaiveSuffixTree("abab$")
+	if st.GetInputString() != "abab$" {
+		t.Errorf("Expected input string to be 'abab$', got %s", st.GetInputString())
+	}
+
+}
+
 // Test creation of a NaiveSuffixTree instance
 func TestNaiveSuffixTreeCreationDoesntFail(t *testing.T) {
 	//generate some random string
