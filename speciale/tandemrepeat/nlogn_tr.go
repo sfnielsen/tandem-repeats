@@ -38,25 +38,27 @@ func addLeafList(st suffixtree.SuffixTree) {
 	dfs(root)
 }
 
-// get all tandem repeats
-func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTree) []TandemRepeat {
-	var allTandemRepeats []TandemRepeat = make([]TandemRepeat, 0)
+// get all tandem repeats by left rotating on the branching repeats
+func getAllTandemRepeats(allBranchingRepeats map[TandemRepeat]bool, st suffixtree.SuffixTree) map[TandemRepeat]bool {
+	var allTandemRepeats = make(map[TandemRepeat]bool)
 
-	for _, v := range allBranchingRepeats {
+	for k := range allBranchingRepeats {
 		// add tandem repeat until length is 0
 		i := 0
 		// left rotate until we no longer have a tandem repeat (or we reach the start of the string)
-		for v.Start-i-1 >= 0 {
+		for k.Start-i-1 >= 0 {
 			i += 1
-			if st.GetInputString()[v.Start-i] == st.GetInputString()[(v.Start-i)+2*(v.length)] {
-				allTandemRepeats = append(allTandemRepeats, TandemRepeat{v.Start - i, v.length, 2})
+			if st.GetInputString()[k.Start-i] == st.GetInputString()[(k.Start-i)+2*(k.length)] {
+				allTandemRepeats[TandemRepeat{k.Start - i, k.length, 2}] = true
 			} else {
 				break
 			}
 		}
 
 	}
-	allTandemRepeats = append(allTandemRepeats, allBranchingRepeats...)
+	for k, v := range allBranchingRepeats {
+		allTandemRepeats[k] = v
+	}
 	return allTandemRepeats
 }
 
@@ -95,8 +97,8 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 	//we create the a idx to dfs mapping
 	idxToDfsTable := getIdxtoDfsTable(st)
 
-	//store all branching repeats
-	var allBranchingRepeats []TandemRepeat = make([]TandemRepeat, 0)
+	//store all branching repeats map - map as we want to avoid duplicates from 2b and 2c
+	var allBranchingRepeats = make(map[TandemRepeat]bool)
 
 	// now we run stoye and gusfield 'optimized algorithm'
 	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
@@ -123,8 +125,8 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 
 							//now check if we are branching
 							if i+2*depth < len(st.GetInputString()) && st.GetInputString()[i] != st.GetInputString()[i+2*depth] {
-								//we have a branching repeat
-								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{leaf, depth, 2})
+								//we have a branching repeat, add to map
+								allBranchingRepeats[TandemRepeat{i, depth, 2}] = true
 							}
 						}
 					}
@@ -139,7 +141,7 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 							//now check if we are branching
 							if i+2*depth < len(st.GetInputString()) && st.GetInputString()[i] != st.GetInputString()[i+2*depth] {
 								//we have a branching repeat
-								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, depth, 2})
+								allBranchingRepeats[TandemRepeat{i, depth, 2}] = true
 							}
 						}
 					}
@@ -151,5 +153,19 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 	}
 	dfs(st.GetRoot(), 0)
 
-	return getAllTandemRepeats(allBranchingRepeats, st)
+	//get all non-branching repeats from the branching ones
+	allRepeatsMap := getAllTandemRepeats(allBranchingRepeats, st)
+	//convert map to slice
+	allRepeatsSlice := convertRepeatsMapToSlice(allRepeatsMap)
+
+	return allRepeatsSlice
+}
+
+// convert repeats map to slice
+func convertRepeatsMapToSlice(repeats map[TandemRepeat]bool) []TandemRepeat {
+	var repeatsSlice []TandemRepeat
+	for k := range repeats {
+		repeatsSlice = append(repeatsSlice, k)
+	}
+	return repeatsSlice
 }
