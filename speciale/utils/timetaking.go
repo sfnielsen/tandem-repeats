@@ -51,12 +51,12 @@ func SaveResults(results []TimingResult, filename string) error {
 	return nil
 }
 
-type SuffixArrayConstructionType func(string) suffixtree.SuffixTree
+type SuffixTreeConstructionType func(string) suffixtree.SuffixTree
 type TandemRepeatFinderType func(suffixtree.SuffixTree) []tandemrepeat.TandemRepeat
 
 type AlgorithmSetup struct {
-	SuffixArrayConstructor SuffixArrayConstructionType
-	TandemRepeatFinder     TandemRepeatFinderType
+	SuffixTreeConstructor SuffixTreeConstructionType
+	TandemRepeatFinder    TandemRepeatFinderType
 }
 
 func TakeTimeAndSave(setup AlgorithmSetup, maxSize int, steps int) {
@@ -71,12 +71,12 @@ func TakeTimeAndSave(setup AlgorithmSetup, maxSize int, steps int) {
 		fmt.Println(i)
 		// Run each type 10 times
 		for _ = range [10]int{} {
-			// Construct suffix array
+			// Construct suffix tree
 			inputString := randomGenerator.GenerateString(i)
 
-			//Take time on suffix array construction
+			//Take time on suffix tree construction
 			startST := time.Now()
-			sa := setup.SuffixArrayConstructor(inputString)
+			sa := setup.SuffixTreeConstructor(inputString)
 			elapsedST := time.Since(startST)
 
 			// Find tandem repeats and take time
