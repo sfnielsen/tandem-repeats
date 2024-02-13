@@ -109,8 +109,7 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 // test that we can find ALL tandem repeats
 func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	//generate some big strings from the stringgenerators
-	s := randomGenerator.GenerateString(50)
-	println(s)
+	s := randomGenerator.GenerateString(1000)
 
 	// find tandem repeats with the naive_tr
 	tr1 := FindTandemRepeatsNaive(s)
@@ -152,5 +151,3 @@ func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	}
 
 }
-
-//AABBAABABABAABAAABABAABBABAAABAABAABABBBAAABBAABAB$

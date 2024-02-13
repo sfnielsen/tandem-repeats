@@ -44,13 +44,12 @@ func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.Suffi
 
 	for _, v := range allBranchingRepeats {
 		// add tandem repeat until length is 0
-		i := 1
-
+		i := 0
 		// left rotate until we no longer have a tandem repeat (or we reach the start of the string)
-		for v.Start-i >= 0 {
+		for v.Start-i-1 >= 0 {
+			i += 1
 			if st.GetInputString()[v.Start-i] == st.GetInputString()[(v.Start-i)+2*(v.length)] {
-				allTandemRepeats = append(allTandemRepeats, TandemRepeat{v.Start - i, i, 2})
-				i += 1
+				allTandemRepeats = append(allTandemRepeats, TandemRepeat{v.Start - i, v.length, 2})
 			} else {
 				break
 			}
