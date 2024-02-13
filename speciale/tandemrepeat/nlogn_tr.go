@@ -42,7 +42,7 @@ func addLeafList(st suffixtree.SuffixTree) {
 func getAllTandemRepeats(allBranchingRepeats map[TandemRepeat]bool, st suffixtree.SuffixTree) map[TandemRepeat]bool {
 	var allTandemRepeats = make(map[TandemRepeat]bool)
 
-	for k, _ := range allBranchingRepeats {
+	for k := range allBranchingRepeats {
 		// add tandem repeat until length is 0
 		i := 0
 		// left rotate until we no longer have a tandem repeat (or we reach the start of the string)
@@ -164,7 +164,7 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 // convert repeats map to slice
 func convertRepeatsMapToSlice(repeats map[TandemRepeat]bool) []TandemRepeat {
 	var repeatsSlice []TandemRepeat
-	for k, _ := range repeats {
+	for k := range repeats {
 		repeatsSlice = append(repeatsSlice, k)
 	}
 	return repeatsSlice
