@@ -70,7 +70,7 @@ func TakeTimeAndSave(setup AlgorithmSetup, maxSize int, steps int) {
 	for i := maxSize / steps; i < maxSize; i += int(maxSize / steps) {
 		fmt.Println(i)
 		// Run each type 10 times
-		for _ = range [10]int{} {
+		for range [10]int{} {
 			// Construct suffix tree
 			inputString := randomGenerator.GenerateString(i)
 

@@ -122,13 +122,13 @@ func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	}
 	mismatches := 0
 
-	for k, _ := range set1 {
+	for k := range set1 {
 		if !set2[k] {
 			t.Errorf("Set2 does not contain %v", k)
 			mismatches++
 		}
 	}
-	for k, _ := range set2 {
+	for k := range set2 {
 		if !set1[k] {
 			t.Errorf("Set1 does not contain %v", k)
 			mismatches++
@@ -172,13 +172,13 @@ func TestFindTandemRepeatsLogarithmicMultipleStringtypes(t *testing.T) {
 		}
 		mismatches := 0
 
-		for k, _ := range set1 {
+		for k := range set1 {
 			if !set2[k] {
 				t.Errorf("Set2 does not contain %v", k)
 				mismatches++
 			}
 		}
-		for k, _ := range set2 {
+		for k := range set2 {
 			if !set1[k] {
 				t.Errorf("Set1 does not contain %v", k)
 				mismatches++
