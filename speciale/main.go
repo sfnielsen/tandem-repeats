@@ -10,5 +10,5 @@ func main() {
 	utils.TakeTimeAndSave(utils.AlgorithmSetup{
 		SuffixTreeConstructor: suffixtreeimpl.ConstructNaiveSuffixTree,
 		TandemRepeatFinder:    tandemrepeat.FindTandemRepeatsLogarithmic,
-	}, 300000, 150)
+	}, 30000, 150)
 }

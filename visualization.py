@@ -16,8 +16,10 @@ def plot_tandem_repeats(data: pd.DataFrame):
     data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
 
     # Clean and convert 'RunningTime' to numeric
-    data['RunningTime'] = pd.to_numeric(data['RunningTime'].str.replace(r'[^0-9.]', ''), errors='coerce')
-
+    try:
+        data['RunningTime'] = pd.to_numeric(data['RunningTime'].str.replace(r'[^0-9.]', ''), errors='coerce')
+    except AttributeError:
+        pass
     # Convert 'InputSize' to categorical for better grouping
     data['InputSize'] = pd.Categorical(data['InputSize'])
     grouped_data = data.groupby(['Algorithm', 'InputSize'])['RunningTime'].mean().reset_index()
