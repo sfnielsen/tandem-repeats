@@ -70,7 +70,6 @@ func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
 func (st *NaiveSuffixTree) AddDFSLabels(node *suffixtree.SuffixTreeNode) {
 	// assign dfs intervals and count up the size of the tree
 	// this can easily be done during construction, but this is just a naive implementation
-	dfsMapper := make([]int, len(st.InputString))
 	dfsNumber := 0
 	var dfs func(node *suffixtree.SuffixTreeNode) int
 	dfs = func(node *suffixtree.SuffixTreeNode) int {
@@ -78,7 +77,6 @@ func (st *NaiveSuffixTree) AddDFSLabels(node *suffixtree.SuffixTreeNode) {
 		if node.IsLeaf() {
 			node.DfsInterval.Start = dfsNumber
 			node.DfsInterval.End = dfsNumber
-			dfsMapper[node.Label] = dfsNumber
 			dfsNumber++
 		} else {
 			//if NOT leaf node
@@ -94,7 +92,6 @@ func (st *NaiveSuffixTree) AddDFSLabels(node *suffixtree.SuffixTreeNode) {
 		return 0
 	}
 	dfs(st.Root)
-	st.LabelToDFSMap = dfsMapper
 }
 
 // InsertSuffix inserts the suffix starting at the given index into the suffix tree.

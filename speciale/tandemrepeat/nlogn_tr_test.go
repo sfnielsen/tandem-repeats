@@ -9,33 +9,20 @@ import (
 
 // Test functions must start with the word "Test" and take a *testing.T parameter.
 var (
-	setupCompleted     bool
-	alphabetGenerator  stringgenerators.StringGenerator
-	randomGenerator    stringgenerators.StringGenerator
-	fibonacciGenerator stringgenerators.StringGenerator
+	setupCompleted          bool
+	randomGenerator_protein stringgenerators.StringGenerator
+	randomGenerator_ab      stringgenerators.StringGenerator
+	randomGenerator_dna     stringgenerators.StringGenerator
+	randomGenerator_ascii   stringgenerators.StringGenerator
 )
 
 // addLeafList adds leaflists to the suffix tree
 func init() {
 	if !setupCompleted {
-		// Perform setup steps here
-		// ...
-		alphaGen := &stringgenerators.AlphabetStringGenerator{
-			Alphabet: stringgenerators.AlphabetDNA,
-		}
-		alphabetGenerator = alphaGen
-
-		randGen := &stringgenerators.RandomStringGenerator{
-			Alphabet: stringgenerators.AlphabetAB,
-		}
-		randomGenerator = randGen
-
-		fibGen := &stringgenerators.FibonacciStringGenerator{
-			First:  "b",
-			Second: "a",
-		}
-		fibonacciGenerator = fibGen
-
+		randomGenerator_protein = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetProtein}
+		randomGenerator_ab = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetAB}
+		randomGenerator_dna = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetDNA}
+		randomGenerator_ascii = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetASCII}
 		setupCompleted = true
 	}
 }
@@ -109,7 +96,7 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 // test that we can find ALL tandem repeats
 func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	//generate some big strings from the stringgenerators
-	s := randomGenerator.GenerateString(1000)
+	s := randomGenerator_protein.GenerateString(50000)
 
 	// find tandem repeats with the naive_tr
 	tr1 := FindTandemRepeatsNaive(s)
@@ -133,20 +120,24 @@ func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	}
 	//not print difference if they are not equal
 	if len(set1) != len(set2) {
-		mismatches := 0
 		t.Errorf("Sets are not equal. Set1: %d, Set2: %d", len(set1), len(set2))
-		for k, _ := range set1 {
-			if !set2[k] {
-				t.Errorf("Set2 does not contain %v", k)
-				mismatches++
-			}
+
+	}
+	mismatches := 0
+
+	for k, _ := range set1 {
+		if !set2[k] {
+			t.Errorf("Set2 does not contain %v", k)
+			mismatches++
 		}
-		for k, _ := range set2 {
-			if !set1[k] {
-				t.Errorf("Set1 does not contain %v", k)
-				mismatches++
-			}
+	}
+	for k, _ := range set2 {
+		if !set1[k] {
+			t.Errorf("Set1 does not contain %v", k)
+			mismatches++
 		}
+	}
+	if mismatches > 0 {
 		t.Errorf("Total mismatches: %d", mismatches)
 	}
 
