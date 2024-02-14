@@ -47,7 +47,6 @@ func TestNaiveTrAmountIsX(t *testing.T) {
 	s := "aaaaaaaa$"
 	// Create a NaiveTandemRepeat instance
 	tr := FindTandemRepeatsNaive(s)
-	
 	if len(tr) != 16 {
 		t.Errorf("Expected 4 tandem repeats, got %d", len(tr))
 	}

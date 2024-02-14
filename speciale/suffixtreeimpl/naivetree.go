@@ -60,6 +60,31 @@ func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
 	return st
 }
 
+// add biggest child to each node. Relies on dfs intervals being set.
+func (st NaiveSuffixTree) AddBiggestChildToNodes() {
+	var dfs func(node *suffixtree.SuffixTreeNode)
+	dfs = func(node *suffixtree.SuffixTreeNode) {
+		if node.IsLeaf() {
+			node.BiggestChild = nil
+		} else {
+			var longest int
+			var biggestFoundChild *suffixtree.SuffixTreeNode = nil
+			for _, child := range node.Children {
+				if child != nil {
+					dfs(child)
+
+					if child.DfsInterval.End-child.DfsInterval.Start+1 > longest {
+						longest = child.DfsInterval.End - child.DfsInterval.Start + 1
+						biggestFoundChild = child
+					}
+				}
+			}
+			node.BiggestChild = biggestFoundChild
+		}
+	}
+	dfs(st.Root)
+}
+
 // Adds DFS labels.
 // Leaves are assigned a single number, and internal nodes are assigned a range of numbers
 // corresponding to the leaves in their subtree.
@@ -134,6 +159,7 @@ func (st *NaiveSuffixTree) InsertSuffix(suffixStartIdx int) {
 	}
 }
 
+// splitEdge splits the edge of the given child node into two edges on inertion of a suffix.
 func (st *NaiveSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, startIdx, splitIdx, endIdx, suffixOffset int) {
 	// Create a new child
 	newChild := &suffixtree.SuffixTreeNode{
@@ -161,7 +187,6 @@ func (st *NaiveSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, s
 	// Update original child
 	originalChild.Parent = internalNode
 	originalChild.StartIdx += splitIdx
-
 
 	// Add original child and new child to internal node
 	internalNode.Children[rune(st.InputString[originalChild.StartIdx])] = originalChild
