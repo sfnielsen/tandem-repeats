@@ -1,4 +1,8 @@
 
+Ting fra sidste møde:
+* tjek at ingen har flere børn end alfabetstørrelsen.
+* for at måle tid for n^2 algoritme kan vi plotte e.g. plot(n, t(n)/n^2)
+
 
 TESTS:
 
