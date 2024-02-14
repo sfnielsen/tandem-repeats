@@ -91,29 +91,35 @@ func getIdxtoDfsTable(st suffixtree.SuffixTree) []int {
 
 // FindTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn) time
 func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
-	//first we need to add the leaflist to the suffix tree
-	addLeafList(st)
 
 	//we create the a idx to dfs mapping
 	idxToDfsTable := getIdxtoDfsTable(st)
+
+	//add biggest child to each node
+	st.AddBiggestChildToNodes()
 
 	//store all branching repeats map - map as we want to avoid duplicates from 2b and 2c
 	var allBranchingRepeats = make(map[TandemRepeat]bool)
 
 	// now we run stoye and gusfield 'optimized algorithm'
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int) []int
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) []int {
 		depth = depth + node.EdgeLength()
+
+		leafList := []int{} // leaflist dynamically added to the node
 
 		for _, child := range node.Children {
 			if child == nil {
 				continue
 			}
+			// leaf lists are added dynamically so space complexity stays at O(n)
+			// step 1, marking internal nodes is done implicitly by a depth-first traversal
+			leafListOfChild := dfs(child, depth)
+
 			// iterate over elements from leaflistPrime
 			//step 2a is performed implicitly by traversal of the children (minus the biggest child)
 			if node.BiggestChild != child {
-
-				for _, leaf := range child.LeafList {
+				for _, leaf := range leafListOfChild {
 
 					//step 2b
 					i := leaf
@@ -147,10 +153,13 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 					}
 				}
 			}
-			// step 1, marking internal nodes is done implicitly by a depth-first traversal
-			dfs(child, depth)
+			// add leaflist of child to leaflist
+			leafList = append(leafList, leafListOfChild...)
 		}
+		//add self to leaflist and return
+		return append(leafList, node.Label)
 	}
+
 	dfs(st.GetRoot(), 0)
 
 	//get all non-branching repeats from the branching ones

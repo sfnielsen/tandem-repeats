@@ -189,3 +189,43 @@ func TestFindTandemRepeatsLogarithmicMultipleStringtypes(t *testing.T) {
 		}
 	}
 }
+
+// test that biggest child is assigned correctly
+func TestNaiveTrBiggestChild(t *testing.T) {
+	s := randomGenerator_ab.GenerateString(100)
+	// Create a NaiveTandemRepeat instance
+	st := suffixtreeimpl.ConstructNaiveSuffixTree(s)
+	st.AddBiggestChildToNodes()
+	// check that biggest child is not nil for all nodes
+	var dfs func(node *suffixtree.SuffixTreeNode)
+	dfs = func(node *suffixtree.SuffixTreeNode) {
+		// test children
+		if node.IsLeaf() {
+			if node.BiggestChild != nil {
+				// test leaf nodes is nil
+				t.Errorf("Expected biggest child to be nil, got %v", node.BiggestChild)
+			}
+		} else {
+			// test internal nodes is not nil
+			if node.BiggestChild == nil {
+				t.Errorf("Expected biggest child to be non-nil for internal node, got nil")
+			}
+			// also verify that biggestchild is the biggest child
+			var longest int
+			var currentBiggestChild *suffixtree.SuffixTreeNode = nil
+			for _, child := range node.Children {
+				if child != nil {
+					dfs(child)
+					if child.DfsInterval.End-child.DfsInterval.Start+1 > longest {
+						longest = child.DfsInterval.End - child.DfsInterval.Start + 1
+						currentBiggestChild = child
+					}
+				}
+			}
+			if currentBiggestChild.Label != node.BiggestChild.Label {
+				t.Errorf("Biggest child found differs from biggest child in tree, expected %d but found: %d", node.BiggestChild.Label, currentBiggestChild.Label)
+			}
+		}
+	}
+	dfs(st.GetRoot())
+}
