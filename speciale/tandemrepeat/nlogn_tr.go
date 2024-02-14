@@ -84,6 +84,11 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []Tandem
 
 		leafList := []int{} // leaflist dynamically added to the node
 
+		//base case: add self to leaflist and return
+		if node.IsLeaf() {
+			return append(leafList, node.Label)
+		}
+
 		for _, child := range node.Children {
 			if child == nil {
 				continue
@@ -132,8 +137,10 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []Tandem
 			// add leaflist of child to leaflist
 			leafList = append(leafList, leafListOfChild...)
 		}
-		//add self to leaflist and return
-		return append(leafList, node.Label)
+
+		//case for internal nodes
+		return leafList
+
 	}
 
 	dfs(st.GetRoot(), 0)
