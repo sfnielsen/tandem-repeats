@@ -9,6 +9,6 @@ import (
 func main() {
 	utils.TakeTimeAndSave(utils.AlgorithmSetup{
 		SuffixTreeConstructor: suffixtreeimpl.ConstructNaiveSuffixTree,
-		TandemRepeatFinder:    tandemrepeat.FindTandemRepeatsLogarithmic,
-	}, 30000, 150)
+		TandemRepeatFinder:    tandemrepeat.FindAllBranchingTandemRepeatsLogarithmic,
+	}, 20000, 15)
 }

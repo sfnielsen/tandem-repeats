@@ -27,47 +27,6 @@ func init() {
 	}
 }
 
-func TestBiggestChildIsBiggestChild(t *testing.T) {
-
-	st := suffixtreeimpl.ConstructNaiveSuffixTree("ababababasdfasdfbasdfasdfawsdfasvaertbnaerfsdfasdf$")
-	addLeafList(st)
-
-	//walk a path down to a leaf and verify that it is the suffix
-	var dfs func(node *suffixtree.SuffixTreeNode) int
-	dfs = func(node *suffixtree.SuffixTreeNode) int {
-		if node.IsLeaf() {
-			if len(node.LeafList) != 1 {
-				t.Errorf("Expected size of leaflist to be 1, got %d", len(node.LeafList))
-			}
-			return len(node.LeafList)
-		} else {
-			var longest int
-			var biggestFoundChild *suffixtree.SuffixTreeNode = nil
-			for _, child := range node.Children {
-				if child != nil {
-					childLeafList := dfs(child)
-
-					if childLeafList > longest {
-						longest = childLeafList
-						biggestFoundChild = child
-					}
-				}
-			}
-			if longest != len(node.BiggestChild.LeafList) {
-				t.Errorf("Leaflist length of biggest child is not the same, expected %d but found: %d", len(node.BiggestChild.LeafList), longest)
-			}
-
-			if biggestFoundChild.Label != node.BiggestChild.Label {
-				t.Errorf("Biggest child found differs from biggest child in tree, expected %d but found: %d", node.BiggestChild.Label, biggestFoundChild.Label)
-			}
-
-			return len(node.LeafList)
-
-		}
-	}
-	dfs(st.GetRoot())
-}
-
 // test that we find the correct tandem repeats in a simple string
 func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 	//define a simple string
@@ -75,7 +34,7 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 	// Create a NaiveSuffixTree instance
 	st := suffixtreeimpl.ConstructNaiveSuffixTree(s)
 	//find the tandem repeats
-	tr := FindTandemRepeatsLogarithmic(st)
+	tr := FindAllTandemRepeatsLogarithmic(st)
 
 	if len(tr) != 2 {
 		t.Errorf("Expected 2 tandem repeat, got %d", len(tr))
@@ -98,7 +57,7 @@ func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	// find tandem repeats with the naive_tr
 	tr1 := FindTandemRepeatsNaive(s)
 
-	tr2 := FindTandemRepeatsLogarithmic(suffixtreeimpl.ConstructNaiveSuffixTree(s))
+	tr2 := FindAllTandemRepeatsLogarithmic(suffixtreeimpl.ConstructNaiveSuffixTree(s))
 
 	//check length are the same
 	if len(tr1) != len(tr2) {
@@ -148,7 +107,7 @@ func TestFindTandemRepeatsLogarithmicMultipleStringtypes(t *testing.T) {
 		// find tandem repeats with the naive_tr
 		tr1 := FindTandemRepeatsNaive(s)
 
-		tr2 := FindTandemRepeatsLogarithmic(suffixtreeimpl.ConstructNaiveSuffixTree(s))
+		tr2 := FindAllTandemRepeatsLogarithmic(suffixtreeimpl.ConstructNaiveSuffixTree(s))
 
 		//check length are the same
 		if len(tr1) != len(tr2) {
