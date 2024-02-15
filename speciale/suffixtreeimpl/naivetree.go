@@ -15,62 +15,7 @@ func (st *NaiveSuffixTree) ConstructSuffixTree() {
 		st.insertSuffix(i)
 	}
 	// Add DFS labels
-	st.addDFSLabels()
-}
-
-// add biggest child to each node. Relies on dfs intervals being set.
-func (st *NaiveSuffixTree) AddBiggestChildToNodes() {
-	var dfs func(node *suffixtree.SuffixTreeNode)
-	dfs = func(node *suffixtree.SuffixTreeNode) {
-		if node.IsLeaf() {
-			node.BiggestChild = nil
-		} else {
-			var longest int
-			var biggestFoundChild *suffixtree.SuffixTreeNode = nil
-			for _, child := range node.Children {
-				if child != nil {
-					dfs(child)
-
-					if child.DfsInterval.End-child.DfsInterval.Start+1 > longest {
-						longest = child.DfsInterval.End - child.DfsInterval.Start + 1
-						biggestFoundChild = child
-					}
-				}
-			}
-			node.BiggestChild = biggestFoundChild
-		}
-	}
-	dfs(st.Root)
-}
-
-// Adds DFS labels.
-// Leaves are assigned a single number, and internal nodes are assigned a range of numbers
-// corresponding to the leaves in their subtree.
-func (st *NaiveSuffixTree) addDFSLabels() {
-	// assign dfs intervals and count up the size of the tree
-	// this can easily be done during construction, but this is just a naive implementation
-	dfsNumber := 0
-	var dfs func(node *suffixtree.SuffixTreeNode) int
-	dfs = func(node *suffixtree.SuffixTreeNode) int {
-		// if leaf node
-		if node.IsLeaf() {
-			node.DfsInterval.Start = dfsNumber
-			node.DfsInterval.End = dfsNumber
-			dfsNumber++
-		} else {
-			//if NOT leaf node
-			node.DfsInterval.Start = dfsNumber
-			for _, child := range node.Children {
-				if child != nil {
-					dfs(child)
-				}
-			}
-			node.DfsInterval.End = dfsNumber - 1 // -1 because we have already incremented dfsNumber for the next leaf
-		}
-		st.IncrementSize()
-		return 0
-	}
-	dfs(st.Root)
+	st.AddDFSLabels()
 }
 
 // InsertSuffix inserts the suffix starting at the given index into the suffix tree.
