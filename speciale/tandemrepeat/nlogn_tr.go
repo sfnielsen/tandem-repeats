@@ -71,6 +71,12 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []Tandem
 	//we create the a idx to dfs mapping
 	idxToDfsTable := getIdxtoDfsTable(st)
 
+	//create Dfs to idx mapping, this is an alternative to leaf lists
+	dfsToIdxTable := make([]int, len(idxToDfsTable))
+	for i, v := range idxToDfsTable {
+		dfsToIdxTable[v] = i
+	}
+
 	//add biggest child to each node
 	st.AddBiggestChildToNodes()
 
@@ -82,28 +88,22 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []Tandem
 	dfs = func(node *suffixtree.SuffixTreeNode, depth int) []int {
 		depth = depth + node.EdgeLength()
 
-		//base case: add self to leaflist and return
-		if node.IsLeaf() {
-			return []int{node.Label}
-		}
-
 		leafList := []int{} // leaflist dynamically added to the node
 
 		for _, child := range node.Children {
 			if child == nil {
 				continue
 			}
-			// leaf lists are added dynamically so space complexity stays at O(n)
-			// step 1, marking internal nodes is done implicitly by a depth-first traversal
-			leafListOfChild := dfs(child, depth)
 
 			// iterate over elements from leaflistPrime
 			//step 2a is performed implicitly by traversal of the children (minus the biggest child)
 			if node.BiggestChild != child {
-				for _, leaf := range leafListOfChild {
+
+				//iterate over all leafs in leaflistPrime
+				for dfsNumber := child.DfsInterval.Start; dfsNumber <= child.DfsInterval.End; dfsNumber++ {
 
 					//step 2b
-					i := leaf
+					i := dfsToIdxTable[dfsNumber]
 					j := i + depth
 					if j < len(st.GetInputString()) {
 						dfsVal := idxToDfsTable[j]
@@ -117,8 +117,9 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []Tandem
 							}
 						}
 					}
+
 					//step 2c
-					j = leaf
+					j = dfsToIdxTable[dfsNumber]
 					i = j - depth
 					if i >= 0 && i < len(st.GetInputString()) {
 						dfsVal := idxToDfsTable[i]
@@ -134,8 +135,11 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []Tandem
 					}
 				}
 			}
-			// add leaflist of child to leaflist
-			leafList = append(leafList, leafListOfChild...)
+
+			// step 1, marking internal nodes is done implicitly by a depth-first traversal
+			if !child.IsLeaf() {
+				dfs(child, depth)
+			}
 		}
 
 		//case for internal nodes
