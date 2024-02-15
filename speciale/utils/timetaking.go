@@ -51,8 +51,8 @@ func SaveResults(results []TimingResult, filename string) error {
 	return nil
 }
 
-type SuffixTreeConstructionType func(string) suffixtree.SuffixTree
-type TandemRepeatFinderType func(suffixtree.SuffixTree) []tandemrepeat.TandemRepeat
+type SuffixTreeConstructionType func(string) suffixtree.SuffixTreeInterface
+type TandemRepeatFinderType func(suffixtree.SuffixTreeInterface) []tandemrepeat.TandemRepeat
 
 type AlgorithmSetup struct {
 	SuffixTreeConstructor SuffixTreeConstructionType

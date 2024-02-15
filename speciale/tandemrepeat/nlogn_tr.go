@@ -5,7 +5,7 @@ import (
 )
 
 // get all tandem repeats by left rotating on the branching repeats
-func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTree) []TandemRepeat {
+func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeInterface) []TandemRepeat {
 	var allTandemRepeats = make([]TandemRepeat, 0)
 
 	for _, k := range allBranchingRepeats {
@@ -27,7 +27,7 @@ func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.Suffi
 }
 
 // GetTandemRepeatSubstring returns the substring of the tandem repeat
-func getIdxtoDfsTable(st suffixtree.SuffixTree) []int {
+func getIdxtoDfsTable(st suffixtree.SuffixTreeInterface) []int {
 	//create table
 	var idxToDfsTable []int = make([]int, len(st.GetInputString()))
 
@@ -54,7 +54,7 @@ func getIdxtoDfsTable(st suffixtree.SuffixTree) []int {
 }
 
 // FindAllTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn + z) time
-func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
+func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 	//find all branching repeats in O(nlogn) time
 	trBranching := FindAllBranchingTandemRepeatsLogarithmic(st)
 
@@ -66,7 +66,7 @@ func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 }
 
 // FindTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn) time
-func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
+func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 
 	//we create the a idx to dfs mapping
 	idxToDfsTable := getIdxtoDfsTable(st)

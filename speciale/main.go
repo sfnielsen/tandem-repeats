@@ -13,7 +13,7 @@ func main() {
 	utils.TakeTimeAndSave(utils.AlgorithmSetup{
 		SuffixTreeConstructor: suffixtreeimpl.ConstructNaiveSuffixTree,
 		TandemRepeatFinder:    tandemrepeat.FindAllBranchingTandemRepeatsLogarithmic,
-	}, 40000, 20, stringgenerators.AlphabetA)
+	}, 80000, 40, stringgenerators.AlphabetDNA)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}

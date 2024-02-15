@@ -1,67 +1,25 @@
 package suffixtreeimpl
 
-import "speciale/suffixtree"
+import (
+	"speciale/suffixtree"
+)
 
 // NaiveTree implements the SuffixTree interface using a naive construction algorithm.
 type NaiveSuffixTree struct {
-	Root        *suffixtree.SuffixTreeNode
-	InputString string
-	Size        int
+	suffixtree.SuffixTree
 }
 
-// GetRoot returns the root node of the suffix tree.
-func (n NaiveSuffixTree) GetRoot() *suffixtree.SuffixTreeNode {
-	return n.Root
-}
-
-// GetInputString returns the input string used to construct the suffix tree.
-func (n NaiveSuffixTree) GetInputString() string {
-	return n.InputString
-}
-
-// GetSize returns the size of the suffix tree.
-func (n NaiveSuffixTree) GetSize() int {
-	return n.Size
-}
-
-// NewNaiveSuffixTree creates a new NaiveSuffixTree instance with the given input string.
-func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
-
-	//ensure that the input string ends with a $ character
-	if inputString[len(inputString)-1] != '$' {
-		inputString += "$"
-	}
-
-	// Create a root node
-	root := &suffixtree.SuffixTreeNode{
-		Label:    -1,
-		StartIdx: -1,
-		EndIdx:   -2,
-		//parent is nil by default
-		//Children is an array of pointers to SuffixTreeNode which is initialized on creation
-	}
-
-	// Create a NaiveSuffixTree
-	st := NaiveSuffixTree{
-		Root:        root,
-		InputString: inputString,
-	}
-
-	// Construct the suffix tree
-	for i := 0; i < len(inputString); i++ {
+func (st *NaiveSuffixTree) ConstructSuffixTree() {
+	for i := 0; i < len(st.InputString); i++ {
 		// Insert all suffixes of inputString into the suffix tree
-		st.InsertSuffix(i)
+		st.insertSuffix(i)
 	}
-
 	// Add DFS labels
-	st.AddDFSLabels(st.Root)
-
-	// Return the interface value
-	return st
+	st.addDFSLabels()
 }
 
 // add biggest child to each node. Relies on dfs intervals being set.
-func (st NaiveSuffixTree) AddBiggestChildToNodes() {
+func (st *NaiveSuffixTree) AddBiggestChildToNodes() {
 	var dfs func(node *suffixtree.SuffixTreeNode)
 	dfs = func(node *suffixtree.SuffixTreeNode) {
 		if node.IsLeaf() {
@@ -88,7 +46,7 @@ func (st NaiveSuffixTree) AddBiggestChildToNodes() {
 // Adds DFS labels.
 // Leaves are assigned a single number, and internal nodes are assigned a range of numbers
 // corresponding to the leaves in their subtree.
-func (st *NaiveSuffixTree) AddDFSLabels(node *suffixtree.SuffixTreeNode) {
+func (st *NaiveSuffixTree) addDFSLabels() {
 	// assign dfs intervals and count up the size of the tree
 	// this can easily be done during construction, but this is just a naive implementation
 	dfsNumber := 0
@@ -109,14 +67,14 @@ func (st *NaiveSuffixTree) AddDFSLabels(node *suffixtree.SuffixTreeNode) {
 			}
 			node.DfsInterval.End = dfsNumber - 1 // -1 because we have already incremented dfsNumber for the next leaf
 		}
-		st.Size++ // increment size of tree
+		st.IncrementSize()
 		return 0
 	}
 	dfs(st.Root)
 }
 
 // InsertSuffix inserts the suffix starting at the given index into the suffix tree.
-func (st *NaiveSuffixTree) InsertSuffix(suffixStartIdx int) {
+func (st *NaiveSuffixTree) insertSuffix(suffixStartIdx int) {
 	suffix := st.InputString[suffixStartIdx:]
 
 	// Start at the root
@@ -191,4 +149,31 @@ func (st *NaiveSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, s
 	// Add original child and new child to internal node
 	internalNode.Children[rune(st.InputString[originalChild.StartIdx])] = originalChild
 	internalNode.Children[rune(st.InputString[newChild.StartIdx])] = newChild
+}
+
+// NewNaiveSuffixTree creates a new NaiveSuffixTree instance with the given input string.
+func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTreeInterface {
+
+	//ensure that the input string ends with a $ character
+	if inputString[len(inputString)-1] != '$' {
+		inputString += "$"
+	}
+
+	// Create a root node
+	root := &suffixtree.SuffixTreeNode{
+		Label:    -1,
+		StartIdx: -1,
+		EndIdx:   -2,
+		//parent is nil by default
+		//Children is an array of pointers to SuffixTreeNode which is initialized on creation
+	}
+
+	// Create a NaiveSuffixTree
+	var st suffixtree.SuffixTreeInterface = &NaiveSuffixTree{suffixtree.SuffixTree{Root: root, InputString: inputString, Size: 0}}
+
+	// Construct the suffix tree
+	st.ConstructSuffixTree()
+
+	// Return the interface value
+	return st
 }

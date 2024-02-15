@@ -93,7 +93,6 @@ func TestNaiveSuffixTreeCreationDoesntFail(t *testing.T) {
 func TestNaiveSuffixTreeSizeOnSmallExample(t *testing.T) {
 	// Create a NaiveSuffixTree instance
 	st := ConstructNaiveSuffixTree("abab$")
-
 	if st.GetSize() != 8 {
 		t.Errorf("Expected size to be 8, got %d", st.GetSize())
 	}
