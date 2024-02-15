@@ -34,6 +34,25 @@ def plot_tandem_repeats(data: pd.DataFrame):
     plt.legend()
     plt.show()
 
-folder_path = 'speciale/time_csvs'
+def scatterplot_tandem_repeats(data:pd.DataFrame):
+    # Convert 'InputSize' to numeric
+    data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
+
+    # Clean and convert 'RunningTime' to numeric
+    try:
+        data['RunningTime'] = pd.to_numeric(data['RunningTime'].str.replace(r'[^0-9.]', ''), errors='coerce')
+    except AttributeError:
+        pass
+
+    # Plot all data points
+    for algorithm in data['Algorithm'].unique():
+        algorithm_data = data[data['Algorithm'] == algorithm]
+        plt.scatter(algorithm_data['InputSize'], algorithm_data['RunningTime'], label=algorithm, marker='x')
+
+    plt.xlabel('Input Size')
+    plt.ylabel('Running Time (ms)')
+    plt.legend()
+    plt.show()
+folder_path = 'time_csvs'
 latest_file_path = get_latest_file(folder_path)
 plot_tandem_repeats(pd.read_csv(latest_file_path, sep=","))

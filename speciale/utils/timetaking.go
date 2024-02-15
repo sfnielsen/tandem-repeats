@@ -59,11 +59,11 @@ type AlgorithmSetup struct {
 	TandemRepeatFinder    TandemRepeatFinderType
 }
 
-func TakeTimeAndSave(setup AlgorithmSetup, maxSize int, steps int) {
+func TakeTimeAndSave(setup AlgorithmSetup, maxSize int, steps int, alphabet string) {
 	currentTime := time.Now().Format("2006-01-02_15-04-05")
 	filename := fmt.Sprintf("time_csvs/timing_results_%s.csv", currentTime)
 	fmt.Println(filename)
-	var randomGenerator stringgenerators.StringGenerator = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetAB}
+	var randomGenerator stringgenerators.StringGenerator = &stringgenerators.RandomStringGenerator{Alphabet: alphabet}
 
 	var results []TimingResult
 
