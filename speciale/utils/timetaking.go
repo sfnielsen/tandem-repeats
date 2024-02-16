@@ -5,19 +5,9 @@ import (
 	"fmt"
 	"os"
 	"speciale/stringgenerators"
-	"speciale/suffixtree"
-	"speciale/tandemrepeat"
 	"strings"
 	"time"
 )
-
-type Algorithm func(inputSize int)
-
-type TimingResult struct {
-	InputSize   int
-	Algorithm   string
-	RunningTime time.Duration
-}
 
 func SaveResults(results []TimingResult, filename string) error {
 	file, err := os.Create(filename)
@@ -30,7 +20,7 @@ func SaveResults(results []TimingResult, filename string) error {
 	defer writer.Flush()
 
 	// Write header
-	header := []string{"InputSize", "Algorithm", "RunningTime"}
+	header := []string{"InputSize", "Algorithm", "RunningTime", "Complexity"}
 	if err := writer.Write(header); err != nil {
 		return err
 	}
@@ -38,10 +28,12 @@ func SaveResults(results []TimingResult, filename string) error {
 	// Write data
 	for _, result := range results {
 		durationString := strings.TrimSuffix(result.RunningTime.String(), "ms")
+
 		row := []string{
 			fmt.Sprintf("%d", result.InputSize),
 			result.Algorithm,
 			durationString,
+			result.ExpectedComplexity,
 		}
 		if err := writer.Write(row); err != nil {
 			return err
@@ -51,15 +43,7 @@ func SaveResults(results []TimingResult, filename string) error {
 	return nil
 }
 
-type SuffixTreeConstructionType func(string) suffixtree.SuffixTreeInterface
-type TandemRepeatFinderType func(suffixtree.SuffixTreeInterface) []tandemrepeat.TandemRepeat
-
-type AlgorithmSetup struct {
-	SuffixTreeConstructor SuffixTreeConstructionType
-	TandemRepeatFinder    TandemRepeatFinderType
-}
-
-func TakeTimeAndSave(setup AlgorithmSetup, maxSize int, steps int, alphabet string) {
+func TakeTimeAndSave(functions []AlgorithmInterface, maxSize int, steps int, alphabet string) {
 	currentTime := time.Now().Format("2006-01-02_15-04-05")
 	filename := fmt.Sprintf("time_csvs/timing_results_%s.csv", currentTime)
 	fmt.Println(filename)
@@ -73,28 +57,17 @@ func TakeTimeAndSave(setup AlgorithmSetup, maxSize int, steps int, alphabet stri
 		for range [10]int{} {
 			// Construct suffix tree
 			inputString := randomGenerator.GenerateString(i)
+			for _, function := range functions {
+				time := function.GetTime(inputString)
 
-			//Take time on suffix tree construction
-			startST := time.Now()
-			sa := setup.SuffixTreeConstructor(inputString)
-			elapsedST := time.Since(startST)
-
-			// Find tandem repeats and take time
-			startTR := time.Now()
-			setup.TandemRepeatFinder(sa)
-			elapsedTR := time.Since(startTR)
-
-			results = append(results,
-				TimingResult{
-					InputSize:   i,
-					Algorithm:   "SuffixTree",
-					RunningTime: elapsedST,
-				},
-				TimingResult{
-					InputSize:   i,
-					Algorithm:   "TandemRepeat",
-					RunningTime: elapsedTR,
-				})
+				results = append(results,
+					TimingResult{
+						InputSize:          i,
+						Algorithm:          function.GetName(),
+						RunningTime:        time,
+						ExpectedComplexity: function.GetExpectedComplexity(),
+					})
+			}
 
 		}
 
