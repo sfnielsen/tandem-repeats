@@ -52,7 +52,7 @@ func SaveResults(results []TimingResult, filename string) error {
 }
 
 type SuffixTreeConstructionType func(string) suffixtree.SuffixTree
-type TandemRepeatFinderType func(suffixtree.SuffixTree) []tandemrepeat.TandemRepeat
+type TandemRepeatFinderType func(suffixtree.SuffixTree) map[tandemrepeat.TandemRepeat]bool
 
 type AlgorithmSetup struct {
 	SuffixTreeConstructor SuffixTreeConstructionType
@@ -62,8 +62,7 @@ type AlgorithmSetup struct {
 func TakeTimeAndSave(setup AlgorithmSetup, maxSize int, steps int) {
 	currentTime := time.Now().Format("2006-01-02_15-04-05")
 	filename := fmt.Sprintf("time_csvs/timing_results_%s.csv", currentTime)
-	fmt.Println(filename)
-	var randomGenerator stringgenerators.StringGenerator = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetAB}
+	var randomGenerator stringgenerators.StringGenerator = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetA}
 
 	var results []TimingResult
 

@@ -1,6 +1,8 @@
 package suffixtreeimpl
 
-import "speciale/suffixtree"
+import (
+	"speciale/suffixtree"
+)
 
 // NaiveTree implements the SuffixTree interface using a naive construction algorithm.
 type NaiveSuffixTree struct {
@@ -26,7 +28,6 @@ func (n NaiveSuffixTree) GetSize() int {
 
 // NewNaiveSuffixTree creates a new NaiveSuffixTree instance with the given input string.
 func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
-
 	//ensure that the input string ends with a $ character
 	if inputString[len(inputString)-1] != '$' {
 		inputString += "$"
@@ -55,7 +56,6 @@ func ConstructNaiveSuffixTree(inputString string) suffixtree.SuffixTree {
 
 	// Add DFS labels
 	st.AddDFSLabels(st.Root)
-
 	// Return the interface value
 	return st
 }
@@ -161,7 +161,6 @@ func (st *NaiveSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, s
 	// Update original child
 	originalChild.Parent = internalNode
 	originalChild.StartIdx += splitIdx
-
 
 	// Add original child and new child to internal node
 	internalNode.Children[rune(st.InputString[originalChild.StartIdx])] = originalChild

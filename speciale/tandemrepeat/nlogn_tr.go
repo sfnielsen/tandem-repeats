@@ -90,7 +90,7 @@ func getIdxtoDfsTable(st suffixtree.SuffixTree) []int {
 }
 
 // FindTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn) time
-func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
+func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) map[TandemRepeat]bool {
 	//first we need to add the leaflist to the suffix tree
 	addLeafList(st)
 
@@ -154,10 +154,10 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) []TandemRepeat {
 	dfs(st.GetRoot(), 0)
 
 	//get all non-branching repeats from the branching ones
-	allRepeatsMap := getAllTandemRepeats(allBranchingRepeats, st)
+	//allRepeatsMap := getAllTandemRepeats(allBranchingRepeats, st)
 	//convert map to slice
-	allRepeatsSlice := convertRepeatsMapToSlice(allRepeatsMap)
-	return allRepeatsSlice
+	//allRepeatsSlice := convertRepeatsMapToSlice(allBranchingRepeats)
+	return allBranchingRepeats
 }
 
 // convert repeats map to slice
