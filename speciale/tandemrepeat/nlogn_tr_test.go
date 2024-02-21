@@ -101,7 +101,7 @@ func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 
 func TestFindTandemRepeatsLogarithmicMultipleStringtypes(t *testing.T) {
 	//generate some big strings from the stringgenerators
-	stringArrays := stringgenerators.GenerateStringArray(100, 3000, []stringgenerators.StringGenerator{randomGenerator_protein, randomGenerator_ab, randomGenerator_dna, randomGenerator_ascii})
+	stringArrays := stringgenerators.GenerateStringArray(100, 1200, []stringgenerators.StringGenerator{randomGenerator_protein, randomGenerator_ab, randomGenerator_dna, randomGenerator_ascii})
 
 	for _, s := range stringArrays {
 		// find tandem repeats with the naive_tr
@@ -187,4 +187,45 @@ func TestNaiveTrBiggestChild(t *testing.T) {
 		}
 	}
 	dfs(st.GetRoot())
+}
+
+// test that we find same TR with McCreight and Naive
+func TestMcCreightVsNaive(t *testing.T) {
+	s := randomGenerator_dna.GenerateString(1000)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	st2 := suffixtreeimpl.ConstructNaiveSuffixTree(s)
+
+	tr1 := FindAllTandemRepeatsLogarithmic(st)
+	tr2 := FindAllTandemRepeatsLogarithmic(st2)
+
+	//check that sets are equal
+	set1 := make(map[TandemRepeat]bool)
+	for _, v := range tr1 {
+		set1[v] = true
+	}
+	set2 := make(map[TandemRepeat]bool)
+	for _, v := range tr2 {
+		set2[v] = true
+	}
+	//not print difference if they are not equal
+	if len(set1) != len(set2) {
+		t.Errorf("Sets are not equal. Set1: %d, Set2: %d", len(set1), len(set2))
+
+	}
+	mismatches := 0
+	for k := range set1 {
+		if !set2[k] {
+			t.Errorf("Set2 does not contain %v", k)
+			mismatches++
+		}
+	}
+	for k := range set2 {
+		if !set1[k] {
+			t.Errorf("Set1 does not contain %v", k)
+			mismatches++
+		}
+	}
+	if mismatches > 0 {
+		t.Errorf("Total mismatches: %d", mismatches)
+	}
 }

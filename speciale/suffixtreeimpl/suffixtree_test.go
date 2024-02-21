@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-// Test functions must start with the word "Test" and take a *testing.T parameter.
-// Run tests using the `go test tests` command in your terminal
 
 var (
 	setupCompleted     bool
