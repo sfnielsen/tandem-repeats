@@ -36,4 +36,5 @@ def plot_tandem_repeats(data: pd.DataFrame):
 
 folder_path = 'speciale/time_csvs'
 latest_file_path = get_latest_file(folder_path)
+print(latest_file_path)
 plot_tandem_repeats(pd.read_csv(latest_file_path, sep=","))
