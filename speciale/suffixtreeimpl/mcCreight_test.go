@@ -131,7 +131,7 @@ func TestMcCreightSuffixTreeSameAsNaive(t *testing.T) {
 }
 
 // verify that suffix links exist
-func TestMcCreightSuffixLinks(t *testing.T) {
+func TestMcCreightSuffixLinksExist(t *testing.T) {
 	str := randomGenerator.GenerateString(1000)
 	st := ConstructMcCreightSuffixTree(str)
 
@@ -150,5 +150,56 @@ func TestMcCreightSuffixLinks(t *testing.T) {
 		}
 	}
 	dfs(st.GetRoot())
+
+}
+
+// test that suffix links are correct, so that s(av) = v
+func TestMcCreightSuffixLinksCorrect(t *testing.T) {
+	str := randomGenerator.GenerateString(1000)
+	st := ConstructMcCreightSuffixTree(str)
+
+	//save string going down to nodes
+	var dfs func(node *suffixtree.SuffixTreeNode, suffix string)
+	dfs = func(node *suffixtree.SuffixTreeNode, suffix string) {
+		if !node.IsLeaf() {
+
+			//check if there is a suffix link
+			if node.SuffixLink == nil {
+				t.Errorf("Expected suffix link, got nil")
+			}
+
+			for _, child := range node.Children {
+				if child != nil {
+					//now check that string on suffix link is the same as the string on the node
+
+					sl := node.SuffixLink
+					if sl != st.GetRoot() {
+						suffixL := st.GetInputString()[sl.StartIdx : sl.EndIdx+1]
+						parent := sl.Parent
+
+						//backtrack till root
+						for parent != st.GetRoot() {
+							suffixL = st.GetInputString()[parent.StartIdx:parent.EndIdx+1] + suffixL
+							parent = parent.Parent
+						}
+						if suffix[1:] != suffixL {
+							t.Errorf("Expected suffix %s, got %s", suffix[1:], suffixL)
+						}
+
+					}
+					dfs(child, suffix+st.GetInputString()[child.StartIdx:child.EndIdx+1])
+
+				}
+
+			}
+		} else {
+			if node.SuffixLink != nil {
+				if st.GetInputString()[node.StartIdx] != st.GetInputString()[node.SuffixLink.StartIdx] {
+					t.Errorf("Leaf should not have a suffix link")
+				}
+			}
+		}
+	}
+	dfs(st.GetRoot(), "")
 
 }
