@@ -7,8 +7,6 @@ import (
 	"testing"
 )
 
-// Test functions must start with the word "Test" and take a *testing.T parameter.
-// Run tests using the `go test tests` command in your terminal
 
 var (
 	setupCompleted     bool
@@ -90,12 +88,17 @@ func TestNaiveSuffixTreeCreationDoesntFail(t *testing.T) {
 }
 
 // Test that size of the suffix tree has correct number of leaves
-func TestNaiveSuffixTreeSizeSmall(t *testing.T) {
+func TestNaiveSuffixTreeSizeOnSmallExample(t *testing.T) {
 	// Create a NaiveSuffixTree instance
 	st := ConstructNaiveSuffixTree("abab$")
-
 	if st.GetSize() != 8 {
-		t.Errorf("Expected size to be 7, got %d", st.GetSize())
+		t.Errorf("Expected size to be 8, got %d", st.GetSize())
+	}
+	// Create a NaiveSuffixTree instance
+	s := "abcdefghijkl$"
+	st = ConstructNaiveSuffixTree(s)
+	if st.GetSize() != len(s)+1 {
+		t.Errorf("Expected size to be %d, got %d", len(s)+1, st.GetSize())
 	}
 }
 

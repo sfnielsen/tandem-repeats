@@ -4,66 +4,30 @@ import (
 	"speciale/suffixtree"
 )
 
-// addLeafList adds leaflists to the suffix tree
-func addLeafList(st suffixtree.SuffixTree) {
-	root := st.GetRoot()
-
-	//make a depth first traversal and collect all leafs that are acceisble through a node and add them to the set in the node:
-	var dfs func(node *suffixtree.SuffixTreeNode) []int
-	dfs = func(node *suffixtree.SuffixTreeNode) []int {
-		// if leaf node
-		if node.IsLeaf() {
-			node.LeafList = []int{node.Label}
-			return node.LeafList
-		} else {
-			// case for internal node
-			var longest int
-			for _, child := range node.Children {
-				if child != nil {
-					//get the leaflist of the child
-					childLeafList := dfs(child)
-					node.LeafList = append(node.LeafList, childLeafList...)
-					//keep track of the biggest child found
-					if len(childLeafList) > longest {
-						longest = len(childLeafList)
-						node.BiggestChild = child
-					}
-				}
-			}
-
-		}
-		return node.LeafList
-	}
-
-	dfs(root)
-}
-
 // get all tandem repeats by left rotating on the branching repeats
-func getAllTandemRepeats(allBranchingRepeats map[TandemRepeat]bool, st suffixtree.SuffixTree) map[TandemRepeat]bool {
-	var allTandemRepeats = make(map[TandemRepeat]bool)
+func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeInterface) []TandemRepeat {
+	var allTandemRepeats = make([]TandemRepeat, 0)
 
-	for k := range allBranchingRepeats {
+	for _, k := range allBranchingRepeats {
 		// add tandem repeat until length is 0
 		i := 0
 		// left rotate until we no longer have a tandem repeat (or we reach the start of the string)
 		for k.Start-i-1 >= 0 {
 			i += 1
 			if st.GetInputString()[k.Start-i] == st.GetInputString()[(k.Start-i)+2*(k.length)] {
-				allTandemRepeats[TandemRepeat{k.Start - i, k.length, 2}] = true
+				allTandemRepeats = append(allTandemRepeats, TandemRepeat{k.Start - i, k.length, 2})
 			} else {
 				break
 			}
 		}
 
 	}
-	for k, v := range allBranchingRepeats {
-		allTandemRepeats[k] = v
-	}
+	allTandemRepeats = append(allTandemRepeats, allBranchingRepeats...)
 	return allTandemRepeats
 }
 
 // GetTandemRepeatSubstring returns the substring of the tandem repeat
-func getIdxtoDfsTable(st suffixtree.SuffixTree) []int {
+func getIdxtoDfsTable(st suffixtree.SuffixTreeInterface) []int {
 	//create table
 	var idxToDfsTable []int = make([]int, len(st.GetInputString()))
 
@@ -89,34 +53,57 @@ func getIdxtoDfsTable(st suffixtree.SuffixTree) []int {
 	return idxToDfsTable
 }
 
+// FindAllTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn + z) time
+func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
+	//find all branching repeats in O(nlogn) time
+	trBranching := FindAllBranchingTandemRepeatsLogarithmic(st)
+
+	//get all tandem repeats by left rotating on the branching repeats
+	//this is O(z) time (up to O(n^2))
+	allTandemRepeats := getAllTandemRepeats(trBranching, st)
+	return allTandemRepeats
+
+}
+
 // FindTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn) time
-func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) map[TandemRepeat]bool {
-	//first we need to add the leaflist to the suffix tree
-	addLeafList(st)
+func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 
 	//we create the a idx to dfs mapping
 	idxToDfsTable := getIdxtoDfsTable(st)
+
+	//create Dfs to idx mapping, this is an alternative to leaf lists
+	dfsToIdxTable := make([]int, len(idxToDfsTable))
+	for i, v := range idxToDfsTable {
+		dfsToIdxTable[v] = i
+	}
+
+	//add biggest child to each node
+	st.AddBiggestChildToNodes()
 
 	//store all branching repeats map - map as we want to avoid duplicates from 2b and 2c
 	var allBranchingRepeats = make(map[TandemRepeat]bool)
 
 	// now we run stoye and gusfield 'optimized algorithm'
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int) []int
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) []int {
 		depth = depth + node.EdgeLength()
+
+		leafList := []int{} // leaflist dynamically added to the node
 
 		for _, child := range node.Children {
 			if child == nil {
 				continue
 			}
+
 			// iterate over elements from leaflistPrime
 			//step 2a is performed implicitly by traversal of the children (minus the biggest child)
 			if node.BiggestChild != child {
 
-				for _, leaf := range child.LeafList {
+				//iterate over all leafs in leaflistPrime
+				for dfsNumber := child.DfsInterval.Start; dfsNumber <= child.DfsInterval.End; dfsNumber++ {
 
 					//step 2b
-					i := leaf
+					i := dfsToIdxTable[dfsNumber]
 					j := i + depth
 					if j < len(st.GetInputString()) {
 						dfsVal := idxToDfsTable[j]
@@ -130,8 +117,9 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) map[TandemRepeat]boo
 							}
 						}
 					}
+
 					//step 2c
-					j = leaf
+					j = dfsToIdxTable[dfsNumber]
 					i = j - depth
 					if i >= 0 && i < len(st.GetInputString()) {
 						dfsVal := idxToDfsTable[i]
@@ -147,17 +135,23 @@ func FindTandemRepeatsLogarithmic(st suffixtree.SuffixTree) map[TandemRepeat]boo
 					}
 				}
 			}
+
 			// step 1, marking internal nodes is done implicitly by a depth-first traversal
-			dfs(child, depth)
+			if !child.IsLeaf() {
+				dfs(child, depth)
+			}
 		}
+
+		//case for internal nodes
+		return leafList
+
 	}
+
 	dfs(st.GetRoot(), 0)
 
-	//get all non-branching repeats from the branching ones
-	//allRepeatsMap := getAllTandemRepeats(allBranchingRepeats, st)
 	//convert map to slice
-	//allRepeatsSlice := convertRepeatsMapToSlice(allBranchingRepeats)
-	return allBranchingRepeats
+	allRepeatsSlice := convertRepeatsMapToSlice(allBranchingRepeats)
+	return allRepeatsSlice
 }
 
 // convert repeats map to slice

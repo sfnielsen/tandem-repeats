@@ -1,11 +1,16 @@
 
+Ting fra sidste møde:
+* tjek at ingen har flere børn end alfabetstørrelsen.
+* for at måle tid for n^2 algoritme kan vi plotte e.g. plot(n, t(n)/n^2)
 
-TESTS:
 
-leaflist
-* Test if leaf list of a node is the sum of the leaf lists of all its children.
+Graftyper:
+* Worst case tidskompleksitetsverificering, divider hver tid med n / n^2 / nlogn, hvad end tidskompleksitet vi forventer
+* Forskellige alfabeter i samme graf
+* Hvordan de forskellige algoritmer af hver kategori klarer sig ift. hinanden. F.eks suffix naiv vs suffix mccreight.
+* Real data
+* Altid plot med standard afvigelse
 
-nlogn alg
-* fix v.length bug in nlogn
-* implement method to get all tandem repeats
-* test that O(n^3) alg produces SAME tandem repeats as O(nlogn)
+
+Implementation:
+* McCreight

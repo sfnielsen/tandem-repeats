@@ -1,7 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
-
+import math
+import numpy as np
 #fetch the latest data in the speciale/time/csvs folder
 def get_latest_file(folder_path:str):
     # Get a list of all files in the folder
@@ -34,7 +35,65 @@ def plot_tandem_repeats(data: pd.DataFrame):
     plt.legend()
     plt.show()
 
-folder_path = 'speciale/time_csvs'
+def scatterplot_tandem_repeats(data:pd.DataFrame):
+    # Convert 'InputSize' to numeric
+    data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
+
+    # Clean and convert 'RunningTime' to numeric
+    try:
+        data['RunningTime'] = pd.to_numeric(data['RunningTime'].str.replace(r'[^0-9.]', ''), errors='coerce')
+    except AttributeError:
+        pass
+
+    # Plot all data points
+    for algorithm in data['Algorithm'].unique():
+        algorithm_data = data[data['Algorithm'] == algorithm]
+        plt.scatter(algorithm_data['InputSize'], algorithm_data['RunningTime'], label=algorithm, marker='x')
+
+    plt.xlabel('Input Size')
+    plt.ylabel('Running Time (ms)')
+    plt.legend()
+    plt.show()
+
+def plot_expected_time_complexity_test(data:pd.DataFrame):
+    data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
+
+    # Clean and convert 'RunningTime' to numeric
+    try:
+        data['RunningTime'] = pd.to_numeric(data['RunningTime'].str.replace(r'[^0-9.]', ''), errors='coerce')
+    except AttributeError:
+        pass
+
+    # Group by InputSize and Algorithm and calculate the average RunningTime for each group
+    grouped_df = data.groupby(['InputSize', 'Algorithm']).agg({'RunningTime': 'mean','Complexity': 'first'}).reset_index()
+    # Plot the data with RunningTime divided by InputSize
+
+    # Iterate over unique algorithms and plot them
+    for algorithm in grouped_df['Algorithm'].unique():
+        fig, ax = plt.subplots()
+
+
+        algorithm_data = grouped_df[grouped_df['Algorithm'] == algorithm]
+        algorithm_data['InputSize'] /= 1000
+        selected_complexity = algorithm_data['Complexity'].iloc[0]
+
+        if selected_complexity == 'nlogn':
+            complexity_function = lambda x: 5*x / ((algorithm_data['InputSize'])*np.log( algorithm_data['InputSize']))
+        elif selected_complexity == 'n':
+            complexity_function = lambda x: x / algorithm_data['InputSize']
+        elif selected_complexity == 'n^2':
+            complexity_function = lambda x: x / (algorithm_data['InputSize'] ** 2)
+        else:
+            complexity_function = lambda x: x
+        ax.plot(algorithm_data['InputSize'], complexity_function(algorithm_data['RunningTime']), label=f'{algorithm} ({selected_complexity})')
+
+        ax.set_xlabel('InputSize')
+        ax.set_ylabel('RunningTime / InputSize')
+        ax.legend()
+        plt.show()
+
+
+folder_path = 'time_csvs'
 latest_file_path = get_latest_file(folder_path)
 print(latest_file_path)
 plot_tandem_repeats(pd.read_csv(latest_file_path, sep=","))

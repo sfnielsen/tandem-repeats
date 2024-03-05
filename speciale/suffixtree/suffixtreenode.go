@@ -9,13 +9,18 @@ type SuffixTreeNode struct {
 	EndIdx   int
 	Children [256]*SuffixTreeNode // assume ASCII characters
 
-	// Fields required for tandem repeats O(nlogn) tandem repeats
-	Marked       bool // probably not necessary
-	DfsInterval  DfsInterval
-	LeafList     []int
-	BiggestChild *SuffixTreeNode
-}
+	// Fields required for McCreight's algorithm
+	SuffixLink *SuffixTreeNode
 
+	// Fields required for tandem repeats O(nlogn) tandem repeats
+	DfsInterval  DfsInterval
+	BiggestChild *SuffixTreeNode
+
+	L_k           *SuffixTreeNode
+	TrailingZeros int
+	A_v           []bool
+	A_v_int       int
+}
 type DfsInterval struct {
 	Start int
 	End   int
@@ -28,6 +33,10 @@ func (node *SuffixTreeNode) EdgeLength() int {
 
 // check if the node is a leaf
 func (node *SuffixTreeNode) IsLeaf() bool {
+	// if its the root
+	if node.Label == -1 {
+		return false
+	}
 	//if all children are nil, the node is a leaf
 	for _, child := range node.Children {
 		if child != nil {
