@@ -11,24 +11,41 @@ import (
 )
 
 func main() {
-	var suffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
-		Name: "SuffixTree",
+	var mccreight utils.AlgorithmInterface = &utils.AlgorithmBase{
+		Name: "McCreight",
+		Algorithm: func(args ...interface{}) interface{} {
+			return suffixtreeimpl.ConstructMcCreightSuffixTree(args[0].(string))
+		},
+		ExpectedComplexity: "n"}
+
+	var naive utils.AlgorithmInterface = &utils.AlgorithmBase{
+		Name: "Naive",
 		Algorithm: func(args ...interface{}) interface{} {
 			return suffixtreeimpl.ConstructNaiveSuffixTree(args[0].(string))
 		},
 		ExpectedComplexity: "nlogn"}
-	tandemAlgo := utils.AlgorithmBase{
-		Name: "TandemRepeat",
+	println(mccreight, naive)
+
+	tandemrepeat_nlogn := utils.AlgorithmBase{
+		Name: "nlogn stoye gusfield",
 		Algorithm: func(args ...interface{}) interface{} {
-			return tandemrepeat.FindAllBranchingTandemRepeatsLogarithmic(args[0].(suffixtree.SuffixTreeInterface))
+			return tandemrepeat.FindAllTandemRepeatsLogarithmic(args[0].(suffixtree.SuffixTreeInterface))
 		},
 		ExpectedComplexity: "nlogn"}
 
-	var tdalg utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemAlgo}
+	tandemrepeat_n := utils.AlgorithmBase{
+		Name: "n stoye gusfield",
+		Algorithm: func(args ...interface{}) interface{} {
+			return tandemrepeat.FindAllTandemRepeatsLogarithmic(args[0].(suffixtree.SuffixTreeInterface))
+		},
+		ExpectedComplexity: "n^2"}
 
-	functionSlice := []utils.AlgorithmInterface{suffixTreeAlgo, tdalg}
+	var nstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemrepeat_n}
+	var nlognstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemrepeat_nlogn}
 
-	utils.TakeTimeAndSave(functionSlice, 70000, 70, stringgenerators.AlphabetAB)
+	functionSlice := []utils.AlgorithmInterface{nlognstoygus, nstoygus}
+
+	utils.TakeTimeAndSave(functionSlice, 30000, 50, stringgenerators.AlphabetDNA)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}
