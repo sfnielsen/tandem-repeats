@@ -14,6 +14,7 @@ var (
 	randomGenerator_ab      stringgenerators.StringGenerator
 	randomGenerator_dna     stringgenerators.StringGenerator
 	randomGenerator_ascii   stringgenerators.StringGenerator
+	randomGenerator_a       stringgenerators.StringGenerator
 )
 
 // addLeafList adds leaflists to the suffix tree
@@ -23,6 +24,7 @@ func init() {
 		randomGenerator_ab = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetAB}
 		randomGenerator_dna = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetDNA}
 		randomGenerator_ascii = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetASCII}
+		randomGenerator_a = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetA}
 		setupCompleted = true
 	}
 }
@@ -52,7 +54,8 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 // test that we can find ALL tandem repeats
 func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 	//generate some big strings from the stringgenerators
-	s := randomGenerator_protein.GenerateString(50000)
+
+	s := randomGenerator_a.GenerateString(1000)
 
 	// find tandem repeats with the naive_tr
 	tr1 := FindTandemRepeatsNaive(s)

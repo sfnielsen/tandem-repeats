@@ -80,8 +80,8 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 	//add biggest child to each node
 	st.AddBiggestChildToNodes()
 
-	//store all branching repeats map - map as we want to avoid duplicates from 2b and 2c
-	var allBranchingRepeats = make(map[TandemRepeat]bool)
+	//store all branching repeats slice
+	allBranchingRepeats := make([]TandemRepeat, 0)
 
 	// now we run stoye and gusfield 'optimized algorithm'
 	var dfs func(node *suffixtree.SuffixTreeNode, depth int) []int
@@ -112,8 +112,8 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 
 							//now check if we are branching
 							if i+2*depth < len(st.GetInputString()) && st.GetInputString()[i] != st.GetInputString()[i+2*depth] {
-								//we have a branching repeat, add to map
-								allBranchingRepeats[TandemRepeat{i, depth, 2}] = true
+								//we have a branching repeat, add to slice
+								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, depth, 2})
 							}
 						}
 					}
@@ -124,14 +124,17 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 					if i >= 0 && i < len(st.GetInputString()) {
 						dfsVal := idxToDfsTable[i]
 						//check if i is in dfs interval
-						if dfsVal >= node.DfsInterval.Start && dfsVal <= node.DfsInterval.End {
+						//this check is simplified compared to the paper
+						//in the paper we check if i is in LL(v), but we only need to check that it is in LL(v')
+						if dfsVal >= node.BiggestChild.DfsInterval.Start && dfsVal <= node.BiggestChild.DfsInterval.End {
 
 							//now check if we are branching
 							if i+2*depth < len(st.GetInputString()) && st.GetInputString()[i] != st.GetInputString()[i+2*depth] {
 								//we have a branching repeat
-								allBranchingRepeats[TandemRepeat{i, depth, 2}] = true
+								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, depth, 2})
 							}
 						}
+
 					}
 				}
 			}
@@ -149,16 +152,5 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 
 	dfs(st.GetRoot(), 0)
 
-	//convert map to slice
-	allRepeatsSlice := convertRepeatsMapToSlice(allBranchingRepeats)
-	return allRepeatsSlice
-}
-
-// convert repeats map to slice
-func convertRepeatsMapToSlice(repeats map[TandemRepeat]bool) []TandemRepeat {
-	var repeatsSlice []TandemRepeat
-	for k := range repeats {
-		repeatsSlice = append(repeatsSlice, k)
-	}
-	return repeatsSlice
+	return allBranchingRepeats
 }
