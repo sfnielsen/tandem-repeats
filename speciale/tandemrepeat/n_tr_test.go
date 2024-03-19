@@ -76,6 +76,7 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	phase1Repeats := make(map[string]TandemRepeat)
 	allRepeats := make(map[string]TandemRepeat)
 
+	//randomGenerator_ab.SetSeed(40)
 	input := randomGenerator_ab.GenerateString(5000)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)

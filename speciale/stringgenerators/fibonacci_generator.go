@@ -5,6 +5,8 @@ type FibonacciStringGenerator struct {
 	Second string
 }
 
+func (g *FibonacciStringGenerator) SetSeed(providedSeed int) {}
+
 func (g *FibonacciStringGenerator) GenerateString(n int) string {
 	if n <= 0 {
 		return ""
