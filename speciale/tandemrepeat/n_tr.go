@@ -5,6 +5,11 @@ import (
 	"speciale/suffixtree"
 )
 
+//Phase 2
+func Algorithm2() {
+
+}
+
 // Algorithm 1
 // Combines algorithm 1a and 1b to find tandem repeats
 func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
@@ -50,16 +55,12 @@ func Algorithm1a(s string, blocks []int, idxToDfsTable []int, leftMostCoveringRe
 			q := h1 - k
 			k1 := findLCEForwardSlow(s, h1, q)
 			k2 := findLCEBackwardSlow(s, h1-1, q-1)
-			start := q - k2
+			start := intMax(q-k2, q-k+1)
 			if k1+k2 >= k && k1 > 0 {
 				addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
-
 			}
-
 		}
-
 	}
-
 }
 
 func Algorithm1b(s string, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat) {
@@ -77,7 +78,7 @@ func Algorithm1b(s string, blocks []int, idxToDfsTable []int, leftMostCoveringRe
 			q := h + k
 			k1 := findLCEForwardSlow(s, h, q)
 			k2 := findLCEBackwardSlow(s, h-1, q-1)
-			start := h - k2
+			start := intMax(h-k2, h-k+1)
 			if k1+k2 >= k && k1 > 0 && start+k < h1 && k2 > 0 {
 				addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
 			}

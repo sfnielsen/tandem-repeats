@@ -15,7 +15,7 @@ func TestNaiveTrSimpleTest(t *testing.T) {
 	}
 
 	//extract the string from the tandem repeat and verify that it is correct ab$
-	if GetTandemRepeatSubstring(tr[0], s) != "ab" {
+	if GetTandemRepeatSubstring(tr[0], s) != "abab" {
 		t.Errorf("Expected tandem repeat to be 'ab', got %s", GetTandemRepeatSubstring(tr[0], s))
 	}
 
@@ -31,13 +31,13 @@ func TestNaiveTrThreeRepeats(t *testing.T) {
 		t.Errorf("Expected 3 tandem repeats, got %d", len(tr))
 	}
 	//extract the string from the tandem repeat and verify that it is correct ab$
-	if GetTandemRepeatSubstring(tr[0], s) != "ab" {
+	if GetTandemRepeatSubstring(tr[0], s) != "abab" {
 		t.Errorf("Expected tandem repeat to be 'ab', got %s", GetTandemRepeatSubstring(tr[0], s))
 	}
-	if GetTandemRepeatSubstring(tr[1], s) != "ba" {
+	if GetTandemRepeatSubstring(tr[1], s) != "baba" {
 		t.Errorf("Expected tandem repeat to be 'ba', got %s", GetTandemRepeatSubstring(tr[1], s))
 	}
-	if GetTandemRepeatSubstring(tr[2], s) != "ab" {
+	if GetTandemRepeatSubstring(tr[2], s) != "abab" {
 		t.Errorf("Expected tandem repeat to be 'ab', got %s", GetTandemRepeatSubstring(tr[2], s))
 	}
 }
