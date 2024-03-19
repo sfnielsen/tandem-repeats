@@ -1,6 +1,7 @@
 package tandemrepeat
 
 import (
+	"fmt"
 	"speciale/suffixtreeimpl"
 	"testing"
 )
@@ -59,4 +60,64 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 
 	}
 
+}
+
+// test alg 1
+func TestAlgorithm1(t *testing.T) {
+	// Test on example from paper https://doi.org/10.1016/j.jcss.2004.03.004
+	input := "abaabaabbaaabaaba$"
+	//input := "aaaaaaaaaaaaaaaaaaaaaaaaaababababaaabbbabbabaabbaaaabababaabababab$"
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+	Algorithm1(st)
+}
+
+func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
+	// intialize maps for all repeat types for both algorithm 1 and nlogn tandem repeat algorithm
+	phase1Repeats := make(map[string]TandemRepeat)
+	allRepeats := make(map[string]TandemRepeat)
+
+	input := randomGenerator_ab.GenerateString(5000)
+	//input := "abaabaabbaaabaaba$"
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+
+	tandemRepeats := FindAllTandemRepeatsLogarithmic(st)
+	for _, v := range tandemRepeats {
+		allRepeats[GetTandemRepeatSubstring(v, input)] = v
+	}
+
+	leftMostCoveringSet := Algorithm1(st)
+	// add all repeats from nested slice "leftmostcoveringset" to a single slice of tandemrepeats so we can input to getALlTandemRepeats
+	var BranchingTandemRepeatTypesPhase1 []TandemRepeat
+	for _, v := range leftMostCoveringSet {
+		for _, v2 := range v {
+			BranchingTandemRepeatTypesPhase1 = append(BranchingTandemRepeatTypesPhase1, v2)
+		}
+	}
+	allTandemRepeatsTypesPhase1 := rightRotation(BranchingTandemRepeatTypesPhase1, st)
+
+	for _, v := range allTandemRepeatsTypesPhase1 {
+		phase1Repeats[GetTandemRepeatSubstring(v, input)] = v
+	}
+
+	fmt.Println(st.GetInputString())
+	// check that all repeats from phase 1 is in all repeats
+	for k, v := range phase1Repeats {
+		if _, ok := allRepeats[k]; !ok {
+			t.Errorf("Expected %s to be in all repeats at index %d", k, v.Start)
+		}
+	}
+
+	//check that all repeats from all repeats is in phase 1
+	for k, v := range allRepeats {
+		if _, ok := phase1Repeats[k]; !ok {
+			t.Errorf("Expected %s to be in phase 1 repeats at index %d", k, v.Start)
+		}
+	}
+}
+
+func TestAlgorithm2(t *testing.T) {
+	input := "abaabaabbaaabaaba$"
+	//input := "aaaaaaaaaaaaaaaaaaaaaaaaaababababaaabbbabbabaabbaaaabababaabababab$"
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+	Algorithm1(st)
 }
