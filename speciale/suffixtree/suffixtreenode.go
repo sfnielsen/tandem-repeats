@@ -3,18 +3,23 @@ package suffixtree
 // SuffixTreeNode represents a node in the suffix tree.
 type SuffixTreeNode struct {
 	//standard fields
-	Label    int
+	Label    int // for leafs it is the index of the suffix, for internal nodes it is the smallest index of the suffix in the subtree
 	Parent   *SuffixTreeNode
-	StartIdx int
-	EndIdx   int
+	StartIdx int                  // start index of the substring in the input string (inclusive)
+	EndIdx   int                  // end index of the substring in the input string (inclusive)
 	Children [256]*SuffixTreeNode // assume ASCII characters
 
 	// Fields required for McCreight's algorithm
 	SuffixLink *SuffixTreeNode
 
-	// Fields required for tandem repeats O(nlogn) tandem repeats
+	// Fields required for algorithm: O(nlogn) tandem repeats
 	DfsInterval  DfsInterval
 	BiggestChild *SuffixTreeNode
+
+	// Fields required for algorithm: O(n) tandem repeats
+	TandemRepeatDeco         []int
+	TandemRepeatDecoComplete map[int]bool
+	StringDepth              int
 
 	L_k           *SuffixTreeNode
 	TrailingZeros int

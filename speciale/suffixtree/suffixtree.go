@@ -11,6 +11,9 @@ type SuffixTreeInterface interface {
 	// AddDFSLabels adds DFS labels to the nodes in the suffix tree.
 	AddDFSLabels()
 
+	// AddStringDepth adds string depth to the nodes in the suffix tree.
+	AddStringDepth()
+
 	// AddBiggestChildToNodes adds the biggest child to each node in the suffix tree.
 	AddBiggestChildToNodes()
 
@@ -91,6 +94,21 @@ func (st *SuffixTree) AddDFSLabels() {
 		return 0
 	}
 	dfs(st.Root)
+}
+
+//add string depth
+func (st *SuffixTree) AddStringDepth() {
+	var dfs func(node *SuffixTreeNode, depth int)
+	dfs = func(node *SuffixTreeNode, depth int) {
+		depth = depth + node.EdgeLength()
+		node.StringDepth = depth
+		for _, child := range node.Children {
+			if child != nil {
+				dfs(child, depth)
+			}
+		}
+	}
+	dfs(st.Root, 0)
 }
 
 // incrementSize increments the size of the suffix tree by one.
