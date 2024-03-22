@@ -6,6 +6,8 @@ type AlphabetStringGenerator struct {
 	Alphabet string
 }
 
+func (g *AlphabetStringGenerator) SetSeed(providedSeed int) {}
+
 // GenerateString generates a random string of length n iterating over the alphabet
 func (g *AlphabetStringGenerator) GenerateString(n int) string {
 	// Create a byte slice of length n

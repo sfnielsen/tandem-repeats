@@ -3,7 +3,7 @@ package suffixtree
 // SuffixTreeNode represents a node in the suffix tree.
 type SuffixTreeNode struct {
 	//standard fields
-	Label    int 
+	Label    int
 	Parent   *SuffixTreeNode
 	StartIdx int
 	EndIdx   int
@@ -15,8 +15,12 @@ type SuffixTreeNode struct {
 	// Fields required for tandem repeats O(nlogn) tandem repeats
 	DfsInterval  DfsInterval
 	BiggestChild *SuffixTreeNode
-}
 
+	L_k           *SuffixTreeNode
+	TrailingZeros int
+	A_v           []bool
+	A_v_int       int
+}
 type DfsInterval struct {
 	Start int
 	End   int
@@ -29,6 +33,10 @@ func (node *SuffixTreeNode) EdgeLength() int {
 
 // check if the node is a leaf
 func (node *SuffixTreeNode) IsLeaf() bool {
+	// if its the root
+	if node.Label == -1 {
+		return false
+	}
 	//if all children are nil, the node is a leaf
 	for _, child := range node.Children {
 		if child != nil {

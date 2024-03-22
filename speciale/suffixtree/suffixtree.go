@@ -13,6 +13,9 @@ type SuffixTreeInterface interface {
 
 	// AddBiggestChildToNodes adds the biggest child to each node in the suffix tree.
 	AddBiggestChildToNodes()
+
+	// Compute leafs of the suffix tree and return them as a slice of nodes
+	ComputeLeafs() map[int]*SuffixTreeNode
 }
 
 type SuffixTree struct {
@@ -94,4 +97,23 @@ func (st *SuffixTree) AddDFSLabels() {
 //only called internally so no need for a public function
 func (n *SuffixTree) incrementSize() {
 	n.Size++
+}
+
+func (n *SuffixTree) ComputeLeafs() map[int]*SuffixTreeNode {
+	leafs := make(map[int]*SuffixTreeNode)
+	var dfs func(node *SuffixTreeNode)
+	dfs = func(node *SuffixTreeNode) {
+		if node.IsLeaf() {
+			leafs[node.Label] = node
+		} else {
+			for _, child := range node.Children {
+				if child != nil {
+					dfs(child)
+				}
+			}
+		}
+	}
+	dfs(n.Root)
+
+	return leafs
 }

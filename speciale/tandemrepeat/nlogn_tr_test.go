@@ -42,10 +42,10 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 		t.Errorf("Expected 2 tandem repeat, got %d", len(tr))
 	}
 	//extract the string from the tandem repeat and verify that it is correct ab$
-	if GetTandemRepeatSubstring(tr[0], s) != "ba" && GetTandemRepeatSubstring(tr[1], s) != "ba" {
+	if GetTandemRepeatSubstring(tr[0], s) != "baba" && GetTandemRepeatSubstring(tr[1], s) != "ba" {
 		t.Errorf("Expected tandem repeat to be 'ba'")
 	}
-	if GetTandemRepeatSubstring(tr[0], s) != "k" && GetTandemRepeatSubstring(tr[1], s) != "k" {
+	if GetTandemRepeatSubstring(tr[0], s) != "k" && GetTandemRepeatSubstring(tr[1], s) != "kk" {
 		t.Errorf("Expected tandem repeat to be 'k'")
 
 	}
