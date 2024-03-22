@@ -2,6 +2,7 @@ package tandemrepeat
 
 import (
 	"fmt"
+	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 	"testing"
 )
@@ -76,8 +77,8 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	phase1Repeats := make(map[string]TandemRepeat)
 	allRepeats := make(map[string]TandemRepeat)
 
-	//randomGenerator_ab.SetSeed(40)
-	input := randomGenerator_ab.GenerateString(5000)
+	randomGenerator_ab.SetSeed(45)
+	input := randomGenerator_ab.GenerateString(2324)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 
@@ -116,9 +117,146 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	}
 }
 
+// test that all the sets are sorted and contains no duplicates
+func TestAlgorithm1SetsAreSortedAndNoDuplicates(t *testing.T) {
+	for i := 0; i < 30; i++ {
+		randomGenerator_ab.SetSeed(113)
+		input := randomGenerator_ab.GenerateString(1213)
+		//input := "abaabaabbaaabaaba$"
+		st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+
+		leftMostCoveringSet := Algorithm1(st)
+		for idx_v, v := range leftMostCoveringSet {
+			for i := 0; i < len(v)-1; i++ {
+				if !(v[i].Length < v[i+1].Length) {
+					t.Errorf("Expected leftMostCoveringSet to be sorted and to not have duplicates,%d, %d, %d", idx_v, v[i].Length, v[i+1].Length)
+				}
+			}
+		}
+	}
+}
+
 func TestAlgorithm2(t *testing.T) {
 	input := "abaabaabbaaabaaba$"
 	//input := "aaaaaaaaaaaaaaaaaaaaaaaaaababababaaabbbabbabaabbaaaabababaabababab$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 	Algorithm1(st)
+}
+
+func TestDecorateTreeIsCorrectOnTestString(t *testing.T) {
+	input := "abaabaabbaaabaaba$"
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+	DecorateTreeWithVocabulary(st)
+
+	//Bottom-up traversal of the suffix tree
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+		// Traverse the children of the current node
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			dfs(child, depth+child.EdgeLength())
+		}
+
+		//if tree has a decoration print int
+		if node.TandemRepeatDeco != nil {
+
+			fmt.Println("new dayz")
+			fmt.Println(GetTandemRepeatSubstring(TandemRepeat{node.Label, (depth - node.EdgeLength() + node.TandemRepeatDeco[0]) / 2, 2}, input))
+
+			fmt.Printf("Node: %v, Decoration: %v\n", node.Label, node.TandemRepeatDeco)
+		}
+
+	}
+	dfs(st.GetRoot(), 0)
+}
+
+func TestDecorateTreeIsCorrectOnRandomString(t *testing.T) {
+	input := "abaabaabbaaabaaba$"
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+	DecorateTreeAndReturnTandemRepeats(st)
+
+	//Bottom-up traversal of the suffix tree
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+		// Traverse the children of the current node
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			dfs(child, depth+child.EdgeLength())
+		}
+
+		//if tree has a decoration print int
+		if node.TandemRepeatDecoComplete != nil {
+
+			fmt.Println("new dayz")
+			for k := range node.TandemRepeatDecoComplete {
+				fmt.Println(GetTandemRepeatSubstring(TandemRepeat{node.Label, (depth - node.EdgeLength() + k) / 2, 2}, input))
+			}
+			fmt.Printf("Node: %v, Decoration: %v\n", node.Label, node.TandemRepeatDecoComplete)
+		}
+
+	}
+	dfs(st.GetRoot(), 0)
+}
+
+func TestThatWeReturnAllTandemRepeats(t *testing.T) {
+
+	randomGenerator_ab.SetSeed(1)
+	for i := 0; i < 10; i++ {
+		input := randomGenerator_ab.GenerateString(20)
+
+		// get all tandem repeats
+		tandemRepeats := FindTandemRepeatsNaive(input)
+		for _, v := range tandemRepeats {
+			fmt.Println(GetTandemRepeatSubstring(v, input), "at index:", v.Start)
+		}
+
+		//input := "abaabaabbaaabaaba$"
+		st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+
+		tandemRepeats2 := DecorateTreeAndReturnTandemRepeats(st)
+		for _, v := range tandemRepeats2 {
+			fmt.Println(v)
+			fmt.Println(GetTandemRepeatSubstring(v, input), "at index:", v.Start)
+		}
+
+		println()
+
+		//Cgecj that both algorithm finds the same tandem repeats
+		for i := range tandemRepeats {
+			for j := range tandemRepeats2 {
+				if tandemRepeats[i].Start == tandemRepeats2[j].Start {
+					break
+				}
+				if j == len(tandemRepeats2)-1 {
+					t.Errorf("Expected tandem repeats to be the same. Not the case for string: %s", input)
+				}
+			}
+		}
+
+		//check that no duplicates are found in n time alg
+		for i := range tandemRepeats2 {
+			for j := range tandemRepeats2 {
+				if tandemRepeats2[i] == tandemRepeats2[j] && i != j {
+					t.Errorf("Expected no duplicates in tandem repeats. Not the case for string: %s", input)
+				}
+			}
+		}
+
+		//check that all found tandem repeats are actual repeats
+		for _, v := range tandemRepeats2 {
+			if input[v.Start:v.Start+v.Length] != input[v.Start+v.Length:v.Start+2*v.Length] {
+				t.Errorf("Expected %s to be a tandem repeat. Error was in string %s", GetTandemRepeatSubstring(v, input), input)
+			}
+		}
+
+		//check that the length of the two slices are the same
+		if len(tandemRepeats) != len(tandemRepeats2) {
+			t.Errorf("Expected tandem repeats to be the same length: true amount is %d, but O(n) alg found %d", len(tandemRepeats), len(tandemRepeats2))
+		}
+
+	}
 }

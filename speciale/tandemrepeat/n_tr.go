@@ -5,8 +5,243 @@ import (
 	"speciale/suffixtree"
 )
 
-//Phase 2
-func Algorithm2() {
+// Decorate tree with vocabulary in O(n) time and return all tandem repeats in O(z) time
+func DecorateTreeAndReturnTandemRepeats(tree suffixtree.SuffixTreeInterface) []TandemRepeat {
+	DecorateTreeWithVocabulary(tree)
+	return getAllTandemRepeatsFromDecoratedTree(tree)
+}
+
+func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
+
+	//FOR DEBUG
+	tree.AddStringDepth()
+
+	// Phase 1
+	// get leftmost covering repeats
+	leftMostCoveringRepeats := Algorithm1(tree)
+
+	//hacky way to get rid of tandem repeats and have ints instead.
+	//Could be improved at a later point
+	leftMostCoveringRepeatsInts := make([][]int, len(leftMostCoveringRepeats))
+	for idx, k := range leftMostCoveringRepeats {
+		leftMostCoveringRepeatsInts[idx] = make([]int, 0)
+		for _, j := range k {
+			leftMostCoveringRepeatsInts[idx] = append(leftMostCoveringRepeatsInts[idx], j.Length)
+
+		}
+	}
+
+	println("test")
+	//print leftMostCoveringRepeatsInts
+	for i, k := range leftMostCoveringRepeatsInts {
+		fmt.Println(i, k)
+	}
+
+	// Phase 2
+	// Decorate tree with subset of leftmost covering repeats
+	Algorithm2(tree, leftMostCoveringRepeatsInts)
+
+	// Phase 3
+	// Decorate tree with entire vocabulary
+	Algorithm3(tree)
+
+}
+
+// Phase 3
+func Algorithm3(tree suffixtree.SuffixTreeInterface) {
+	// Bottom-up traversal of the suffix tree
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+		// Traverse the children of the current node
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			dfs(child, depth+child.EdgeLength())
+		}
+
+		// Process the current node
+		if !(tree.GetRoot() == node) {
+			if node.TandemRepeatDeco != nil {
+				//attempt suffix walk
+				for _, v := range node.TandemRepeatDeco {
+					println("ok lets go")
+					attemptSuffixWalk(tree, node, v)
+
+				}
+			}
+
+		}
+
+	}
+
+	// Perform depth-first traversal starting from the root of the suffix tree
+	dfs(tree.GetRoot(), 0)
+}
+
+func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.SuffixTreeNode, tandemRepeatLengthOnEdge int) {
+	//naming conventions according to the paper
+	v := node
+	u := node.Parent
+	uMark := node.Parent.SuffixLink
+
+	//put this tandem repeat into the complete list
+	if v.TandemRepeatDecoComplete == nil {
+		v.TandemRepeatDecoComplete = make(map[int]bool)
+	} else {
+		_, ok := v.TandemRepeatDecoComplete[tandemRepeatLengthOnEdge]
+		if ok {
+			//case where tandem repeat is already in the list
+			return
+		}
+	}
+	v.TandemRepeatDecoComplete[tandemRepeatLengthOnEdge] = true
+
+	beta := tandemRepeatLengthOnEdge
+	betaFull := beta
+	char := st.GetInputString()[v.StartIdx]
+	vMark := uMark.Children[char]
+
+	println(v, u, beta)
+
+	for beta > 0 {
+		println()
+		println("this is:"+st.GetInputString()[v.Label:v.Label+v.StringDepth], "so string:", st.GetInputString()[v.Label:v.Label+v.Parent.StringDepth+beta], beta)
+
+		println(beta, vMark.EdgeLength(), vMark.StartIdx, v.StartIdx, v.Label, vMark.Label, vMark.EdgeLength(), st.GetInputString()[v.StartIdx+(betaFull-beta)])
+		//case where beta ends in a node
+		if vMark.EdgeLength() == beta {
+			//check if child with "alpha" exists
+			char := st.GetInputString()[v.Label]
+			if vMark.Children[char] != nil {
+
+				beta = 1 // We just pass vMark, so beta is 1, as we just take a single step down next edge of vMarkMark. (v'')
+
+				//check if tr already is marked
+				if vMark.Children[char].TandemRepeatDecoComplete == nil {
+					vMark.Children[char].TandemRepeatDecoComplete = make(map[int]bool)
+				}
+				_, ok := vMark.Children[char].TandemRepeatDecoComplete[beta]
+				if ok {
+					//case where tandem repeat is already in the list
+					return
+				}
+				//add to complete list
+				vMark.Children[char].TandemRepeatDecoComplete[beta] = true
+
+				//success - continue suffix walk
+				println(st.GetInputString()[vMark.Label:vMark.Label+vMark.StringDepth+1], "kEggK", " new beta:", beta)
+
+				v = vMark.Children[char]
+				u = v.Parent
+				uMark = u.SuffixLink
+				vMark = uMark.Children[char]
+
+				if uMark == st.GetRoot() {
+					//if we reach the root, we are done
+					break
+				}
+
+			} else {
+				//failure - 'alpha' was not present in the subtree
+				break
+			}
+		}
+		if vMark.EdgeLength() > beta {
+			//check if alpha is present in extension of beta
+			if st.GetInputString()[vMark.StartIdx+beta+1] == st.GetInputString()[v.Label] { // THIS MIGHT NOT BE +1
+				//success - continue suffix walk
+				beta++
+
+				if vMark.TandemRepeatDecoComplete == nil {
+					vMark.TandemRepeatDecoComplete = make(map[int]bool)
+				}
+				//check if tr already is marked
+				_, ok := vMark.TandemRepeatDecoComplete[beta]
+				if ok {
+					//case where tandem repeat is already in the list
+					return
+				}
+				//add to complete list
+				vMark.TandemRepeatDecoComplete[beta] = true
+
+				println(st.GetInputString()[vMark.Label:vMark.Label+vMark.StringDepth], "kOg", "new beta;", beta)
+
+				v = vMark
+				u = v.Parent
+				uMark = u.SuffixLink
+				vMark = uMark.Children[st.GetInputString()[v.StartIdx]]
+
+			} else {
+				//failure - alpha was not present in the extension of beta
+				break
+			}
+		}
+		if vMark.EdgeLength() < beta {
+			// we need to fastscan further
+			beta = beta - vMark.EdgeLength()
+			vMark = vMark.Children[st.GetInputString()[v.StartIdx+(betaFull-beta)]] //should exist by construction ?
+		}
+	}
+}
+
+// Phase 2
+func Algorithm2(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts [][]int) {
+
+	//Bottom-up traversal of the suffix tree
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+		// Traverse the children of the current node
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			dfs(child, depth+child.EdgeLength())
+		}
+
+		// Process the current node
+		if !(tree.GetRoot() == node) {
+			ProcessNodeAlg2(node, leftMostCoveringRepeatsInts, depth)
+		}
+
+	}
+
+	// Perform depth-first traversal starting from the root of the suffix tree
+	dfs(tree.GetRoot(), 0)
+
+}
+
+// Check if we can decorate this node with a tandem repeat from the leftmost covering set
+func ProcessNodeAlg2(node *suffixtree.SuffixTreeNode, leftMostCoveringRepeatsInt [][]int, depth int) {
+	fmt.Println(node.Label, "hattemand", depth, depth-node.EdgeLength(), leftMostCoveringRepeatsInt[node.Label])
+
+	//the label of any node (internal or leaf) is the smallest index in the subtree
+	pList := leftMostCoveringRepeatsInt[node.Label]
+
+	//if list is empty break
+	if len(pList) == 0 {
+		return
+	}
+	l := (pList)[len(pList)-1] * 2 // multiply by 2 to get entire repeat length \alpha \alpha
+
+	parentDepth := depth - node.EdgeLength()
+
+	for l > parentDepth {
+
+		println("depth values:", l, parentDepth, l-parentDepth)
+
+		node.TandemRepeatDeco = append(node.TandemRepeatDeco, l-parentDepth)
+		//remove the last element from the list
+		pList = pList[:len(pList)-1]
+		leftMostCoveringRepeatsInt[node.Label] = leftMostCoveringRepeatsInt[node.Label][:len(leftMostCoveringRepeatsInt[node.Label])-1]
+		//if the list is empty, break
+		if len(pList) == 0 {
+			break
+		}
+		//update l
+		l = pList[len(pList)-1] * 2
+
+	}
 
 }
 
@@ -31,39 +266,18 @@ func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
 	// add idx to dfs table
 	idxToDfsTable := getIdxtoDfsTable(tree)
 
-	// Process block B for tandem repeats that satisfy condition 1
-	Algorithm1a(s, blocks, idxToDfsTable, &leftMostCoveringRepeats)
-
-	// Process block B for tandem repeats that satisfy condition 2
-	Algorithm1b(s, blocks, idxToDfsTable, &leftMostCoveringRepeats)
+	IterateBlocksAndExecuteAlgorithm1aAnd1b(tree, blocks, idxToDfsTable, &leftMostCoveringRepeats)
 
 	for _, k := range leftMostCoveringRepeats {
 		fmt.Println(k)
 	}
+
 	return leftMostCoveringRepeats
+
 }
 
-func Algorithm1a(s string, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat) {
-	for i := 0; i < len(blocks); i++ {
-		h := blocks[i]
-		h1 := len(s)
-		if i < len(blocks)-1 {
-			h1 = blocks[i+1]
-		}
-
-		for k := 1; k <= h1-h; k++ {
-			q := h1 - k
-			k1 := findLCEForwardSlow(s, h1, q)
-			k2 := findLCEBackwardSlow(s, h1-1, q-1)
-			start := intMax(q-k2, q-k+1)
-			if k1+k2 >= k && k1 > 0 {
-				addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
-			}
-		}
-	}
-}
-
-func Algorithm1b(s string, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat) {
+func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat) {
+	s := tree.GetInputString()
 	for i := 0; i < len(blocks); i++ {
 		h := blocks[i]
 		h1 := len(s)
@@ -74,14 +288,37 @@ func Algorithm1b(s string, blocks []int, idxToDfsTable []int, leftMostCoveringRe
 		if i < len(blocks)-2 {
 			h2 = blocks[i+2]
 		}
-		for k := 1; k <= h2-h; k++ {
-			q := h + k
-			k1 := findLCEForwardSlow(s, h, q)
-			k2 := findLCEBackwardSlow(s, h-1, q-1)
-			start := intMax(h-k2, h-k+1)
-			if k1+k2 >= k && k1 > 0 && start+k < h1 && k2 > 0 {
-				addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
-			}
+
+		// Process block B for tandem repeats that satisfy condition 2
+		Algorithm1b(s, h, h1, h2, leftMostCoveringRepeats)
+
+		// Process block B for tandem repeats that satisfy condition 1
+		Algorithm1a(s, h, h1, leftMostCoveringRepeats)
+
+	}
+}
+
+func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRepeat) {
+	for k := 1; k <= h1-h; k++ {
+		q := h1 - k
+		k1 := findLCEForwardSlow(s, h1, q)
+		k2 := findLCEBackwardSlow(s, h1-1, q-1)
+		start := intMax(q-k2, q-k+1)
+		if k1+k2 >= k && k1 > 0 {
+			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
+		}
+	}
+
+}
+
+func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]TandemRepeat) {
+	for k := 1; k <= h2-h; k++ {
+		q := h + k
+		k1 := findLCEForwardSlow(s, h, q)
+		k2 := findLCEBackwardSlow(s, h-1, q-1)
+		start := intMax(h-k2, h-k+1)
+		if k1+k2 >= k && k1 > 0 && start+k <= h1 && k2 > 0 {
+			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
 		}
 	}
 
@@ -172,12 +409,62 @@ func CreateLZBlocks(li []int, si []int) []int {
 	return blocks
 }
 
+// function to output all tandem repeats by traverseing subtrees and outputting labels
+func getAllTandemRepeatsFromDecoratedTree(tree suffixtree.SuffixTreeInterface) []TandemRepeat {
+
+	tandemRepeats := make([]TandemRepeat, 0)
+
+	//make a dfs label to idx mapping
+	idxToDfsTable := getIdxtoDfsTable(tree)
+	//now reverse it
+	dfsToIdxTable := make([]int, len(idxToDfsTable))
+	for i, k := range idxToDfsTable {
+		dfsToIdxTable[k] = i
+	}
+
+	//do a dfs
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+		// Traverse the children of the current node
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			dfs(child, depth+child.EdgeLength())
+		}
+
+		// Process the current node - should work for both internal and leaf nodes
+		for k := range node.TandemRepeatDecoComplete {
+			for leafDfs := node.DfsInterval.Start; leafDfs <= node.DfsInterval.End; leafDfs++ {
+				leafIdx := dfsToIdxTable[leafDfs]
+				tandemRepeats = append(tandemRepeats, TandemRepeat{leafIdx, (node.Parent.StringDepth + k) / 2, 2})
+				println("new tandem repeat:", leafIdx, (depth-node.EdgeLength()+k)/2, 2)
+			}
+
+		}
+
+	}
+
+	dfs(tree.GetRoot(), 0)
+
+	return tandemRepeats
+
+}
+
 // return the maximum of two integers
 func intMax(a, b int) int {
 	if a > b {
 		return a
 	} else {
 		return b
+	}
+}
+
+func reverseTRSlice(slice []TandemRepeat) {
+	n := len(slice)
+	for i := 0; i < n/2; i++ {
+		j := n - 1 - i
+		slice[i], slice[j] = slice[j], slice[i]
 	}
 }
 
