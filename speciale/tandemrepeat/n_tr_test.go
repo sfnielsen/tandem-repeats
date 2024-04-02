@@ -63,13 +63,40 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 
 }
 
-// test alg 1
-func TestAlgorithm1(t *testing.T) {
-	// Test on example from paper https://doi.org/10.1016/j.jcss.2004.03.004
-	input := "abaabaabbaaabaaba$"
-	//input := "aaaaaaaaaaaaaaaaaaaaaaaaaababababaaabbbabbabaabbaaaabababaabababab$"
+// Test that all sets from algorithm 1 are sorted
+func TestAlgorithm1SetsAreSorted(t *testing.T) {
+	randomGenerator_ab.SetSeed(77)
+	input := randomGenerator_ab.GenerateString(1231)
+	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-	Algorithm1(st)
+
+	leftMostCoveringSet := Algorithm1(st)
+	for idx_v, v := range leftMostCoveringSet {
+		for i := 0; i < len(v)-1; i++ {
+			if !(v[i].Length < v[i+1].Length) {
+				t.Errorf("Expected leftMostCoveringSet to be sorted and to not have duplicates,%d, %d, %d", idx_v, v[i].Length, v[i+1].Length)
+			}
+		}
+	}
+}
+
+// test that all algorithm 1 results are tandem repeats
+func TestAlg1OnlyFindsTandemRepeats(t *testing.T) {
+	randomGenerator_ab.SetSeed(1)
+	for i := 0; i < 5; i++ {
+		input := randomGenerator_ab.GenerateString(500)
+		//input := "abaabaabbaaabaaba$"
+		st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+
+		leftMostCoveringSet := Algorithm1(st)
+		for _, v := range leftMostCoveringSet {
+			for _, v2 := range v {
+				if input[v2.Start:v2.Start+v2.Length] != input[v2.Start+v2.Length:v2.Start+2*v2.Length] {
+					t.Errorf("Expected %s to be a tandem repeat", GetTandemRepeatSubstring(v2, input))
+				}
+			}
+		}
+	}
 }
 
 func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
@@ -91,9 +118,7 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	// add all repeats from nested slice "leftmostcoveringset" to a single slice of tandemrepeats so we can input to getALlTandemRepeats
 	var BranchingTandemRepeatTypesPhase1 []TandemRepeat
 	for _, v := range leftMostCoveringSet {
-		for _, v2 := range v {
-			BranchingTandemRepeatTypesPhase1 = append(BranchingTandemRepeatTypesPhase1, v2)
-		}
+		BranchingTandemRepeatTypesPhase1 = append(BranchingTandemRepeatTypesPhase1, v...)
 	}
 	allTandemRepeatsTypesPhase1 := rightRotation(BranchingTandemRepeatTypesPhase1, st)
 
@@ -117,33 +142,72 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	}
 }
 
-func TestAlgorithm2(t *testing.T) {
-	input := "abaabaabbaaabaaba$"
-	//input := "aaaaaaaaaaaaaaaaaaaaaaaaaababababaaabbbabbabaabbaaaabababaabababab$"
-	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-	Algorithm1(st)
-}
+// Test that algorithm 2 only decorates tree with actual tandem repeats
+func TestAlg2OnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
 
-func TestAlgorithm1SetsAreSorted(t *testing.T) {
-	randomGenerator_ab.SetSeed(77)
-	input := randomGenerator_ab.GenerateString(1231)
-	//input := "abaabaabbaaabaaba$"
-	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+	//Run alg 2
+	randomGenerator_ab.SetSeed(1)
+	for i := 0; i < 10; i++ {
+		input := randomGenerator_ab.GenerateString(100)
 
-	leftMostCoveringSet := Algorithm1(st)
-	for idx_v, v := range leftMostCoveringSet {
-		for i := 0; i < len(v)-1; i++ {
-			if !(v[i].Length < v[i+1].Length) {
-				t.Errorf("Expected leftMostCoveringSet to be sorted and to not have duplicates,%d, %d, %d", idx_v, v[i].Length, v[i+1].Length)
+		tree := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+
+		tree.AddStringDepth()
+
+		// Phase 1
+		// get leftmost covering repeats
+		leftMostCoveringRepeats := Algorithm1(tree)
+
+		//hacky way to get rid of tandem repeats and have ints instead.
+		//Could be improved at a later point
+		leftMostCoveringRepeatsInts := make([][]int, len(leftMostCoveringRepeats))
+		for idx, k := range leftMostCoveringRepeats {
+			leftMostCoveringRepeatsInts[idx] = make([]int, 0)
+			for _, j := range k {
+				leftMostCoveringRepeatsInts[idx] = append(leftMostCoveringRepeatsInts[idx], j.Length)
+
 			}
 		}
+
+		// Phase 2
+		// Decorate tree with subset of leftmost covering repeats
+		Algorithm2(tree, leftMostCoveringRepeatsInts)
+
+		//Bottom-up traversal of the suffix tree
+		var dfs func(node *suffixtree.SuffixTreeNode)
+		dfs = func(node *suffixtree.SuffixTreeNode) {
+			// Traverse the children of the current node
+			for _, child := range node.Children {
+				if child == nil {
+					continue
+				}
+				dfs(child)
+			}
+
+			//if tree has a decoration print int
+			if node.TandemRepeatDeco != nil {
+				for _, k := range node.TandemRepeatDeco {
+					if (node.Parent.StringDepth+k)%2 != 0 {
+						t.Errorf("Expected tandem repeat but has odd length: %d", node.StringDepth+k)
+					}
+					lenOfRepeat := node.Parent.StringDepth + k
+					if input[node.Label:node.Label+lenOfRepeat/2] != input[node.Label+lenOfRepeat/2:node.Label+lenOfRepeat] {
+						t.Errorf("Expected %s to be a tandem repeat", GetTandemRepeatSubstring(TandemRepeat{node.Label, (node.Parent.StringDepth + k) / 2, 2}, input))
+					}
+				}
+			}
+
+		}
+		dfs(tree.GetRoot())
 	}
+
 }
 
 func TestDecorateTreeOnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
-	randomGenerator_a.SetSeed(1)
-	for i := 0; i < 30; i++ {
-		input := randomGenerator_a.GenerateString(5000)
+
+	randomGenerator_ab.SetSeed(4)
+	for i := 0; i < 10; i++ {
+		input := randomGenerator_ab.GenerateString(3000)
 		tree := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 
 		DecorateTreeWithVocabulary(tree)
@@ -181,24 +245,14 @@ func TestThatWeReturnAllTandemRepeats(t *testing.T) {
 
 	randomGenerator_ab.SetSeed(1)
 	for i := 0; i < 10; i++ {
-		input := randomGenerator_ab.GenerateString(1000)
+		input := randomGenerator_ab.GenerateString(5000)
 
 		// get all tandem repeats
 		tandemRepeats := FindTandemRepeatsNaive(input)
-		for _, v := range tandemRepeats {
-			fmt.Println(GetTandemRepeatSubstring(v, input), "at index:", v.Start)
-		}
 
-		//input := "abaabaabbaaabaaba$"
 		st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 
 		tandemRepeats2 := DecorateTreeAndReturnTandemRepeats(st)
-		for _, v := range tandemRepeats2 {
-			fmt.Println(v)
-			fmt.Println(GetTandemRepeatSubstring(v, input), "at index:", v.Start)
-		}
-
-		println()
 
 		//Cgecj that both algorithm finds the same tandem repeats
 		for i := range tandemRepeats {
