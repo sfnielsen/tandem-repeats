@@ -156,33 +156,32 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 			}
 		}
 		if vMark.EdgeLength() > beta {
-			println("edge too biggz")
+			println("edge too biggz", vMark.EdgeLength(), beta)
 			//check if alpha is present in extension of beta
 			if st.GetInputString()[vMark.StartIdx+beta] == st.GetInputString()[v.Label] {
-
 				println("just checking that a is what i think it is xD", string(st.GetInputString()[v.Label]), string(st.GetInputString()[vMark.StartIdx:vMark.EndIdx+1]), "start", vMark.Label, "startofthisedge", vMark.StartIdx)
 				//success - continue suffix walk
-				beta++ // Beta is the known part, so the actual point of interest is the character just after beta
 
 				if vMark.TandemRepeatDecoComplete == nil {
 					vMark.TandemRepeatDecoComplete = make(map[int]bool)
 				}
 				//check if tr already is marked
-				_, ok := vMark.TandemRepeatDecoComplete[beta]
+				_, ok := vMark.TandemRepeatDecoComplete[beta+1]
 				if ok {
 					//case where tandem repeat is already in the list
 					return
 				}
 				//add to complete list
-				vMark.TandemRepeatDecoComplete[beta] = true
+				vMark.TandemRepeatDecoComplete[beta+1] = true
 
 				//IF THIS IS NOT A TANDEM REPEAT I NEED TO KWON!
-				if !isTandemRepeat(st.GetInputString(), vMark, beta) {
+				if !isTandemRepeat(st.GetInputString(), vMark, beta+1) {
 					println("this is not a tandem repeat")
 				}
 
 				//println(st.GetInputString()[vMark.Label:vMark.Label+vMark.StringDepth], "kOg", "new beta;", beta)
 
+				beta++ // Beta has now grown by one, as we have added \alpha
 				v = vMark
 				u = v.Parent
 				uMark = u.SuffixLink
@@ -194,14 +193,15 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 			}
 		}
 		if vMark.EdgeLength() < beta {
-			println("edge too smol")
+			println("edge too smol", vMark.EdgeLength(), beta)
 			// we need to fastscan further
 			betaSum += vMark.EdgeLength()
 			beta -= vMark.EdgeLength()
-			vMark = vMark.Children[st.GetInputString()[v.StartIdx+betaSum]] //should exist by construction
+			vMark = vMark.Children[st.GetInputString()[v.StartIdx+betaSum-1]] //should exist by construction
 
 			//convert to string and print
-			println(string(st.GetInputString()[v.StartIdx+betaSum]))
+			println(string(st.GetInputString()[v.StartIdx+betaSum-1]))
+			println(string(st.GetInputString()[v.StartIdx+betaSum-1 : v.StartIdx+betaSum+1+1]))
 
 		}
 	}
