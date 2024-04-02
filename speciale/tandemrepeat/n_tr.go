@@ -11,6 +11,7 @@ func DecorateTreeAndReturnTandemRepeats(tree suffixtree.SuffixTreeInterface) []T
 	return getAllTandemRepeatsFromDecoratedTree(tree)
 }
 
+// Function that runs algorithm 1a,1b,2 and 3 on a suffix tree and decorates it with the tandem repeat vocabulary
 func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 
 	//FOR DEBUG
@@ -31,7 +32,6 @@ func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 		}
 	}
 
-	println("test")
 	//print leftMostCoveringRepeatsInts
 	for i, k := range leftMostCoveringRepeatsInts {
 		fmt.Println(i, k)
@@ -65,7 +65,6 @@ func Algorithm3(tree suffixtree.SuffixTreeInterface) {
 			if node.TandemRepeatDeco != nil {
 				//attempt suffix walk
 				for _, v := range node.TandemRepeatDeco {
-					println("ok lets go")
 					attemptSuffixWalk(tree, node, v)
 
 				}
@@ -80,37 +79,42 @@ func Algorithm3(tree suffixtree.SuffixTreeInterface) {
 }
 
 func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.SuffixTreeNode, tandemRepeatLengthOnEdge int) {
-	//naming conventions according to the paper
-	v := node
-	u := node.Parent
-	uMark := node.Parent.SuffixLink
-
 	//put this tandem repeat into the complete list
-	if v.TandemRepeatDecoComplete == nil {
-		v.TandemRepeatDecoComplete = make(map[int]bool)
+	if node.TandemRepeatDecoComplete == nil {
+		node.TandemRepeatDecoComplete = make(map[int]bool)
 	} else {
-		_, ok := v.TandemRepeatDecoComplete[tandemRepeatLengthOnEdge]
+		_, ok := node.TandemRepeatDecoComplete[tandemRepeatLengthOnEdge]
 		if ok {
 			//case where tandem repeat is already in the list
 			return
 		}
 	}
-	v.TandemRepeatDecoComplete[tandemRepeatLengthOnEdge] = true
+	node.TandemRepeatDecoComplete[tandemRepeatLengthOnEdge] = true
+
+	//naming conventions according to the paper
+	v := node
+	u := v.Parent
+	uMark := u.SuffixLink
 
 	beta := tandemRepeatLengthOnEdge
-	betaFull := beta
+	betaSum := 0 //used to keep track of full length of beta for case where we traverse multiple nodes
 	char := st.GetInputString()[v.StartIdx]
 	vMark := uMark.Children[char]
 
-	println(v, u, beta)
+	println(v, u, beta, "NExt episode has beign")
+
+	println("starting from", isTandemRepeat(st.GetInputString(), v, beta))
 
 	for beta > 0 {
-		println()
-		println("this is:"+st.GetInputString()[v.Label:v.Label+v.StringDepth], "so string:", st.GetInputString()[v.Label:v.Label+v.Parent.StringDepth+beta], beta)
 
-		println(beta, vMark.EdgeLength(), vMark.StartIdx, v.StartIdx, v.Label, vMark.Label, vMark.EdgeLength(), st.GetInputString()[v.StartIdx+(betaFull-beta)])
+		println()
+		println(beta)
+		//println("this is:"+st.GetInputString()[v.Label:v.Label+v.StringDepth], "so string:", st.GetInputString()[v.Label:v.Label+v.Parent.StringDepth+beta], beta)
+
+		//println(beta, vMark.EdgeLength(), vMark.StartIdx, v.StartIdx, v.Label, vMark.Label, vMark.EdgeLength(), st.GetInputString()[v.StartIdx+(betaFull-beta)])
 		//case where beta ends in a node
 		if vMark.EdgeLength() == beta {
+			println("edge is juuuust rite X)")
 			//check if child with "alpha" exists
 			char := st.GetInputString()[v.Label]
 			if vMark.Children[char] != nil {
@@ -128,9 +132,13 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 				}
 				//add to complete list
 				vMark.Children[char].TandemRepeatDecoComplete[beta] = true
+				if !isTandemRepeat(st.GetInputString(), vMark.Children[char], beta) {
+
+					println("this is not a tandem repeat")
+				}
 
 				//success - continue suffix walk
-				println(st.GetInputString()[vMark.Label:vMark.Label+vMark.StringDepth+1], "kEggK", " new beta:", beta)
+				//println(st.GetInputString()[vMark.Label:vMark.Label+vMark.StringDepth+1], "kEggK", " new beta:", beta)
 
 				v = vMark.Children[char]
 				u = v.Parent
@@ -139,19 +147,22 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 
 				if uMark == st.GetRoot() {
 					//if we reach the root, we are done
-					break
+					return
 				}
 
 			} else {
 				//failure - 'alpha' was not present in the subtree
-				break
+				return
 			}
 		}
 		if vMark.EdgeLength() > beta {
+			println("edge too biggz")
 			//check if alpha is present in extension of beta
-			if st.GetInputString()[vMark.StartIdx+beta+1] == st.GetInputString()[v.Label] { // THIS MIGHT NOT BE +1
+			if st.GetInputString()[vMark.StartIdx+beta] == st.GetInputString()[v.Label] {
+
+				println("just checking that a is what i think it is xD", string(st.GetInputString()[v.Label]), string(st.GetInputString()[vMark.StartIdx:vMark.EndIdx+1]), "start", vMark.Label, "startofthisedge", vMark.StartIdx)
 				//success - continue suffix walk
-				beta++
+				beta++ // Beta is the known part, so the actual point of interest is the character just after beta
 
 				if vMark.TandemRepeatDecoComplete == nil {
 					vMark.TandemRepeatDecoComplete = make(map[int]bool)
@@ -165,7 +176,12 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 				//add to complete list
 				vMark.TandemRepeatDecoComplete[beta] = true
 
-				println(st.GetInputString()[vMark.Label:vMark.Label+vMark.StringDepth], "kOg", "new beta;", beta)
+				//IF THIS IS NOT A TANDEM REPEAT I NEED TO KWON!
+				if !isTandemRepeat(st.GetInputString(), vMark, beta) {
+					println("this is not a tandem repeat")
+				}
+
+				//println(st.GetInputString()[vMark.Label:vMark.Label+vMark.StringDepth], "kOg", "new beta;", beta)
 
 				v = vMark
 				u = v.Parent
@@ -174,13 +190,19 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 
 			} else {
 				//failure - alpha was not present in the extension of beta
-				break
+				return
 			}
 		}
 		if vMark.EdgeLength() < beta {
+			println("edge too smol")
 			// we need to fastscan further
-			beta = beta - vMark.EdgeLength()
-			vMark = vMark.Children[st.GetInputString()[v.StartIdx+(betaFull-beta)]] //should exist by construction ?
+			betaSum += vMark.EdgeLength()
+			beta -= vMark.EdgeLength()
+			vMark = vMark.Children[st.GetInputString()[v.StartIdx+betaSum]] //should exist by construction
+
+			//convert to string and print
+			println(string(st.GetInputString()[v.StartIdx+betaSum]))
+
 		}
 	}
 }
@@ -438,7 +460,6 @@ func getAllTandemRepeatsFromDecoratedTree(tree suffixtree.SuffixTreeInterface) [
 			for leafDfs := node.DfsInterval.Start; leafDfs <= node.DfsInterval.End; leafDfs++ {
 				leafIdx := dfsToIdxTable[leafDfs]
 				tandemRepeats = append(tandemRepeats, TandemRepeat{leafIdx, (node.Parent.StringDepth + k) / 2, 2})
-				println("new tandem repeat:", leafIdx, (depth-node.EdgeLength()+k)/2, 2)
 			}
 
 		}
@@ -502,4 +523,27 @@ func findLCEBackwardSlow(s string, i, j int) int {
 		}
 	}
 	return lce
+}
+
+// method for debugging. Check that 'something' is indeed a tandem repeat
+func isTandemRepeat(s string, node *suffixtree.SuffixTreeNode, lengthOnEdge int) bool {
+
+	substr := s[node.Label : node.Label+node.Parent.StringDepth+lengthOnEdge]
+
+	//check that the length of the tandem repeat is even
+	if len(substr)%2 != 0 {
+		//print the string
+		println("BAD1 string:", substr)
+		return false
+	}
+
+	//check that first half of the tandem repeat is equal to the second half
+	if substr[:len(substr)/2] != substr[len(substr)/2:] {
+		//print the string
+		println("BAD2 string:", substr)
+		return false
+	}
+	println("GOOD string:", substr)
+
+	return true
 }
