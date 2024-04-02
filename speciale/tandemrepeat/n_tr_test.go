@@ -77,8 +77,8 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	phase1Repeats := make(map[string]TandemRepeat)
 	allRepeats := make(map[string]TandemRepeat)
 
-	randomGenerator_ab.SetSeed(45)
-	input := randomGenerator_ab.GenerateString(2324)
+	//randomGenerator_ab.SetSeed(40)
+	input := randomGenerator_ab.GenerateString(5000)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 
@@ -117,25 +117,6 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	}
 }
 
-// test that all the sets are sorted and contains no duplicates
-func TestAlgorithm1SetsAreSortedAndNoDuplicates(t *testing.T) {
-	for i := 0; i < 30; i++ {
-		randomGenerator_ab.SetSeed(113)
-		input := randomGenerator_ab.GenerateString(1213)
-		//input := "abaabaabbaaabaaba$"
-		st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-
-		leftMostCoveringSet := Algorithm1(st)
-		for idx_v, v := range leftMostCoveringSet {
-			for i := 0; i < len(v)-1; i++ {
-				if !(v[i].Length < v[i+1].Length) {
-					t.Errorf("Expected leftMostCoveringSet to be sorted and to not have duplicates,%d, %d, %d", idx_v, v[i].Length, v[i+1].Length)
-				}
-			}
-		}
-	}
-}
-
 func TestAlgorithm2(t *testing.T) {
 	input := "abaabaabbaaabaaba$"
 	//input := "aaaaaaaaaaaaaaaaaaaaaaaaaababababaaabbbabbabaabbaaaabababaabababab$"
@@ -143,70 +124,64 @@ func TestAlgorithm2(t *testing.T) {
 	Algorithm1(st)
 }
 
-func TestDecorateTreeIsCorrectOnTestString(t *testing.T) {
-	input := "abaabaabbaaabaaba$"
+func TestAlgorithm1SetsAreSorted(t *testing.T) {
+	randomGenerator_ab.SetSeed(77)
+	input := randomGenerator_ab.GenerateString(1231)
+	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-	DecorateTreeWithVocabulary(st)
 
-	//Bottom-up traversal of the suffix tree
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
-		// Traverse the children of the current node
-		for _, child := range node.Children {
-			if child == nil {
-				continue
+	leftMostCoveringSet := Algorithm1(st)
+	for idx_v, v := range leftMostCoveringSet {
+		for i := 0; i < len(v)-1; i++ {
+			if !(v[i].Length < v[i+1].Length) {
+				t.Errorf("Expected leftMostCoveringSet to be sorted and to not have duplicates,%d, %d, %d", idx_v, v[i].Length, v[i+1].Length)
 			}
-			dfs(child, depth+child.EdgeLength())
 		}
-
-		//if tree has a decoration print int
-		if node.TandemRepeatDeco != nil {
-
-			fmt.Println("new dayz")
-			fmt.Println(GetTandemRepeatSubstring(TandemRepeat{node.Label, (depth - node.EdgeLength() + node.TandemRepeatDeco[0]) / 2, 2}, input))
-
-			fmt.Printf("Node: %v, Decoration: %v\n", node.Label, node.TandemRepeatDeco)
-		}
-
 	}
-	dfs(st.GetRoot(), 0)
 }
 
-func TestDecorateTreeIsCorrectOnRandomString(t *testing.T) {
-	input := "abaabaabbaaabaaba$"
-	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-	DecorateTreeAndReturnTandemRepeats(st)
+func TestDecorateTreeOnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
+	randomGenerator_a.SetSeed(1)
+	for i := 0; i < 30; i++ {
+		input := randomGenerator_a.GenerateString(5000)
+		tree := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 
-	//Bottom-up traversal of the suffix tree
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
-		// Traverse the children of the current node
-		for _, child := range node.Children {
-			if child == nil {
-				continue
+		DecorateTreeWithVocabulary(tree)
+
+		//Bottom-up traversal of the suffix tree
+		var dfs func(node *suffixtree.SuffixTreeNode)
+		dfs = func(node *suffixtree.SuffixTreeNode) {
+			// Traverse the children of the current node
+			for _, child := range node.Children {
+				if child == nil {
+					continue
+				}
+				dfs(child)
 			}
-			dfs(child, depth+child.EdgeLength())
-		}
 
-		//if tree has a decoration print int
-		if node.TandemRepeatDecoComplete != nil {
-
-			fmt.Println("new dayz")
-			for k := range node.TandemRepeatDecoComplete {
-				fmt.Println(GetTandemRepeatSubstring(TandemRepeat{node.Label, (depth - node.EdgeLength() + k) / 2, 2}, input))
+			//if tree has a decoration print int
+			if node.TandemRepeatDecoComplete != nil {
+				for k := range node.TandemRepeatDecoComplete {
+					if (node.Parent.StringDepth+k)%2 != 0 {
+						t.Errorf("Expected tandem repeat but has odd length: %d", node.StringDepth+k)
+					}
+					lenOfRepeat := node.Parent.StringDepth + k
+					if input[node.Label:node.Label+lenOfRepeat/2] != input[node.Label+lenOfRepeat/2:node.Label+lenOfRepeat] {
+						t.Errorf("Expected %s to be a tandem repeat", GetTandemRepeatSubstring(TandemRepeat{node.Label, (node.Parent.StringDepth + k) / 2, 2}, input))
+					}
+				}
 			}
-			fmt.Printf("Node: %v, Decoration: %v\n", node.Label, node.TandemRepeatDecoComplete)
-		}
 
+		}
+		dfs(tree.GetRoot())
 	}
-	dfs(st.GetRoot(), 0)
 }
 
 func TestThatWeReturnAllTandemRepeats(t *testing.T) {
 
 	randomGenerator_ab.SetSeed(1)
 	for i := 0; i < 10; i++ {
-		input := randomGenerator_ab.GenerateString(20)
+		input := randomGenerator_ab.GenerateString(1000)
 
 		// get all tandem repeats
 		tandemRepeats := FindTandemRepeatsNaive(input)
