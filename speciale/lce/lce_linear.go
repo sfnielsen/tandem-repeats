@@ -39,13 +39,16 @@ func eulerTour(st suffixtree.SuffixTreeInterface) ([]int, []int, []int) {
 
 		//process children
 		for _, child := range node.Children {
-			dfs(child, depth+1)
-		}
+			if child != nil {
+				dfs(child, depth+1)
 
-		//process self again
-		L[nextEulerStep] = depth           //note the depth of current eulerStep
-		E[nextEulerStep] = node.EulerLabel //map eulerStep to eulerLabel
-		nextEulerStep++
+				//process self again (each time we return from a subtree)
+				L[nextEulerStep] = depth           //note the depth of current eulerStep
+				E[nextEulerStep] = node.EulerLabel //map eulerStep to eulerLabel
+				nextEulerStep++
+
+			}
+		}
 
 	}
 	dfs(st.GetRoot(), 0)
