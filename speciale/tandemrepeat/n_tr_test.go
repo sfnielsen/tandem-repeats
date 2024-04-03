@@ -289,3 +289,32 @@ func TestThatWeReturnAllTandemRepeats(t *testing.T) {
 
 	}
 }
+
+// #####################################################################################
+// #####################################################################################
+// Helper functions used for testing
+// #####################################################################################
+// #####################################################################################
+
+// get all tandem rpeeats by RIGHT rotating on the branching repeats
+func rightRotation(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeInterface) []TandemRepeat {
+	var allTandemRepeats = make([]TandemRepeat, 0)
+
+	for _, k := range allBranchingRepeats {
+		// add tandem repeat until length is 0
+		i := 0
+		// left rotate until we no longer have a tandem repeat (or we reach the start of the string)
+		for k.Start+i+2*(k.Length) < len(st.GetInputString()) {
+			if st.GetInputString()[k.Start+i] == st.GetInputString()[(k.Start+i)+2*(k.Length)] {
+				i += 1
+				allTandemRepeats = append(allTandemRepeats, TandemRepeat{k.Start + i, k.Length, 2})
+			} else {
+				break
+			}
+
+		}
+
+	}
+	allTandemRepeats = append(allTandemRepeats, allBranchingRepeats...)
+	return allTandemRepeats
+}

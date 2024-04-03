@@ -41,7 +41,256 @@ func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 
 }
 
-// Phase 3
+// #######################################################################################
+// #######################################################################################
+// Algorithm 1
+// #######################################################################################
+// #######################################################################################
+
+// Combines algorithm 1a and 1b to find tandem repeats
+func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
+	s := tree.GetInputString()
+	leftMostCoveringRepeats := make([][]TandemRepeat, len(s))
+
+	// intialize nested slice
+	for i := range leftMostCoveringRepeats {
+		leftMostCoveringRepeats[i] = make([]TandemRepeat, 0)
+	}
+
+	// Compute the blocks and Z-values
+	li, si := LZDecomposition(tree)
+	blocks := CreateLZBlocks(li, si)
+
+	// add idx to dfs table
+	idxToDfsTable := getIdxtoDfsTable(tree)
+
+	IterateBlocksAndExecuteAlgorithm1aAnd1b(tree, blocks, idxToDfsTable, &leftMostCoveringRepeats)
+
+	return leftMostCoveringRepeats
+
+}
+
+// Phase 1, pt 1
+// Compute the LZ decomposition of a string using a suffix tree
+func LZDecomposition(tree suffixtree.SuffixTreeInterface) ([]int, []int) {
+
+	// Initialize arrays to store the lengths of blocks and their starting positions
+	n := len(tree.GetInputString())
+	li := make([]int, n)
+	si := make([]int, n)
+
+	// Perform a depth-first traversal of the suffix tree to compute the LZ decomposition
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+
+		// Traverse the children of the current node
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			if node.Label < child.Label {
+				li[child.Label] = depth
+				si[child.Label] = node.Label
+			}
+
+			dfs(child, depth+child.EdgeLength())
+
+		}
+	}
+
+	// Perform depth-first traversal starting from the root of the suffix tree
+	dfs(tree.GetRoot(), 0)
+
+	return li, si
+}
+
+// create blocks from the LZ decomposition
+func CreateLZBlocks(li []int, si []int) []int {
+	n := len(li)
+
+	//first block
+	blocks := []int{0}
+	iB := 0
+
+	//recursively define remaining blocks
+	for iB < n-1 {
+
+		//next start
+		iB += intMax(1, li[iB])
+		blocks = append(blocks, iB)
+
+	}
+	return blocks
+}
+
+func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat) {
+	s := tree.GetInputString()
+	for i := 0; i < len(blocks); i++ {
+		h := blocks[i]
+		h1 := len(s)
+		h2 := len(s)
+		if i < len(blocks)-1 {
+			h1 = blocks[i+1]
+		}
+		if i < len(blocks)-2 {
+			h2 = blocks[i+2]
+		}
+
+		// Process block B for tandem repeats that satisfy condition 2
+		Algorithm1b(s, h, h1, h2, leftMostCoveringRepeats)
+
+		// Process block B for tandem repeats that satisfy condition 1
+		Algorithm1a(s, h, h1, leftMostCoveringRepeats)
+
+	}
+}
+
+func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRepeat) {
+	for k := 1; k <= h1-h; k++ {
+		q := h1 - k
+		k1 := findLCEForwardSlow(s, h1, q)
+		k2 := findLCEBackwardSlow(s, h1-1, q-1)
+		start := intMax(q-k2, q-k+1)
+		if k1+k2 >= k && k1 > 0 {
+			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
+		}
+	}
+
+}
+
+func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]TandemRepeat) {
+	for k := 1; k <= h2-h; k++ {
+		q := h + k
+		k1 := findLCEForwardSlow(s, h, q)
+		k2 := findLCEBackwardSlow(s, h-1, q-1)
+		start := intMax(h-k2, h-k+1)
+		if k1+k2 >= k && k1 > 0 && start+k <= h1 && k2 > 0 {
+			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
+		}
+	}
+
+}
+
+// find the longest common extension of two suffixes that starts at i and j
+func findLCEForwardSlow(s string, i, j int) int {
+
+	lce := 0
+
+	//match letters until we have a mismatch
+	for i < len(s) && j < len(s) {
+		if s[i] != s[j] {
+			return lce
+		} else {
+			i++
+			j++
+			lce++
+		}
+	}
+	return lce
+
+}
+
+// find the longest common extension of two suffixes that ends at i and j
+func findLCEBackwardSlow(s string, i, j int) int {
+	lce := 0
+
+	//match letters until we have a mismatch
+	for i >= 0 && j >= 0 {
+		if s[i] != s[j] {
+			return lce
+		} else {
+			i--
+			j--
+			lce++
+		}
+	}
+	return lce
+}
+
+// add tandemrepeat to leftMostCoveringRepeats at index start if the last inserted tandem repeat at index start is not of same length
+func addToLeftMostCoveringRepeats(leftMostCoveringRepeats *[][]TandemRepeat, start int, k int) {
+	if len((*leftMostCoveringRepeats)[start]) == 0 {
+		(*leftMostCoveringRepeats)[start] = append((*leftMostCoveringRepeats)[start], TandemRepeat{start, k, 2})
+	} else if (*leftMostCoveringRepeats)[start][len((*leftMostCoveringRepeats)[start])-1].Length != k {
+		(*leftMostCoveringRepeats)[start] = append((*leftMostCoveringRepeats)[start], TandemRepeat{start, k, 2})
+	}
+}
+
+// return the maximum of two integers
+func intMax(a, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
+}
+
+// #######################################################################################
+// #######################################################################################
+// Algorithm 2
+// #######################################################################################
+// #######################################################################################
+func Algorithm2(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts [][]int) {
+
+	//Bottom-up traversal of the suffix tree
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+		// Traverse the children of the current node
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			dfs(child, depth+child.EdgeLength())
+		}
+
+		// Process the current node
+		if !(tree.GetRoot() == node) {
+			ProcessNodeAlg2(node, leftMostCoveringRepeatsInts, depth)
+		}
+
+	}
+
+	// Perform depth-first traversal starting from the root of the suffix tree
+	dfs(tree.GetRoot(), 0)
+
+}
+
+// Check if we can decorate this node with a tandem repeat from the leftmost covering set
+func ProcessNodeAlg2(node *suffixtree.SuffixTreeNode, leftMostCoveringRepeatsInt [][]int, depth int) {
+	//fmt.Println(node.Label, "hattemand", depth, depth-node.EdgeLength(), leftMostCoveringRepeatsInt[node.Label])
+
+	//the label of any node (internal or leaf) is the smallest index in the subtree
+	pList := leftMostCoveringRepeatsInt[node.Label]
+
+	//if list is empty break
+	if len(pList) == 0 {
+		return
+	}
+	l := (pList)[len(pList)-1] * 2 // multiply by 2 to get entire repeat length \alpha \alpha
+
+	parentDepth := depth - node.EdgeLength()
+
+	for l > parentDepth {
+		node.TandemRepeatDeco = append(node.TandemRepeatDeco, l-parentDepth)
+		//remove the last element from the list
+		pList = pList[:len(pList)-1]
+		leftMostCoveringRepeatsInt[node.Label] = leftMostCoveringRepeatsInt[node.Label][:len(leftMostCoveringRepeatsInt[node.Label])-1]
+		//if the list is empty, break
+		if len(pList) == 0 {
+			break
+		}
+		//update l
+		l = pList[len(pList)-1] * 2
+
+	}
+
+}
+
+// #######################################################################################
+// #######################################################################################
+// Algorithm 3
+// #######################################################################################
+// #######################################################################################
 func Algorithm3(tree suffixtree.SuffixTreeInterface) {
 	// Bottom-up traversal of the suffix tree
 	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
@@ -169,219 +418,11 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 	}
 }
 
-// Phase 2
-func Algorithm2(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts [][]int) {
-
-	//Bottom-up traversal of the suffix tree
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
-		// Traverse the children of the current node
-		for _, child := range node.Children {
-			if child == nil {
-				continue
-			}
-			dfs(child, depth+child.EdgeLength())
-		}
-
-		// Process the current node
-		if !(tree.GetRoot() == node) {
-			ProcessNodeAlg2(node, leftMostCoveringRepeatsInts, depth)
-		}
-
-	}
-
-	// Perform depth-first traversal starting from the root of the suffix tree
-	dfs(tree.GetRoot(), 0)
-
-}
-
-// Check if we can decorate this node with a tandem repeat from the leftmost covering set
-func ProcessNodeAlg2(node *suffixtree.SuffixTreeNode, leftMostCoveringRepeatsInt [][]int, depth int) {
-	//fmt.Println(node.Label, "hattemand", depth, depth-node.EdgeLength(), leftMostCoveringRepeatsInt[node.Label])
-
-	//the label of any node (internal or leaf) is the smallest index in the subtree
-	pList := leftMostCoveringRepeatsInt[node.Label]
-
-	//if list is empty break
-	if len(pList) == 0 {
-		return
-	}
-	l := (pList)[len(pList)-1] * 2 // multiply by 2 to get entire repeat length \alpha \alpha
-
-	parentDepth := depth - node.EdgeLength()
-
-	for l > parentDepth {
-		node.TandemRepeatDeco = append(node.TandemRepeatDeco, l-parentDepth)
-		//remove the last element from the list
-		pList = pList[:len(pList)-1]
-		leftMostCoveringRepeatsInt[node.Label] = leftMostCoveringRepeatsInt[node.Label][:len(leftMostCoveringRepeatsInt[node.Label])-1]
-		//if the list is empty, break
-		if len(pList) == 0 {
-			break
-		}
-		//update l
-		l = pList[len(pList)-1] * 2
-
-	}
-
-}
-
-// Algorithm 1
-// Combines algorithm 1a and 1b to find tandem repeats
-func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
-	s := tree.GetInputString()
-	leftMostCoveringRepeats := make([][]TandemRepeat, len(s))
-
-	// intialize nested slice
-	for i := range leftMostCoveringRepeats {
-		leftMostCoveringRepeats[i] = make([]TandemRepeat, 0)
-	}
-
-	// Compute the blocks and Z-values
-	li, si := LZDecomposition(tree)
-	blocks := CreateLZBlocks(li, si)
-
-	// add idx to dfs table
-	idxToDfsTable := getIdxtoDfsTable(tree)
-
-	IterateBlocksAndExecuteAlgorithm1aAnd1b(tree, blocks, idxToDfsTable, &leftMostCoveringRepeats)
-
-	return leftMostCoveringRepeats
-
-}
-
-func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat) {
-	s := tree.GetInputString()
-	for i := 0; i < len(blocks); i++ {
-		h := blocks[i]
-		h1 := len(s)
-		h2 := len(s)
-		if i < len(blocks)-1 {
-			h1 = blocks[i+1]
-		}
-		if i < len(blocks)-2 {
-			h2 = blocks[i+2]
-		}
-
-		// Process block B for tandem repeats that satisfy condition 2
-		Algorithm1b(s, h, h1, h2, leftMostCoveringRepeats)
-
-		// Process block B for tandem repeats that satisfy condition 1
-		Algorithm1a(s, h, h1, leftMostCoveringRepeats)
-
-	}
-}
-
-func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRepeat) {
-	for k := 1; k <= h1-h; k++ {
-		q := h1 - k
-		k1 := findLCEForwardSlow(s, h1, q)
-		k2 := findLCEBackwardSlow(s, h1-1, q-1)
-		start := intMax(q-k2, q-k+1)
-		if k1+k2 >= k && k1 > 0 {
-			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
-		}
-	}
-
-}
-
-func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]TandemRepeat) {
-	for k := 1; k <= h2-h; k++ {
-		q := h + k
-		k1 := findLCEForwardSlow(s, h, q)
-		k2 := findLCEBackwardSlow(s, h-1, q-1)
-		start := intMax(h-k2, h-k+1)
-		if k1+k2 >= k && k1 > 0 && start+k <= h1 && k2 > 0 {
-			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
-		}
-	}
-
-}
-
-// get all tandem rpeeats by RIGHT rotating on the branching repeats
-func rightRotation(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeInterface) []TandemRepeat {
-	var allTandemRepeats = make([]TandemRepeat, 0)
-
-	for _, k := range allBranchingRepeats {
-		// add tandem repeat until length is 0
-		i := 0
-		// left rotate until we no longer have a tandem repeat (or we reach the start of the string)
-		for k.Start+i+2*(k.Length) < len(st.GetInputString()) {
-			if st.GetInputString()[k.Start+i] == st.GetInputString()[(k.Start+i)+2*(k.Length)] {
-				i += 1
-				allTandemRepeats = append(allTandemRepeats, TandemRepeat{k.Start + i, k.Length, 2})
-			} else {
-				break
-			}
-
-		}
-
-	}
-	allTandemRepeats = append(allTandemRepeats, allBranchingRepeats...)
-	return allTandemRepeats
-}
-
-// add tandemrepeat to leftMostCoveringRepeats at index start if the last inserted tandem repeat at index start is not of same length
-func addToLeftMostCoveringRepeats(leftMostCoveringRepeats *[][]TandemRepeat, start int, k int) {
-	if len((*leftMostCoveringRepeats)[start]) == 0 {
-		(*leftMostCoveringRepeats)[start] = append((*leftMostCoveringRepeats)[start], TandemRepeat{start, k, 2})
-	} else if (*leftMostCoveringRepeats)[start][len((*leftMostCoveringRepeats)[start])-1].Length != k {
-		(*leftMostCoveringRepeats)[start] = append((*leftMostCoveringRepeats)[start], TandemRepeat{start, k, 2})
-	}
-}
-
-// Phase 1, pt 1
-// Compute the LZ decomposition of a string using a suffix tree
-func LZDecomposition(tree suffixtree.SuffixTreeInterface) ([]int, []int) {
-
-	// Initialize arrays to store the lengths of blocks and their starting positions
-	n := len(tree.GetInputString())
-	li := make([]int, n)
-	si := make([]int, n)
-
-	// Perform a depth-first traversal of the suffix tree to compute the LZ decomposition
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
-
-		// Traverse the children of the current node
-		for _, child := range node.Children {
-			if child == nil {
-				continue
-			}
-			if node.Label < child.Label {
-				li[child.Label] = depth
-				si[child.Label] = node.Label
-			}
-
-			dfs(child, depth+child.EdgeLength())
-
-		}
-	}
-
-	// Perform depth-first traversal starting from the root of the suffix tree
-	dfs(tree.GetRoot(), 0)
-
-	return li, si
-}
-
-// create blocks from the LZ decomposition
-func CreateLZBlocks(li []int, si []int) []int {
-	n := len(li)
-
-	//first block
-	blocks := []int{0}
-	iB := 0
-
-	//recursively define remaining blocks
-	for iB < n-1 {
-
-		//next start
-		iB += intMax(1, li[iB])
-		blocks = append(blocks, iB)
-
-	}
-	return blocks
-}
+// #######################################################################################
+// #######################################################################################
+// Additional functions
+// #######################################################################################
+// #######################################################################################
 
 // function to output all tandem repeats by traverseing subtrees and outputting labels
 func getAllTandemRepeatsFromDecoratedTree(tree suffixtree.SuffixTreeInterface) []TandemRepeat {
@@ -424,78 +465,31 @@ func getAllTandemRepeatsFromDecoratedTree(tree suffixtree.SuffixTreeInterface) [
 
 }
 
-// return the maximum of two integers
-func intMax(a, b int) int {
-	if a > b {
-		return a
-	} else {
-		return b
-	}
-}
-
-func reverseTRSlice(slice []TandemRepeat) {
-	n := len(slice)
-	for i := 0; i < n/2; i++ {
-		j := n - 1 - i
-		slice[i], slice[j] = slice[j], slice[i]
-	}
-}
-
-// find the longest common extension of two suffixes that starts at i and j
-func findLCEForwardSlow(s string, i, j int) int {
-
-	lce := 0
-
-	//match letters until we have a mismatch
-	for i < len(s) && j < len(s) {
-		if s[i] != s[j] {
-			return lce
-		} else {
-			i++
-			j++
-			lce++
+// compute LCP array of the string using the suffix tree
+func computeLCPArray(st suffixtree.SuffixTreeInterface) []int {
+	s := st.GetInputString()
+	n := len(s)
+	lcp := make([]int, n)
+	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
+	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
+		// Traverse the children of the current node
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			dfs(child, depth+child.EdgeLength())
 		}
-	}
-	return lce
 
-}
-
-// find the longest common extension of two suffixes that ends at i and j
-func findLCEBackwardSlow(s string, i, j int) int {
-	lce := 0
-
-	//match letters until we have a mismatch
-	for i >= 0 && j >= 0 {
-		if s[i] != s[j] {
-			return lce
-		} else {
-			i--
-			j--
-			lce++
+		// Process the current node
+		if !(st.GetRoot() == node) {
+			// Compute the LCP value for the current node
+			lcp[node.Label] = depth
 		}
-	}
-	return lce
-}
 
-// method for debugging. Check that 'something' is indeed a tandem repeat
-func isTandemRepeat(s string, node *suffixtree.SuffixTreeNode, lengthOnEdge int) bool {
-
-	substr := s[node.Label : node.Label+node.Parent.StringDepth+lengthOnEdge]
-
-	//check that the length of the tandem repeat is even
-	if len(substr)%2 != 0 {
-		//print the string
-		println("BAD1 string:", substr)
-		return false
 	}
 
-	//check that first half of the tandem repeat is equal to the second half
-	if substr[:len(substr)/2] != substr[len(substr)/2:] {
-		//print the string
-		println("BAD2 string:", substr)
-		return false
-	}
-	println("GOOD string:", substr)
+	// Perform depth-first traversal starting from the root of the suffix tree
+	dfs(st.GetRoot(), 0)
 
-	return true
+	return lcp
 }
