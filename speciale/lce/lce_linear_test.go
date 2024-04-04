@@ -1,6 +1,7 @@
 package lce
 
 import (
+	"math"
 	"speciale/stringgenerators"
 	"speciale/suffixtreeimpl"
 	"testing"
@@ -75,6 +76,94 @@ func TestLCEArrays(t *testing.T) {
 			t.Errorf("Expected L to be the same for all same E values")
 		}
 
+	}
+
+}
+
+// Test that the Blocks from L are created correctly
+func TestLBlocks(t *testing.T) {
+	randomGenerator_ab.SetSeed(1)
+	s := randomGenerator_ab.GenerateString(721)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	L, _, _ := createLERArrays(st)
+	blocks := createLBlocks(L)
+	n := len(L)
+	blockSize := int(math.Ceil(math.Log2(float64(n)) / 2))
+	numBlocks := int(math.Ceil(float64(n) / float64(blockSize)))
+
+	//check that blocks are correct size
+	if len(blocks) != numBlocks {
+		t.Errorf("Expected %d blocks, got %d", numBlocks, len(blocks))
+	}
+
+	LFromBlocks := 0
+	//check that blocks are correct size
+	for i := 0; i < len(blocks); i++ {
+		LFromBlocks += len(blocks[i])
+
+		if len(blocks[i]) != blockSize && i != len(blocks)-1 {
+			t.Errorf("Expected block size to be %d, got %d", blockSize, len(blocks[i]))
+		}
+
+		if i == len(blocks)-1 {
+			if len(blocks[i]) != n%blockSize || len(blocks[i]) == 0 {
+				t.Errorf("Expected block size to be %d, got %d", n%blockSize, len(blocks[i]))
+			}
+		}
+	}
+
+	//check that total length of blocks is equal to L
+	if LFromBlocks != len(L) {
+		t.Errorf("Expected total length of blocks to be %d, got %d", len(L), LFromBlocks)
+	}
+
+}
+
+// Test that L' and B' are computed correctly
+func TestLPrimeandBPrime(t *testing.T) {
+	randomGenerator_ab.SetSeed(1)
+	s := randomGenerator_ab.GenerateString(721)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	L, _, _ := createLERArrays(st)
+	blocks := createLBlocks(L)
+	LPrime, BPrime := computeLPrimeandBPrime(blocks)
+	sizeNormalBlock := len(blocks[0])
+
+	//check that L' and B' are correct size
+	if len(LPrime) != len(blocks) {
+		t.Errorf("Expected L' to be of size %d, got %d", len(blocks), len(LPrime))
+	}
+	if len(BPrime) != len(blocks) {
+		t.Errorf("Expected B' to be of size %d, got %d", len(blocks), len(BPrime))
+	}
+
+	//check that L' and B' are correct
+	for i, block := range blocks {
+		min := math.MaxInt32
+		for _, v := range block {
+			if v < min {
+				min = v
+			}
+		}
+		if LPrime[i] != min {
+			t.Errorf("Expected L'[i] to be the smallest element in the block")
+		}
+
+		minIndex := -1
+		for j, v := range block {
+			if v == min {
+				minIndex = j
+				break
+			}
+		}
+
+		if BPrime[i] != i*sizeNormalBlock+minIndex {
+			t.Errorf("Expected B'[i] to be the index of the smallest element in the block")
+		}
+
+		if L[BPrime[i]] != min {
+			t.Errorf("Expected L[B'[i]] (%d) to be the smallest element in the block (%d)", L[BPrime[i]], min)
+		}
 	}
 
 }

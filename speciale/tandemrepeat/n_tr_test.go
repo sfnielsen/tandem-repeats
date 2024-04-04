@@ -1,7 +1,6 @@
 package tandemrepeat
 
 import (
-	"fmt"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 	"testing"
@@ -126,7 +125,6 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 		phase1Repeats[GetTandemRepeatSubstring(v, input)] = v
 	}
 
-	fmt.Println(st.GetInputString())
 	// check that all repeats from phase 1 is in all repeats
 	for k, v := range phase1Repeats {
 		if _, ok := allRepeats[k]; !ok {
