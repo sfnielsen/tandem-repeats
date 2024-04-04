@@ -167,3 +167,34 @@ func TestLPrimeandBPrime(t *testing.T) {
 	}
 
 }
+
+// Test that the sparse table is computed correctly
+func TestSparseTable(t *testing.T) {
+	//setup
+	randomGenerator_ab.SetSeed(1)
+	s := randomGenerator_ab.GenerateString((1 << 10) + 1) //1025
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	L, _, _ := createLERArrays(st)
+	blocks := createLBlocks(L)
+	LPrime, _ := computeLPrimeandBPrime(blocks)
+	sparseTable := computeSparseTable(LPrime)
+
+	//iterate all combinations of i,j (i<=j) and check that RMQ is correct
+	for i := 0; i < len(LPrime)-1; i++ {
+		for j := i + 1; j < len(LPrime); j++ {
+			//naively find the smallest element in the range
+			min := math.MaxInt32
+			for k := i; k <= j; k++ {
+				if LPrime[k] < min {
+					min = LPrime[k]
+				}
+			}
+			//check that RMQ on the sparse table achieves the same result as the naive approach
+			if RMQLookup(i, j, sparseTable) != min {
+				t.Errorf("Expected RMQ to be %d, got %d for indexes i=%d,j=%d", min, RMQLookup(i, j, sparseTable), i, j)
+			}
+
+		}
+	}
+
+}

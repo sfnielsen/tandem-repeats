@@ -15,6 +15,7 @@ type LCELinear struct {
 	blocks     [][]int
 	LPrime     []int
 	BPrime     []int
+	LPrimeST   [][]int
 
 	//backward LCE queries
 	//TBD
@@ -29,7 +30,9 @@ func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 
 	LPrime, BPrime := computeLPrimeandBPrime(blocks)
 
-	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime}
+	LPrimeSparseTable := computeSparseTable(LPrime)
+
+	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable}
 }
 
 // create the three arrays: L,E,R by doing an euler tour of the suffix tree
@@ -121,4 +124,49 @@ func computeLPrimeandBPrime(blocks [][]int) ([]int, []int) {
 	}
 
 	return LPrime, BPrime
+}
+
+// function to compute sparse tables (ST) using dynamic programming
+func computeSparseTable(LPrime []int) [][]int {
+	//compute sparse table
+	n := len(LPrime)
+	sparseTable := make([][]int, n)
+	for i := 0; i < len(LPrime); i++ {
+		sparseTable[i] = make([]int, int(math.Ceil(math.Log2(float64(n))))+1)
+
+	}
+
+	//first compute first row (trivial)
+	for i, v := range LPrime {
+		sparseTable[i][0] = v
+	}
+
+	//compute the rest of the sparse table
+	for j := 1; 1<<j <= n; j++ {
+		for i := 0; i+(1<<j) <= n; i++ {
+			sparseTable[i][j] = minInt(sparseTable[i][j-1], sparseTable[i+(1<<(j-1))][j-1])
+		}
+	}
+
+	return sparseTable
+}
+
+// function to compute the LCE between two indices i and j
+func RMQLookup(i, j int, sparseTable [][]int) int {
+
+	k := int(math.Floor((math.Log2(float64(j - i)))))
+
+	range1 := sparseTable[i][k]
+	range2 := sparseTable[j-(1<<k)+1][k]
+
+	return minInt(range1, range2)
+
+}
+
+// helper function to find the minimum of two integers
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
