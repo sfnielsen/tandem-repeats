@@ -10,31 +10,47 @@ import (
 	"speciale/utils"
 )
 
+var logTandemAlgo = utils.AlgorithmBase{
+	Name: "TandemRepeat Logarithmic",
+	Algorithm: func(args ...interface{}) interface{} {
+		return tandemrepeat.FindAllBranchingTandemRepeatsLogarithmic(args[0].(suffixtree.SuffixTreeInterface))
+	},
+	ExpectedComplexity: "nlogn"}
+var logTR utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{logTandemAlgo}
+
+var lineraTandemAlgobase = utils.AlgorithmBase{
+	Name: "TandemRepeat Linear",
+	Algorithm: func(args ...interface{}) interface{} {
+		tandemrepeat.DecorateTreeWithVocabulary(args[0].(suffixtree.SuffixTreeInterface))
+		return []tandemrepeat.TandemRepeat{}
+	},
+	ExpectedComplexity: "n"}
+var linearTR utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{lineraTandemAlgobase}
+
+var naiveSuffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
+	Name: "SuffixTree Naive",
+	Algorithm: func(args ...interface{}) interface{} {
+		return suffixtreeimpl.ConstructNaiveSuffixTree(args[0].(string))
+	},
+	ExpectedComplexity: "n^2"}
+
+var mcCregightSuffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
+	Name: "SuffixTree McCreight",
+	Algorithm: func(args ...interface{}) interface{} {
+		return suffixtreeimpl.ConstructMcCreightSuffixTree(args[0].(string))
+	},
+	ExpectedComplexity: "n"}
+
 func main() {
-	var suffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
-		Name: "SuffixTree",
-		Algorithm: func(args ...interface{}) interface{} {
-			return suffixtreeimpl.ConstructNaiveSuffixTree(args[0].(string))
-		},
-		ExpectedComplexity: "nlogn"}
-	tandemAlgo := utils.AlgorithmBase{
-		Name: "TandemRepeat",
-		Algorithm: func(args ...interface{}) interface{} {
-			return tandemrepeat.FindAllBranchingTandemRepeatsLogarithmic(args[0].(suffixtree.SuffixTreeInterface))
-		},
-		ExpectedComplexity: "nlogn"}
+	functionSlice := []utils.AlgorithmInterface{mcCregightSuffixTreeAlgo}
 
-	var tdalg utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemAlgo}
-
-	functionSlice := []utils.AlgorithmInterface{suffixTreeAlgo, tdalg}
-
-	utils.TakeTimeAndSave(functionSlice, 70000, 70, stringgenerators.AlphabetAB)
+	utils.TakeTimeAndSave(functionSlice, 240000, 30, stringgenerators.AlphabetA)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}
 
 	// Build the command to execute the Python script
-	cmd := exec.Command("python", pythonScript)
+	cmd := exec.Command("python3", pythonScript)
 
 	// Capture the output of the Python script
 	_, err := cmd.Output()

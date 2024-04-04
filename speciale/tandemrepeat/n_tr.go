@@ -60,12 +60,9 @@ func Algorithm3(tree suffixtree.SuffixTreeInterface) {
 				//attempt suffix walk
 				for _, v := range node.TandemRepeatDeco {
 					attemptSuffixWalk(tree, node, v)
-
 				}
 			}
-
 		}
-
 	}
 
 	// Perform depth-first traversal starting from the root of the suffix tree
