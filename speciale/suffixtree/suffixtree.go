@@ -18,7 +18,7 @@ type SuffixTreeInterface interface {
 	AddBiggestChildToNodes()
 
 	// Compute leafs of the suffix tree and return them as a slice of nodes
-	ComputeLeafs() map[int]*SuffixTreeNode
+	ComputeLeafs() []*SuffixTreeNode
 }
 
 type SuffixTree struct {
@@ -117,8 +117,8 @@ func (n *SuffixTree) incrementSize() {
 	n.Size++
 }
 
-func (n *SuffixTree) ComputeLeafs() map[int]*SuffixTreeNode {
-	leafs := make(map[int]*SuffixTreeNode)
+func (n *SuffixTree) ComputeLeafs() []*SuffixTreeNode {
+	leafs := make([]*SuffixTreeNode, len(n.GetInputString()))
 	var dfs func(node *SuffixTreeNode)
 	dfs = func(node *SuffixTreeNode) {
 		if node.IsLeaf() {

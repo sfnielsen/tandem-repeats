@@ -148,7 +148,7 @@ func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface
 func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRepeat) {
 	for k := 1; k <= h1-h; k++ {
 		q := h1 - k
-		k1 := findLCEForwardSlow(s, h1, q)
+		k1 := FindLCEForwardSlow(s, h1, q)
 		k2 := findLCEBackwardSlow(s, h1-1, q-1)
 		start := intMax(q-k2, q-k+1)
 		if k1+k2 >= k && k1 > 0 {
@@ -161,7 +161,7 @@ func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRep
 func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]TandemRepeat) {
 	for k := 1; k <= h2-h; k++ {
 		q := h + k
-		k1 := findLCEForwardSlow(s, h, q)
+		k1 := FindLCEForwardSlow(s, h, q)
 		k2 := findLCEBackwardSlow(s, h-1, q-1)
 		start := intMax(h-k2, h-k+1)
 		if k1+k2 >= k && k1 > 0 && start+k <= h1 && k2 > 0 {
@@ -172,7 +172,7 @@ func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]T
 }
 
 // find the longest common extension of two suffixes that starts at i and j
-func findLCEForwardSlow(s string, i, j int) int {
+func FindLCEForwardSlow(s string, i, j int) int {
 
 	lce := 0
 

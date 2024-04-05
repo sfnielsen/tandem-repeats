@@ -4,6 +4,7 @@ import (
 	"math"
 	"speciale/stringgenerators"
 	"speciale/suffixtreeimpl"
+	"speciale/tandemrepeat"
 	"strconv"
 	"testing"
 )
@@ -36,7 +37,7 @@ func TestLCEArrays(t *testing.T) {
 
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
 
-	L, E, R := createLERArrays(st)
+	L, E, R, _ := createLERArrays(st)
 	n := st.GetSize()
 
 	//check that L,E,R sizes are correct
@@ -86,7 +87,7 @@ func TestLBlocks(t *testing.T) {
 	randomGenerator_ab.SetSeed(1)
 	s := randomGenerator_ab.GenerateString(721)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	L, _, _ := createLERArrays(st)
+	L, _, _, _ := createLERArrays(st)
 	blocks := createLBlocks(L)
 	n := len(L)
 	blockSize := int(math.Ceil(math.Log2(float64(n)) / 2))
@@ -125,7 +126,7 @@ func TestLPrimeandBPrime(t *testing.T) {
 	randomGenerator_ab.SetSeed(1)
 	s := randomGenerator_ab.GenerateString(721)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	L, _, _ := createLERArrays(st)
+	L, _, _, _ := createLERArrays(st)
 	blocks := createLBlocks(L)
 	LPrime, BPrime := computeLPrimeandBPrime(blocks)
 	sizeNormalBlock := len(blocks[0])
@@ -175,7 +176,7 @@ func TestSparseTable(t *testing.T) {
 	randomGenerator_ab.SetSeed(1)
 	s := randomGenerator_ab.GenerateString((1 << 10) + 1) //1025
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	L, _, _ := createLERArrays(st)
+	L, _, _, _ := createLERArrays(st)
 	blocks := createLBlocks(L)
 	LPrime, _ := computeLPrimeandBPrime(blocks)
 	sparseTable := computeSparseTable(LPrime)
@@ -191,7 +192,7 @@ func TestSparseTable(t *testing.T) {
 				}
 			}
 			//check that RMQ on the sparse table achieves the same result as the naive approach
-			if RMQLookup(i, j, sparseTable) != min {
+			if RMQLookup(i, j, sparseTable).level != min {
 				t.Errorf("Expected RMQ to be %d, got %d for indexes i=%d,j=%d", min, RMQLookup(i, j, sparseTable), i, j)
 			}
 
@@ -232,7 +233,7 @@ func TestComputeNormalizedBlock(t *testing.T) {
 	randomGenerator_ab.SetSeed(1)
 	s := randomGenerator_ab.GenerateString((1 << 10) + 1) //1025
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	L, _, _ := createLERArrays(st)
+	L, _, _, _ := createLERArrays(st)
 	blocks := createLBlocks(L)
 
 	normalizedBlocks := computeNormalizedBlockSparseTables(blocks)
@@ -251,10 +252,34 @@ func TestComputeNormalizedBlock(t *testing.T) {
 					}
 				}
 				//check that RMQ on the sparse table achieves the same result as the naive approach
-				if RMQLookup(i, j, blockST)+blockStart != min {
+				if RMQLookup(i, j, blockST).level+blockStart != min {
 					t.Errorf("Expected RMQ to be %d, got %d for indexes i=%d,j=%d", min, RMQLookup(i, j, blockST), i, j)
 				}
 
+			}
+		}
+	}
+
+}
+
+func TestForwardLookup(t *testing.T) {
+	randomGenerator_ab.SetSeed(123)
+	s := randomGenerator_ab.GenerateString(121)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	st.AddStringDepth()
+
+	// run through all pairs of i and j
+	for i := 0; i < len(s)-1; i++ {
+		for j := i + 1; j < len(s); j++ {
+			// find the LCE using the slow method
+			realLength := tandemrepeat.FindLCEForwardSlow(s, i, j)
+			// find the LCE using the LCELookup method
+
+			lceObject := PreProcessLCE(st)
+			lca := lceObject.LCELookup(i, j)
+
+			if realLength != lca.StringDepth {
+				t.Errorf("Expected %d, got %d", realLength, lca.StringDepth)
 			}
 		}
 	}
