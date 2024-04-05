@@ -13,7 +13,7 @@ var (
 	randomGenerator_protein stringgenerators.StringGenerator
 	randomGenerator_ab      stringgenerators.StringGenerator
 	randomGenerator_dna     stringgenerators.StringGenerator
-	randomGenerator_ascii   stringgenerators.StringGenerator
+	randomGenerator_byte    stringgenerators.StringGenerator
 	randomGenerator_a       stringgenerators.StringGenerator
 )
 
@@ -23,7 +23,7 @@ func init() {
 		randomGenerator_protein = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetProtein}
 		randomGenerator_ab = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetAB}
 		randomGenerator_dna = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetDNA}
-		randomGenerator_ascii = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetASCII}
+		randomGenerator_byte = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetByte}
 		randomGenerator_a = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetA}
 		setupCompleted = true
 	}
@@ -104,7 +104,7 @@ func TestFindTandemRepeatsLogarithmicSimpleExample(t *testing.T) {
 
 func TestFindTandemRepeatsLogarithmicMultipleStringtypes(t *testing.T) {
 	//generate some big strings from the stringgenerators
-	stringArrays := stringgenerators.GenerateStringArray(100, 1200, []stringgenerators.StringGenerator{randomGenerator_protein, randomGenerator_ab, randomGenerator_dna, randomGenerator_ascii})
+	stringArrays := stringgenerators.GenerateStringArray(100, 1200, []stringgenerators.StringGenerator{randomGenerator_protein, randomGenerator_ab, randomGenerator_dna, randomGenerator_byte})
 
 	for _, s := range stringArrays {
 		// find tandem repeats with the naive_tr
