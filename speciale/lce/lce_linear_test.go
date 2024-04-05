@@ -4,6 +4,7 @@ import (
 	"math"
 	"speciale/stringgenerators"
 	"speciale/suffixtreeimpl"
+	"strconv"
 	"testing"
 )
 
@@ -194,6 +195,67 @@ func TestSparseTable(t *testing.T) {
 				t.Errorf("Expected RMQ to be %d, got %d for indexes i=%d,j=%d", min, RMQLookup(i, j, sparseTable), i, j)
 			}
 
+		}
+	}
+
+}
+
+func TestConvertBinaryToValues(t *testing.T) {
+	// test whether the testarray produces the same int as the binary string parsed to int
+	binaryString := "111010"
+
+	// Parse binary string to integer
+	correct, _ := strconv.ParseInt(binaryString, 2, 64)
+
+	testArray := []int{3, 4, 5, 4, 5, 4}
+	resultingInt := convertBlockToInt(testArray)
+	if correct != int64(resultingInt) {
+		// test failed
+		t.Errorf("Expected %d, got %d", correct, resultingInt)
+	}
+
+	// test longer binary string
+	binaryString = "111010100101011110101011"
+	correct, _ = strconv.ParseInt(binaryString, 2, 64)
+
+	//create testarray
+	testArray = []int{3, 4, 5, 4, 5, 4, 5, 4, 3, 4, 3, 4, 3, 4, 5, 6, 7, 6, 7, 6, 7, 6, 7, 8}
+	resultingInt = convertBlockToInt(testArray)
+	if correct != int64(resultingInt) {
+		// test failed
+		t.Errorf("Expected %d, got %d", correct, resultingInt)
+	}
+
+}
+
+func TestComputeNormalizedBlock(t *testing.T) {
+	randomGenerator_ab.SetSeed(1)
+	s := randomGenerator_ab.GenerateString((1 << 10) + 1) //1025
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	L, _, _ := createLERArrays(st)
+	blocks := createLBlocks(L)
+
+	normalizedBlocks := computeNormalizedBlockSparseTables(blocks)
+
+	for _, block := range blocks {
+		blockStart := block[0]
+		blockAsBinary := convertBlockToInt(block)
+		blockST := normalizedBlocks[blockAsBinary]
+		for i := 0; i < len(block)-1; i++ {
+			for j := i + 1; j < len(block); j++ {
+				//naively find the smallest element in the range
+				min := math.MaxInt32
+				for k := i; k <= j; k++ {
+					if block[k] < min {
+						min = block[k]
+					}
+				}
+				//check that RMQ on the sparse table achieves the same result as the naive approach
+				if RMQLookup(i, j, blockST)+blockStart != min {
+					t.Errorf("Expected RMQ to be %d, got %d for indexes i=%d,j=%d", min, RMQLookup(i, j, blockST), i, j)
+				}
+
+			}
 		}
 	}
 

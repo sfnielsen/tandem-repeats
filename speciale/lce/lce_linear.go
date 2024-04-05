@@ -8,14 +8,15 @@ import (
 // LCELinear holds the preprocessed data for the LCE linear time algorithm
 type LCELinear struct {
 	//forward LCE queries
-	suffixTree *suffixtree.SuffixTreeInterface
-	L          []int
-	E          []int
-	R          []int
-	blocks     [][]int
-	LPrime     []int
-	BPrime     []int
-	LPrimeST   *sparseTable
+	suffixTree                  *suffixtree.SuffixTreeInterface
+	L                           []int
+	E                           []int
+	R                           []int
+	blocks                      [][]int
+	LPrime                      []int
+	BPrime                      []int
+	LPrimeST                    *sparseTable
+	NormalizedBlockSparseTables []*sparseTable
 
 	//backward LCE queries
 	//TBD
@@ -33,8 +34,9 @@ func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 	// compute sparse table for L'
 	LPrimeSparseTable := computeSparseTable(LPrime)
 	// precompute all possible normalized blocks
+	NormalizedBlockSparseTables := computeNormalizedBlockSparseTables(blocks)
 
-	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable}
+	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables}
 }
 
 // create the three arrays: L,E,R by doing an euler tour of the suffix tree
@@ -174,39 +176,50 @@ func intMin(a, b int) int {
 }
 
 // compute all normalized blocks
-func computeNormalizedBlocks(blockLength int) []*sparseTable {
-	// Total number of possible blocks (each element can be + or -)
-	totalNormalizedBlocks := 1 << uint(blockLength)
-
+func computeNormalizedBlockSparseTables(blocks [][]int) []*sparseTable {
 	// Create a 2D slice to store all blocks
+	totalNormalizedBlocks := 1 << uint(len(blocks[0]))
 	normalizedBlocks := make([]*sparseTable, totalNormalizedBlocks)
 
-	// Iterate over all possible blocks and initialize their sparse tables
-	for i := range normalizedBlocks {
-		// Initialize the Sparse Table for the current block
-
-		values := convertBinaryToValues(i, blockLength)
-		normalizedBlocks[i] = computeSparseTable(values)
+	// Total number of possible blocks (each element can be + or -)
+	for _, block := range blocks {
+		blockAsInt := convertBlockToInt(block)
+		if normalizedBlocks[blockAsInt] == nil {
+			// subtract the first element from the rest of the block
+			normalizedBlock := normalizeBlock(block)
+			normalizedBlocks[blockAsInt] = computeSparseTable(normalizedBlock)
+		}
 	}
-
 	return normalizedBlocks
 }
 
-// convertBinaryToValues converts a binary number to a sequence of +1 and -1 values
-func convertBinaryToValues(binaryNumber int, length int) []int {
-	values := make([]int, length)
-
-	// Iterate over each bit position
-	for i := 0; i < length; i++ {
-		// Extract the i-th bit from the binaryNumber
-		bit := (binaryNumber >> uint(i)) & 1
-		// If bit is 0, set the corresponding value to -1, otherwise set it to +1
-		if bit == 0 {
-			values[i] = -1
-		} else {
-			values[i] = 1
+func normalizeBlock(block []int) []int {
+	// subtract the first element from the rest of the block
+	normalizedBlock := make([]int, len(block))
+	for i, v := range block {
+		if i == 0 {
+			continue
 		}
+		normalizedBlock[i] = v - block[0]
+	}
+	return normalizedBlock
+
+}
+
+// convertBinaryToValues converts a binary number to a sequence of +1 and -1 values
+func convertBlockToInt(block []int) int {
+	// Iterate over each bit position
+	number := 1
+	for i, v := range block {
+		if i == 0 {
+			continue
+		}
+		number = number << 1
+		if block[i-1]-v == -1 {
+			number += 1
+		}
+
 	}
 
-	return values
+	return number
 }
