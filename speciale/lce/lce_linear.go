@@ -3,6 +3,7 @@ package lce
 import (
 	"math"
 	"speciale/suffixtree"
+	"speciale/suffixtreeimpl"
 )
 
 // LCELinear holds the preprocessed data for the LCE linear time algorithm
@@ -23,11 +24,30 @@ type LCELinear struct {
 	//backward LCE queries
 	//TBD
 }
+
+// LCELinearTwoWays holds the preprocessed data for the LCE linear time algorithm
+type LCELinearTwoWays struct {
+	forward  *LCELinear //forward LCE queries
+	backward *LCELinear //backward LCE queries
+}
+
 type stTuple struct {
 	level int
 	index int
 }
 type sparseTable = [][]stTuple
+
+// LCELookupForward returns the longest common extension of the nodes at index i and j in the forward direction
+func (lceTwoWays *LCELinearTwoWays) LCELookupForward(i, j int) *suffixtree.SuffixTreeNode {
+	return lceTwoWays.forward.LCELookup(i, j)
+}
+
+// LCELookupBackward returns the longest common extension of the nodes at index i and j in the BACKWARD direction
+func (lceTwoWays *LCELinearTwoWays) LCELookupBackward(i, j int) *suffixtree.SuffixTreeNode {
+	stringLength := len((*lceTwoWays.backward.suffixTree).GetInputString())
+	return lceTwoWays.backward.LCELookup(stringLength-(j+2), stringLength-(i+2))
+
+}
 
 func (lce *LCELinear) LCELookup(i, j int) *suffixtree.SuffixTreeNode {
 	//find the lowest common ancestor of i and j
@@ -91,15 +111,25 @@ func (lce *LCELinear) LCELookup(i, j int) *suffixtree.SuffixTreeNode {
 	}
 }
 
-func IntMin(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+// main function for linear time LCE preprocessing in both directions
+func PreProcessLCEBothDirections(st suffixtree.SuffixTreeInterface) *LCELinearTwoWays {
+	//create forward LCE
+	forwardLCE := PreProcessLCE(st)
+
+	//create backward LCE
+	reversedString := reverseStringWithSentinel(st.GetInputString())
+	reversedSuffixTree := suffixtreeimpl.ConstructMcCreightSuffixTree(reversedString)
+	reversedSuffixTree.AddStringDepth()
+
+	backwardLCE := PreProcessLCE(reversedSuffixTree)
+
+	return &LCELinearTwoWays{forward: forwardLCE, backward: backwardLCE}
+
 }
 
-// main function for the LCE linear time preprocessing
+// main function for the LCE linear time preprocessing (in one direction)
 func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
+
 	//create L,E,R arrays
 	L, E, R, EulerindexToNode := createLERArrays(st)
 	// divide L into blocks
@@ -112,6 +142,7 @@ func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 	NormalizedBlockSparseTables := computeNormalizedBlockSparseTables(blocks)
 	// compute leafs of tree
 	leafSlice := st.ComputeLeafs()
+
 	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, leafSlice, EulerindexToNode}
 }
 
@@ -309,4 +340,20 @@ func convertBlockToInt(block []int) int {
 	}
 
 	return number
+}
+
+// Function that reverses a string ending with a sentinel character
+// The sentinel is excluded from the reversal, and added back at the end
+// after the reversal
+func reverseStringWithSentinel(s string) string {
+	runes := []rune(s)
+	//remove sentinel
+	runes = runes[:len(runes)-1]
+	//reverse
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	//add sentinel
+	runes = append(runes, '$')
+	return string(runes)
 }
