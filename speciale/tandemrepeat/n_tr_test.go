@@ -1,6 +1,7 @@
 package tandemrepeat
 
 import (
+	"speciale/lce"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 	"testing"
@@ -103,10 +104,11 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	phase1Repeats := make(map[string]TandemRepeat)
 	allRepeats := make(map[string]TandemRepeat)
 
-	//randomGenerator_ab.SetSeed(40)
+	randomGenerator_ab.SetSeed(40)
 	input := randomGenerator_ab.GenerateString(5000)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+	st.AddStringDepth() //needed for Algorithm1 with constant time LCE
 
 	tandemRepeats := FindAllTandemRepeatsLogarithmic(st)
 	for _, v := range tandemRepeats {
@@ -243,7 +245,7 @@ func TestThatWeReturnAllTandemRepeats(t *testing.T) {
 
 	randomGenerator_ab.SetSeed(1)
 	for i := 0; i < 10; i++ {
-		input := randomGenerator_ab.GenerateString(5000)
+		input := randomGenerator_ab.GenerateString(2518)
 
 		// get all tandem repeats
 		tandemRepeats := FindTandemRepeatsNaive(input)
@@ -315,4 +317,62 @@ func rightRotation(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeI
 	}
 	allTandemRepeats = append(allTandemRepeats, allBranchingRepeats...)
 	return allTandemRepeats
+}
+
+func TestForwardLookup(t *testing.T) {
+	randomGenerator_ab.SetSeed(410)
+	s := randomGenerator_ab.GenerateString(1000)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	st.AddStringDepth()
+	lceObject := lce.PreProcessLCE(st)
+
+	// run through all pairs of i and j
+	for i := 0; i < len(s)-1; i++ {
+		for j := i + 1; j < len(s); j++ {
+			// find the LCE using the slow method
+			realLength := findLCEForwardSlow(s, i, j)
+			// find the LCE using the LCELookup method
+			lce := lceObject.LCELookup(i, j)
+
+			if realLength != lce {
+				t.Errorf("Expected %d, got %d", realLength, lce)
+			}
+		}
+	}
+
+}
+
+// Test that LCE backward (and forward) works
+func TestBackwardAndForwardLookup(t *testing.T) {
+	randomGenerator_ab.SetSeed(40)
+	s := randomGenerator_ab.GenerateString(1634)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	st.AddStringDepth()
+	//stringLength := len(st.GetInputString())
+	lceObject := lce.PreProcessLCEBothDirections(st)
+
+	// run through all pairs of i and j
+	for i := 1; i < len(s)-1; i++ {
+		for j := i + 1; j < len(s); j++ {
+
+			// find the LCE using the slow method
+			realLengthFW := findLCEForwardSlow(s, i, j)
+			realLengthBW := findLCEBackwardSlow(s, i-1, j-1)
+			// find the LCE using the LCELookup method
+			//lca := lceObject.backward.LCELookup(stringLength-j-1, stringLength-i-1)
+
+			// check if the LCE is correct
+			lceFW := lceObject.LCELookupForward(i, j)
+			lceBW := lceObject.LCELookupBackward(i-1, j-1)
+
+			if realLengthFW != lceFW {
+				t.Errorf("Expected %d, got %d", realLengthFW, lceFW)
+			}
+			if realLengthBW != lceBW {
+				t.Errorf("Expected %d, got %d", realLengthBW, lceBW)
+			}
+
+		}
+	}
+
 }

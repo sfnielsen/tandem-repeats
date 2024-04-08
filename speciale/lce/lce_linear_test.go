@@ -4,7 +4,6 @@ import (
 	"math"
 	"speciale/stringgenerators"
 	"speciale/suffixtreeimpl"
-	"speciale/tandemrepeat"
 	"strconv"
 	"testing"
 )
@@ -257,64 +256,6 @@ func TestComputeNormalizedBlock(t *testing.T) {
 				}
 
 			}
-		}
-	}
-
-}
-
-func TestForwardLookup(t *testing.T) {
-	randomGenerator_ab.SetSeed(123)
-	s := randomGenerator_ab.GenerateString(1229)
-	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	st.AddStringDepth()
-	lceObject := PreProcessLCE(st)
-
-	// run through all pairs of i and j
-	for i := 0; i < len(s)-1; i++ {
-		for j := i + 1; j < len(s); j++ {
-			// find the LCE using the slow method
-			realLength := tandemrepeat.FindLCEForwardSlow(s, i, j)
-			// find the LCE using the LCELookup method
-			lca := lceObject.LCELookup(i, j)
-
-			if realLength != lca.StringDepth {
-				t.Errorf("Expected %d, got %d", realLength, lca.StringDepth)
-			}
-		}
-	}
-
-}
-
-// Test that LCE backward works
-func TestBackwardAndForwardLookup(t *testing.T) {
-	randomGenerator_ab.SetSeed(124)
-	s := randomGenerator_ab.GenerateString(1053)
-	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	st.AddStringDepth()
-	//stringLength := len(st.GetInputString())
-	lceObject := PreProcessLCEBothDirections(st)
-
-	// run through all pairs of i and j
-	for i := 1; i < len(s)-1; i++ {
-		for j := i + 1; j < len(s); j++ {
-
-			// find the LCE using the slow method
-			realLengthFW := tandemrepeat.FindLCEForwardSlow(s, i, j)
-			realLengthBW := tandemrepeat.FindLCEBackwardSlow(s, i-1, j-1)
-			// find the LCE using the LCELookup method
-			//lca := lceObject.backward.LCELookup(stringLength-j-1, stringLength-i-1)
-
-			// check if the LCE is correct
-			lcaFW := lceObject.LCELookupForward(i, j)
-			lcaBW := lceObject.LCELookupBackward(i-1, j-1)
-
-			if realLengthFW != lcaFW.StringDepth {
-				t.Errorf("Expected %d, got %d", realLengthFW, lcaFW.StringDepth)
-			}
-			if realLengthBW != lcaBW.StringDepth {
-				t.Errorf("Expected %d, got %d", realLengthBW, lcaBW.StringDepth)
-			}
-
 		}
 	}
 
