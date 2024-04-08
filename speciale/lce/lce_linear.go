@@ -38,18 +38,28 @@ type stTuple struct {
 type sparseTable = [][]stTuple
 
 // LCELookupForward returns the longest common extension of the nodes at index i and j in the forward direction
-func (lceTwoWays *LCELinearTwoWays) LCELookupForward(i, j int) *suffixtree.SuffixTreeNode {
+func (lceTwoWays *LCELinearTwoWays) LCELookupForward(i, j int) int {
+	stringLength := len((*lceTwoWays.forward.suffixTree).GetInputString())
+	if i >= stringLength || j >= stringLength {
+		return 0
+	}
+
 	return lceTwoWays.forward.LCELookup(i, j)
 }
 
 // LCELookupBackward returns the longest common extension of the nodes at index i and j in the BACKWARD direction
-func (lceTwoWays *LCELinearTwoWays) LCELookupBackward(i, j int) *suffixtree.SuffixTreeNode {
+func (lceTwoWays *LCELinearTwoWays) LCELookupBackward(i, j int) int {
 	stringLength := len((*lceTwoWays.backward.suffixTree).GetInputString())
-	return lceTwoWays.backward.LCELookup(stringLength-(j+2), stringLength-(i+2))
+	revI, revJ := stringLength-(j+2), stringLength-(i+2)
+	if revI < 0 || revJ < 0 || revI >= stringLength || revJ >= stringLength {
+		return 0
+	}
+
+	return lceTwoWays.backward.LCELookup(revI, revJ)
 
 }
 
-func (lce *LCELinear) LCELookup(i, j int) *suffixtree.SuffixTreeNode {
+func (lce *LCELinear) LCELookup(i, j int) int {
 	//find the lowest common ancestor of i and j
 	leaf_i := lce.Leafs[i]
 	leaf_j := lce.Leafs[j]
@@ -72,7 +82,7 @@ func (lce *LCELinear) LCELookup(i, j int) *suffixtree.SuffixTreeNode {
 		//find the LCA in the normalized block
 		lca := RMQLookup(eulerindex_i%blockSize, eulerindex_j%blockSize, normalizedBlockSparseTable)
 		lcaEulerIdx := int(block_i)*blockSize + lca.index
-		return lce.EulerindexToNode[lce.E[lcaEulerIdx]]
+		return lce.EulerindexToNode[lce.E[lcaEulerIdx]].StringDepth
 	} else {
 		// case 2:   They are on different blocks (i < j   always)
 		// find the LCA in the first block
@@ -88,9 +98,9 @@ func (lce *LCELinear) LCELookup(i, j int) *suffixtree.SuffixTreeNode {
 		//edgecase when block i and j are adjacent
 		if block_j == block_i+1 {
 			if lca1.level < lca2.level {
-				return lce.EulerindexToNode[lce.E[int(block_i)*blockSize+lca1.index]]
+				return lce.EulerindexToNode[lce.E[int(block_i)*blockSize+lca1.index]].StringDepth
 			}
-			return lce.EulerindexToNode[lce.E[int(block_j)*blockSize+lca2.index]]
+			return lce.EulerindexToNode[lce.E[int(block_j)*blockSize+lca2.index]].StringDepth
 		}
 
 		//i and j are not adjacent
@@ -102,12 +112,12 @@ func (lce *LCELinear) LCELookup(i, j int) *suffixtree.SuffixTreeNode {
 
 		if lca1.level < lca2.level {
 			if lca1.level < lca3.level {
-				return lce.EulerindexToNode[lce.E[lca1EulerIdx]]
+				return lce.EulerindexToNode[lce.E[lca1EulerIdx]].StringDepth
 			}
 		} else if lca2.level < lca3.level {
-			return lce.EulerindexToNode[lce.E[lca2EulerIdx]]
+			return lce.EulerindexToNode[lce.E[lca2EulerIdx]].StringDepth
 		}
-		return lce.EulerindexToNode[lce.E[lca3EulerIdx]]
+		return lce.EulerindexToNode[lce.E[lca3EulerIdx]].StringDepth
 	}
 }
 
