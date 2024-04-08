@@ -175,42 +175,6 @@ func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]T
 
 }
 
-// find the longest common extension of two suffixes that starts at i and j
-func findLCEForwardSlow(s string, i, j int) int {
-
-	lce := 0
-
-	//match letters until we have a mismatch
-	for i < len(s) && j < len(s) {
-		if s[i] != s[j] {
-			return lce
-		} else {
-			i++
-			j++
-			lce++
-		}
-	}
-	return lce
-
-}
-
-// find the longest common extension of two suffixes that ends at i and j
-func findLCEBackwardSlow(s string, i, j int) int {
-	lce := 0
-
-	//match letters until we have a mismatch
-	for i >= 0 && j >= 0 {
-		if s[i] != s[j] {
-			return lce
-		} else {
-			i--
-			j--
-			lce++
-		}
-	}
-	return lce
-}
-
 // add tandemrepeat to leftMostCoveringRepeats at index start if the last inserted tandem repeat at index start is not of same length
 func addToLeftMostCoveringRepeats(leftMostCoveringRepeats *[][]TandemRepeat, start int, k int) {
 	if len((*leftMostCoveringRepeats)[start]) == 0 {
@@ -467,33 +431,4 @@ func getAllTandemRepeatsFromDecoratedTree(tree suffixtree.SuffixTreeInterface) [
 
 	return tandemRepeats
 
-}
-
-// compute LCP array of the string using the suffix tree
-func computeLCPArray(st suffixtree.SuffixTreeInterface) []int {
-	s := st.GetInputString()
-	n := len(s)
-	lcp := make([]int, n)
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) {
-		// Traverse the children of the current node
-		for _, child := range node.Children {
-			if child == nil {
-				continue
-			}
-			dfs(child, depth+child.EdgeLength())
-		}
-
-		// Process the current node
-		if !(st.GetRoot() == node) {
-			// Compute the LCP value for the current node
-			lcp[node.Label] = depth
-		}
-
-	}
-
-	// Perform depth-first traversal starting from the root of the suffix tree
-	dfs(st.GetRoot(), 0)
-
-	return lcp
 }

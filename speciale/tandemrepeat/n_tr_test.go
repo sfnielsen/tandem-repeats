@@ -330,7 +330,7 @@ func TestForwardLookup(t *testing.T) {
 	for i := 0; i < len(s)-1; i++ {
 		for j := i + 1; j < len(s); j++ {
 			// find the LCE using the slow method
-			realLength := findLCEForwardSlow(s, i, j)
+			realLength := lce.FindLCEForwardSlow(s, i, j)
 			// find the LCE using the LCELookup method
 			lce := lceObject.LCELookup(i, j)
 
@@ -356,8 +356,8 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 		for j := i + 1; j < len(s); j++ {
 
 			// find the LCE using the slow method
-			realLengthFW := findLCEForwardSlow(s, i, j)
-			realLengthBW := findLCEBackwardSlow(s, i-1, j-1)
+			realLengthFW := lce.FindLCEForwardSlow(s, i, j)
+			realLengthBW := lce.FindLCEBackwardSlow(s, i-1, j-1)
 			// find the LCE using the LCELookup method
 			//lca := lceObject.backward.LCELookup(stringLength-j-1, stringLength-i-1)
 

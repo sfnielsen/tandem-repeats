@@ -6,7 +6,14 @@ import (
 	"speciale/suffixtreeimpl"
 )
 
+// #######################################################################################
+// #######################################################################################
+// Types
+// #######################################################################################
+// #######################################################################################
+
 // LCELinear holds the preprocessed data for the LCE linear time algorithm
+// Preprocessing time: O(n),Space complexity: O(n), Query time: O(1)
 type LCELinear struct {
 	//forward LCE queries
 	suffixTree                  *suffixtree.SuffixTreeInterface
@@ -36,6 +43,12 @@ type stTuple struct {
 	index int
 }
 type sparseTable = [][]stTuple
+
+// #######################################################################################
+// #######################################################################################
+// Query functions
+// #######################################################################################
+// #######################################################################################
 
 // LCELookupForward returns the longest common extension of the nodes at index i and j in the forward direction
 func (lceTwoWays *LCELinearTwoWays) LCELookupForward(i, j int) int {
@@ -120,6 +133,12 @@ func (lce *LCELinear) LCELookup(i, j int) int {
 		return lce.EulerindexToNode[lce.E[lca3EulerIdx]].StringDepth
 	}
 }
+
+// #######################################################################################
+// #######################################################################################
+// Preprocessing functions
+// #######################################################################################
+// #######################################################################################
 
 // main function for linear time LCE preprocessing in both directions
 func PreProcessLCEBothDirections(st suffixtree.SuffixTreeInterface) *LCELinearTwoWays {
