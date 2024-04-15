@@ -59,8 +59,8 @@ func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
 	}
 
 	// Compute the blocks and Z-values
-	li, si := LZDecomposition(tree)
-	blocks := CreateLZBlocks(li, si)
+	li := LZDecomposition(tree)
+	blocks := CreateLZBlocks(li)
 
 	// add idx to dfs table
 	idxToDfsTable := getIdxtoDfsTable(tree)
@@ -76,12 +76,11 @@ func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
 
 // Phase 1, pt 1
 // Compute the LZ decomposition of a string using a suffix tree
-func LZDecomposition(tree suffixtree.SuffixTreeInterface) ([]int, []int) {
+func LZDecomposition(tree suffixtree.SuffixTreeInterface) []int {
 
 	// Initialize arrays to store the lengths of blocks and their starting positions
 	n := len(tree.GetInputString())
 	li := make([]int, n)
-	si := make([]int, n)
 
 	// Perform a depth-first traversal of the suffix tree to compute the LZ decomposition
 	var dfs func(node *suffixtree.SuffixTreeNode, depth int)
@@ -94,7 +93,6 @@ func LZDecomposition(tree suffixtree.SuffixTreeInterface) ([]int, []int) {
 			}
 			if node.Label < child.Label {
 				li[child.Label] = depth
-				si[child.Label] = node.Label
 			}
 
 			dfs(child, depth+child.EdgeLength())
@@ -105,11 +103,11 @@ func LZDecomposition(tree suffixtree.SuffixTreeInterface) ([]int, []int) {
 	// Perform depth-first traversal starting from the root of the suffix tree
 	dfs(tree.GetRoot(), 0)
 
-	return li, si
+	return li
 }
 
 // create blocks from the LZ decomposition
-func CreateLZBlocks(li []int, si []int) []int {
+func CreateLZBlocks(li []int) []int {
 	n := len(li)
 
 	//first block
@@ -142,7 +140,6 @@ func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface
 
 		// Process block B for tandem repeats that satisfy condition 2
 		Algorithm1b(s, h, h1, h2, leftMostCoveringRepeats, lceObject)
-
 		// Process block B for tandem repeats that satisfy condition 1
 		Algorithm1a(s, h, h1, leftMostCoveringRepeats, lceObject)
 
