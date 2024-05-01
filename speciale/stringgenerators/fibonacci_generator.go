@@ -1,32 +1,33 @@
 package stringgenerators
 
 type FibonacciStringGenerator struct {
-	First  string
-	Second string
+	First  string // not used
+	Second string // not used
 }
 
 func (g *FibonacciStringGenerator) SetSeed(providedSeed int) {}
 
 func (g *FibonacciStringGenerator) GenerateString(n int) string {
 	if n <= 0 {
-		return ""
+		return "$"
 	}
 
 	// The first two characters of the string are always "1"
-	prev1 := g.First
-	prev2 := g.Second
+	fn1 := "a"
+	fn := "ab"
+	temp := ""
 
 	// Iterate and concatenate strings according to the Fibonacci sequence
-	for i := 2; i < n+1; i++ {
-		current := prev2 + prev1
-
-		// Update previous strings for the next iteration
-		prev1 = prev2
-		prev2 = current
+	for len(fn) < n {
+		// Append the current Fibonacci string to the builder
+		temp = fn
+		fn += fn1
+		fn1 = temp
 	}
 
-	// Add the sentinel character ('$') at the end
-	prev2 += "$"
+	//trim so it has length n
+	fn = fn[:n]
 
-	return prev2
+	// Return the built string with the sentinel character
+	return fn + "$"
 }

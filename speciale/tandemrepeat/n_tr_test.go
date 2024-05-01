@@ -21,7 +21,6 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 			// test on example from paper https://doi.org/10.1016/j.jcss.2004.03.004
 			input:     "abaabaabbaaabaaba$",
 			expectedL: []int{0, 0, 1, 5, 4, 3, 2, 1, 3, 2, 6, 6, 5, 4, 3, 2, 1, 0},
-			expectedS: []int{-1, -1, 0, 0, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 0, 1, 0, -1},
 			lzBlocks:  []int{0, 1, 2, 3, 8, 11, 17},
 		},
 
@@ -29,7 +28,6 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 			//just another simple test
 			input:     "abbbaabbbb$",
 			expectedL: []int{0, 0, 2, 1, 1, 4, 3, 3, 2, 1, 0},
-			expectedS: []int{-1, -1, 1, 1, 0, 0, 1, 1, 1, 1, -1},
 			lzBlocks:  []int{0, 1, 2, 4, 5, 9, 10},
 		},
 	}
@@ -38,15 +36,12 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 		// Compute the LZ decomposition
 		tree := suffixtreeimpl.ConstructMcCreightSuffixTree(tc.input)
 
-		li, si := LZDecomposition(tree)
-		lzB := CreateLZBlocks(li, si)
+		li := LZDecomposition(tree)
+		lzB := CreateLZBlocks(li)
 		// Compare the computed values with the expected values
 		for i := range li {
 			if li[i] != tc.expectedL[i] {
 				t.Errorf("Test case failed for input '%s': Expected li[%d] = %d, but got %d", tc.input, i, tc.expectedL[i], li[i])
-			}
-			if si[i] != tc.expectedS[i] {
-				t.Errorf("Test case failed for input '%s': Expected si[%d] = %d, but got %d", tc.input, i, tc.expectedS[i], si[i])
 			}
 
 		}
@@ -66,10 +61,10 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 // Test that all sets from algorithm 1 are sorted
 func TestAlgorithm1SetsAreSorted(t *testing.T) {
 	randomGenerator_ab.SetSeed(77)
-	input := randomGenerator_ab.GenerateString(1231)
+	input := randomGenerator_ab.GenerateString(1731)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-
+	st.AddStringDepth()
 	leftMostCoveringSet := Algorithm1(st)
 	for idx_v, v := range leftMostCoveringSet {
 		for i := 0; i < len(v)-1; i++ {
@@ -87,6 +82,7 @@ func TestAlg1OnlyFindsTandemRepeats(t *testing.T) {
 		input := randomGenerator_ab.GenerateString(500)
 		//input := "abaabaabbaaabaaba$"
 		st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
+		st.AddStringDepth()
 
 		leftMostCoveringSet := Algorithm1(st)
 		for _, v := range leftMostCoveringSet {
