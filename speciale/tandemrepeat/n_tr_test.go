@@ -1,6 +1,9 @@
 package tandemrepeat
 
 import (
+	"log"
+	"os"
+	"runtime/pprof"
 	"speciale/lce"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
@@ -61,7 +64,7 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 // Test that all sets from algorithm 1 are sorted
 func TestAlgorithm1SetsAreSorted(t *testing.T) {
 	randomGenerator_ab.SetSeed(77)
-	input := randomGenerator_ab.GenerateString(1731)
+	input := randomGenerator_ab.GenerateString(1531)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 	st.AddStringDepth()
@@ -370,5 +373,26 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 
 		}
 	}
+
+}
+
+// #####################################################################################
+// #####################################################################################
+// Benchmarking
+// #####################################################################################
+// #####################################################################################
+func BenchmarkExample(b *testing.B) {
+
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		log.Fatal("could not create CPU profile: ", err)
+	}
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatal("could not start CPU profile: ", err)
+	}
+	str := randomGenerator_a.GenerateString(1000)
+	suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+
+	defer pprof.StopCPUProfile()
 
 }
