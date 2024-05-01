@@ -10,7 +10,8 @@ const (
 	AlphabetAB      string = "AB"
 	AlphabetDNA     string = "ACGT"
 	AlphabetProtein string = "ACDEFGHIKLMNPQRSTVWY"
-	AlphabetByte    string = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f" +
+	//Contains 256 characters (a byte), except $ which is used as a sentinel character
+	AlphabetByte string = "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f" +
 		"\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f" +
 		" !\"#%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f" +
 		"\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f" +

@@ -25,6 +25,9 @@ type SuffixTreeNode struct {
 	TrailingZeros int
 	A_v           []bool
 	A_v_int       int
+
+	// Fields required for algorithm: LCE linear
+	EulerLabel int
 }
 type DfsInterval struct {
 	Start int

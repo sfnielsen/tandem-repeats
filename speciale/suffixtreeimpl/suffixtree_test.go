@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-
 var (
 	setupCompleted     bool
 	alphabetGenerator  stringgenerators.StringGenerator
