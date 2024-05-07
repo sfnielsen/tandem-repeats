@@ -36,7 +36,7 @@ func TestLCEArrays(t *testing.T) {
 
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
 
-	L, E, R, _ := createLERArrays(st)
+	L, E, R, _ := createLERArraysStack(st)
 	n := st.GetSize()
 
 	//check that L,E,R sizes are correct
@@ -86,7 +86,7 @@ func TestLBlocks(t *testing.T) {
 	randomGenerator_ab.SetSeed(1)
 	s := randomGenerator_ab.GenerateString(721)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	L, _, _, _ := createLERArrays(st)
+	L, _, _, _ := createLERArraysStack(st)
 	blocks := createLBlocks(L)
 	n := len(L)
 	blockSize := int(math.Ceil(math.Log2(float64(n)) / 2))
@@ -125,7 +125,7 @@ func TestLPrimeandBPrime(t *testing.T) {
 	randomGenerator_ab.SetSeed(1)
 	s := randomGenerator_ab.GenerateString(721)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	L, _, _, _ := createLERArrays(st)
+	L, _, _, _ := createLERArraysStack(st)
 	blocks := createLBlocks(L)
 	LPrime, BPrime := computeLPrimeandBPrime(blocks)
 	sizeNormalBlock := len(blocks[0])
@@ -175,7 +175,7 @@ func TestSparseTable(t *testing.T) {
 	randomGenerator_ab.SetSeed(1)
 	s := randomGenerator_ab.GenerateString((1 << 10) + 1) //1025
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	L, _, _, _ := createLERArrays(st)
+	L, _, _, _ := createLERArraysStack(st)
 	blocks := createLBlocks(L)
 	LPrime, _ := computeLPrimeandBPrime(blocks)
 	sparseTable := computeSparseTable(LPrime)
@@ -232,7 +232,7 @@ func TestComputeNormalizedBlock(t *testing.T) {
 	randomGenerator_ab.SetSeed(1)
 	s := randomGenerator_ab.GenerateString((1 << 10) + 1) //1025
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	L, _, _, _ := createLERArrays(st)
+	L, _, _, _ := createLERArraysStack(st)
 	blocks := createLBlocks(L)
 
 	normalizedBlocks := computeNormalizedBlockSparseTables(blocks)

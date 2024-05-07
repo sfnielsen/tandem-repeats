@@ -148,7 +148,6 @@ func PreProcessLCEBothDirections(st suffixtree.SuffixTreeInterface) *LCELinearTw
 	//create backward LCE
 	reversedString := reverseStringWithSentinel(st.GetInputString())
 	reversedSuffixTree := suffixtreeimpl.ConstructMcCreightSuffixTree(reversedString)
-	reversedSuffixTree.AddStringDepth()
 
 	backwardLCE := PreProcessLCE(reversedSuffixTree)
 
@@ -160,7 +159,7 @@ func PreProcessLCEBothDirections(st suffixtree.SuffixTreeInterface) *LCELinearTw
 func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 
 	//create L,E,R arrays
-	L, E, R, EulerindexToNode := createLERArrays(st)
+	L, E, R, EulerindexToNode := createLERArraysStack(st)
 	// divide L into blocks
 	blocks := createLBlocks(L)
 	// compute L' and B'
@@ -170,7 +169,7 @@ func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 	// precompute all possible normalized blocks
 	NormalizedBlockSparseTables := computeNormalizedBlockSparseTables(blocks)
 	// compute leafs of tree
-	leafSlice := st.ComputeLeafs()
+	leafSlice := st.ComputeLeafsStackMethod()
 
 	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, leafSlice, EulerindexToNode}
 }
@@ -222,6 +221,84 @@ func createLERArrays(st suffixtree.SuffixTreeInterface) ([]int, []int, []int, []
 
 	return L, E, R, EulerindexToNode
 
+}
+
+func createLERArraysStack(st suffixtree.SuffixTreeInterface) ([]int, []int, []int, []*suffixtree.SuffixTreeNode) {
+	stack := suffixtree.Stack{}
+
+	// Push the root node with start flag onto the stack
+	stack.Push(&suffixtree.StackItem{Node: st.GetRoot(), IsStart: true})
+
+	//euler labels
+	nextEulerLabel := 0
+	nextEulerStep := 0
+
+	//tables
+	L := make([]int, 2*st.GetSize()-1)
+	E := make([]int, 2*st.GetSize()-1)
+	R := make([]int, st.GetSize())
+	EulerindexToNode := make([]*suffixtree.SuffixTreeNode, 2*st.GetSize()-1)
+
+	// since first iteration is the root and depth needs to start at 0
+	depth := -1
+
+	for len(stack) > 0 {
+		item := stack.PopOrNil()
+		node := item.Node
+
+		if node.IsLeaf() {
+			//We're now entering a new depth of the tree
+			depth += 1
+
+			//process self
+			node.EulerLabel = nextEulerLabel
+			R[nextEulerLabel] = nextEulerStep //make mapping from eulerLabel to the eulertour
+
+			L[nextEulerStep] = depth           //note the depth of current eulerStep
+			E[nextEulerStep] = node.EulerLabel //map eulerStep to eulerLabel
+
+			nextEulerLabel++
+			nextEulerStep++
+
+			EulerindexToNode[node.EulerLabel] = node
+		} else if item.IsStart {
+			//We're now entering a new depth of the tree
+			depth += 1
+
+			item.IsStart = false
+
+			//process self
+			node.EulerLabel = nextEulerLabel
+			R[nextEulerLabel] = nextEulerStep //make mapping from eulerLabel to the eulertour
+
+			L[nextEulerStep] = depth           //note the depth of current eulerStep
+			E[nextEulerStep] = node.EulerLabel //map eulerStep to eulerLabel
+
+			nextEulerLabel++
+			nextEulerStep++
+
+			EulerindexToNode[node.EulerLabel] = node
+
+			//process children
+			for i := len(node.Children) - 1; i >= 0; i-- {
+				if node.Children[i] != nil {
+					stack.Push(item)
+					stack.Push(&suffixtree.StackItem{Node: node.Children[i], IsStart: true})
+				}
+			}
+
+		} else {
+			// We're back up again
+			depth -= 1
+
+			//process self again (each time we return from a subtree)
+			L[nextEulerStep] = depth           //note the depth of current eulerStep
+			E[nextEulerStep] = node.EulerLabel //map eulerStep to eulerLabel
+			nextEulerStep++
+		}
+
+	}
+	return L, E, R, EulerindexToNode
 }
 
 // create blocks from L array

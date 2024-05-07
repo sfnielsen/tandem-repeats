@@ -155,7 +155,7 @@ func ReplaceBits(num, bits, N int, totalbits int) int {
 func lcaLookup(i int, j int, st suffixtree.SuffixTreeInterface) {
 	inputStringBitLength := bits.Len(uint(st.GetSize()))
 	preprocessMappingFromTreeToB(st)
-	leafs := st.ComputeLeafs()
+	leafs := st.ComputeLeafsStackMethod()
 	leaf_x := leafs[i]
 	leaf_y := leafs[j]
 

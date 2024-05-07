@@ -9,7 +9,7 @@ type SuffixTreeInterface interface {
 	GetSize() int
 
 	// AddDFSLabels adds DFS labels to the nodes in the suffix tree.
-	AddDFSLabels()
+	AddDFSLabelsAndLeafBools()
 
 	// AddStringDepth adds string depth to the nodes in the suffix tree.
 	AddStringDepth()
@@ -18,7 +18,7 @@ type SuffixTreeInterface interface {
 	AddBiggestChildToNodes()
 
 	// Compute leafs of the suffix tree and return them as a slice of nodes
-	ComputeLeafs() []*SuffixTreeNode
+	ComputeLeafsStackMethod() []*SuffixTreeNode
 }
 
 type SuffixTree struct {
@@ -107,6 +107,77 @@ func (st *SuffixTree) AddDFSLabels() {
 	dfs(st.Root)
 }
 
+/*
+This function add the following variables to each node:
+
+	- Dfs Labels start and end
+	- NodeIsLeaf
+	- StringDepth
+*/
+func (st *SuffixTree) AddDFSLabelsAndLeafBools() {
+	stack := Stack{}
+	dfsNumber := 0 // Initialize DFS index
+
+	// Push the root node with start flag onto the stack
+	stack.Push(&StackItem{Node: st.Root, IsStart: true})
+
+	for len(stack) > 0 {
+		item := stack.PopOrNil()
+		node := item.Node
+
+		//check if the node is a leaf and save it as a bool
+		node.NodeIsLeaf = true
+		if node.Label == -1 {
+			node.NodeIsLeaf = false
+		}
+		for _, child := range node.Children {
+			if child != nil {
+				node.NodeIsLeaf = false
+				break
+			}
+		}
+
+		// set the dfs interval
+		if node.IsLeaf() {
+			// Set the stringdepth of the node
+			node.StringDepth = node.Parent.StringDepth + node.EdgeLength()
+
+			node.DfsInterval.Start = dfsNumber
+			node.DfsInterval.End = dfsNumber
+			dfsNumber++
+			st.incrementSize()
+		} else if item.IsStart {
+			// Set the stringdepth of the node
+			if node != st.Root {
+				node.StringDepth = node.Parent.StringDepth + node.EdgeLength()
+			} else {
+				node.StringDepth = 0
+			}
+
+			// We need top push the item again since we will encounter it again when traversing back up
+			item.IsStart = false
+			stack.Push(item)
+
+			//if NOT leaf node
+			node.DfsInterval.Start = dfsNumber
+
+			// add children to the queue in reverse order
+			// this is done to ensure that the children are popped in the correct order
+			for i := len(node.Children) - 1; i >= 0; i-- {
+				if node.Children[i] != nil {
+					stack.Push(&StackItem{Node: node.Children[i], IsStart: true})
+				}
+			}
+			st.incrementSize()
+
+		} else {
+			node.DfsInterval.End = dfsNumber - 1 // -1 because we have already incremented dfsNumber for the next leaf
+		}
+
+	}
+
+}
+
 //add string depth
 func (st *SuffixTree) AddStringDepth() {
 	var dfs func(node *SuffixTreeNode, depth int)
@@ -143,6 +214,26 @@ func (n *SuffixTree) ComputeLeafs() []*SuffixTreeNode {
 		}
 	}
 	dfs(n.Root)
+
+	return leafs
+}
+
+func (n *SuffixTree) ComputeLeafsStackMethod() []*SuffixTreeNode {
+	leafs := make([]*SuffixTreeNode, len(n.GetInputString()))
+	stack := TreeStack{n.GetRoot()}
+
+	for len(stack) > 0 {
+		node := stack.PopOrNil()
+		if node.IsLeaf() {
+			leafs[node.Label] = node
+		} else {
+			for _, child := range node.Children {
+				if child != nil {
+					stack.Push(child)
+				}
+			}
+		}
+	}
 
 	return leafs
 }

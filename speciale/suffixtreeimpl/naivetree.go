@@ -15,7 +15,7 @@ func (st *NaiveSuffixTree) ConstructSuffixTree() {
 		st.insertSuffix(i)
 	}
 	// Add DFS labels
-	st.AddDFSLabels()
+	st.AddDFSLabelsAndLeafBools()
 }
 
 // InsertSuffix inserts the suffix starting at the given index into the suffix tree.

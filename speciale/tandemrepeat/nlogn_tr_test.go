@@ -259,7 +259,7 @@ func BenchmarkBranchingTR(b *testing.B) {
 		log.Fatal("could not start CPU profile: ", err)
 	}
 	for i := 0; i < 10; i++ {
-		FindAllBranchingTandemRepeatsLogarithmic(trees[i%20])
+		DecorateTreeWithVocabulary(trees[i%20])
 	}
 
 	defer pprof.StopCPUProfile()
