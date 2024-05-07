@@ -1,5 +1,6 @@
 package suffixtree
 
+// TreeStack is a stack of SuffixTreeNodes only for top down traversal
 type TreeStack []*SuffixTreeNode
 
 func (t *TreeStack) Push(node *SuffixTreeNode) {
@@ -15,6 +16,7 @@ func (t *TreeStack) PopOrNil() *SuffixTreeNode {
 	return node
 }
 
+// StackItem is a struct that holds a node and a flag in order to go back during dfs run
 type StackItem struct {
 	Node    *SuffixTreeNode
 	IsStart bool // Flag indicating whether it's the start index of DFS numbering

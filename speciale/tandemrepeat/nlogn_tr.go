@@ -53,6 +53,26 @@ func getIdxtoDfsTable(st suffixtree.SuffixTreeInterface) []int {
 	return idxToDfsTable
 }
 
+func getIdxtoDfsTableStackMethod(st suffixtree.SuffixTreeInterface) []int {
+	var idxToDfsTable []int = make([]int, len(st.GetInputString()))
+
+	stack := suffixtree.TreeStack{st.GetRoot()}
+	for len(stack) > 0 {
+		node := stack.PopOrNil()
+		if node.IsLeaf() {
+			idxToDfsTable[node.Label] = node.DfsInterval.Start
+		} else {
+			for _, child := range node.Children {
+				if child != nil {
+					stack.Push(child)
+				}
+			}
+		}
+	}
+
+	return idxToDfsTable
+}
+
 // FindAllTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn + z) time
 func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 	//find all branching repeats in O(nlogn) time

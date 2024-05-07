@@ -1,7 +1,9 @@
 **/*.exe
 **/*.out
 **/*.prof
+**/*.fasta
 
 #This is the default folder for csv timings
 #we don't want to commit these files all the time
 */time_csvs/*.csv
+

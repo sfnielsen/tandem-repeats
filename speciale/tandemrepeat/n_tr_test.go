@@ -165,7 +165,7 @@ func TestAlg2OnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
 
 		// Phase 2
 		// Decorate tree with subset of leftmost covering repeats
-		Algorithm2(tree, leftMostCoveringRepeatsInts)
+		Algorithm2StackMethod(tree, leftMostCoveringRepeatsInts)
 
 		//Bottom-up traversal of the suffix tree
 		var dfs func(node *suffixtree.SuffixTreeNode)
@@ -376,7 +376,7 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 // #####################################################################################
 func BenchmarkExample(b *testing.B) {
 	randomGenerator_a.SetSeed(42)
-	str := randomGenerator_a.GenerateString(100000)
+	str := randomGenerator_a.GenerateString(500000)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
 
 	f, err := os.Create("cpu.prof")
