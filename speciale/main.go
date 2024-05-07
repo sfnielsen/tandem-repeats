@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os/exec"
+	"speciale/stringgenerators"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 	"speciale/tandemrepeat"
@@ -41,9 +42,9 @@ var mcCregightSuffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
 	ExpectedComplexity: "n"}
 
 func main() {
-	functionSlice := []utils.AlgorithmInterface{linearTR}
+	functionSlice := []utils.AlgorithmInterface{logTR}
 
-	utils.TakeTimeAllAlphabets(functionSlice, 50000, 30)
+	utils.TakeTimeAndSave(functionSlice, 200000, 50, stringgenerators.AlphabetA)
 
 	pythonScript := "../visualization_all_alphabets.py"
 	//scriptArgs := []string{}

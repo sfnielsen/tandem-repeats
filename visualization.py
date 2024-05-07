@@ -125,7 +125,7 @@ def plot_expected_time_complexity_test(data:pd.DataFrame):
         elif selected_complexity == 'n':
             complexity_function = lambda x: x / algorithm_data['InputSize']
         elif selected_complexity == 'n^2':
-            algorithm_data['InputSize'] /= 1000
+            #algorithm_data['InputSize'] /= 1000
             complexity_function = lambda x: x / (algorithm_data['InputSize'] ** 2)
         else:
             complexity_function = lambda x: x
@@ -144,9 +144,67 @@ def plot_expected_time_complexity_test(data:pd.DataFrame):
     ax.legend()
     plt.show()
 
-        
+## create a similar plot but with scatter plot, so no values are aggregated
+def plot_expected_time_complexity_test_scatter(data:pd.DataFrame):
+    data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
+
+    # convert runnningtime to numeric, for example 's' means seconds so convert it to ms
+    data['RunningTime'] = data['RunningTime'].apply(lambda x: float(x[:-2]) * 1000 if type(x) == str and x[-2] == 'µ' else x)
+    data['RunningTime'] = data['RunningTime'].apply(lambda x: float(x[:-1]) * 1000 if type(x) == str and x[-1] == 's' else float(x))
+
+    # Clean and convert 'RunningTime' to numeric
+    try:
+        data['RunningTime'] = pd.to_numeric(data['RunningTime'].str.replace(r'[^0-9.]', ''), errors='coerce')
+    except AttributeError:
+        pass
+
+    # Group by InputSize and Algorithm and calculate the average RunningTime for each group
+    grouped_df = data
+    # Plot the data with RunningTime divided by InputSize
+    fig, ax = plt.subplots()
+
+
+    # Calculate the standard error for each group and add a column for lower and upper part of the mean +- 2*standard error
+    grouped_df['StandardError'] = data.groupby(['InputSize', 'Algorithm'])['RunningTime'].sem().reset_index()['RunningTime']
+    grouped_df['LowerBound'] = grouped_df['RunningTime'] - 2 * grouped_df['StandardError']
+    grouped_df['UpperBound'] = grouped_df['RunningTime'] + 2 * grouped_df['StandardError']
+    print(grouped_df)
+    # Iterate over unique algorithms and plot them
+    for algorithm in grouped_df['Algorithm'].unique():
+
+
+        algorithm_data = grouped_df[grouped_df['Algorithm'] == algorithm]
+        algorithm_data['InputSize']
+        selected_complexity = algorithm_data['Complexity'].iloc[0]
+
+        if selected_complexity == 'nlogn':
+            complexity_function = lambda x: x / algorithm_data['InputSize']
+            #complexity_function = lambda x: x / ((algorithm_data['InputSize'])*np.log2( algorithm_data['InputSize']))
+        elif selected_complexity == 'n':
+            complexity_function = lambda x: x / algorithm_data['InputSize']
+        elif selected_complexity == 'n^2':
+            algorithm_data
+            complexity_function = lambda x: x / (algorithm_data['InputSize'] ** 2)
+        else:
+            complexity_function = lambda x: x
+        print("YASONDOASND")
+        algorithm_data['RunningTime'] = complexity_function(algorithm_data['RunningTime'])
+
+        print(f"coordinates {{")
+        for i in range(len(algorithm_data['InputSize'])):
+            # upper lower bound is the +- part
+            print(f"({algorithm_data['InputSize'].iloc[i]},{round(algorithm_data['RunningTime'].iloc[i],6)})")
+
+        print(f"}};")
+        ax.scatter(algorithm_data['InputSize'], algorithm_data['RunningTime'], label=f'{algorithm} ({selected_complexity})')
+
+        ax.set_xlabel('InputSize')
+        ax.set_ylabel('log(RunningTime / InputSize)')
+    ax.legend()
+    plt.show()
+
 
 folder_path = 'time_csvs'
 latest_file_path = get_latest_file(folder_path)
 print(latest_file_path)
-plot_tandem_repeats(pd.read_csv(latest_file_path, sep=","))
+plot_expected_time_complexity_test_scatter(pd.read_csv(latest_file_path, sep=","))

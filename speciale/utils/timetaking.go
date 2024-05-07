@@ -52,7 +52,7 @@ func TakeTimeAndSave(functions []AlgorithmInterface, maxSize int, steps int, alp
 
 	var results []TimingResult
 
-	for i := maxSize / steps; i < maxSize; i += int(maxSize / steps) {
+	for i := maxSize / steps; i <= maxSize; i += int(maxSize / steps) {
 		fmt.Println(i)
 		// Run each type 10 times
 		for range [10]int{} {
@@ -92,7 +92,12 @@ func TakeTimeAllAlphabets(functions []AlgorithmInterface, maxSize int, steps int
 	//iterate all alphabets
 	for _, alphabet := range alphabets {
 		itr++
-		var randomGenerator stringgenerators.StringGenerator = &stringgenerators.RandomStringGenerator{Alphabet: alphabet}
+		var randomGenerator stringgenerators.StringGenerator = nil
+		if alphabet == "fib" {
+			randomGenerator = &stringgenerators.FibonacciStringGenerator{}
+		} else {
+			randomGenerator = &stringgenerators.RandomStringGenerator{Alphabet: alphabet}
+		}
 
 		for i := maxSize / steps; i < maxSize; i += int(maxSize / steps) {
 			fmt.Println(i)
@@ -103,7 +108,7 @@ func TakeTimeAllAlphabets(functions []AlgorithmInterface, maxSize int, steps int
 				for _, function := range functions {
 					time := function.GetTime(inputString)
 
-					if itr == 5 {
+					if itr == len(alphabets) {
 						alphabet = "Byte"
 					}
 					results = append(results,

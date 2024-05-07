@@ -12,6 +12,8 @@ type SuffixTreeNode struct {
 	// Fields required for McCreight's algorithm
 	SuffixLink *SuffixTreeNode
 
+	NodeIsLeaf bool
+
 	// Fields required for algorithm: O(nlogn) tandem repeats
 	DfsInterval  DfsInterval
 	BiggestChild *SuffixTreeNode
@@ -39,6 +41,12 @@ func (node *SuffixTreeNode) EdgeLength() int {
 	return node.EndIdx - node.StartIdx + 1
 }
 
+func (node *SuffixTreeNode) IsLeaf() bool {
+	return node.NodeIsLeaf
+}
+
+/*
+
 // check if the node is a leaf
 func (node *SuffixTreeNode) IsLeaf() bool {
 	// if its the root
@@ -53,3 +61,4 @@ func (node *SuffixTreeNode) IsLeaf() bool {
 	}
 	return true
 }
+*/

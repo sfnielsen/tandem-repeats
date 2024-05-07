@@ -75,6 +75,17 @@ func (st *SuffixTree) AddDFSLabels() {
 	dfsNumber := 0
 	var dfs func(node *SuffixTreeNode) int
 	dfs = func(node *SuffixTreeNode) int {
+		node.NodeIsLeaf = true
+		if node.Label == -1 {
+			node.NodeIsLeaf = false
+		}
+		//if all children are nil, the node is a leaf
+		for _, child := range node.Children {
+			if child != nil {
+				node.NodeIsLeaf = false
+				break
+			}
+		}
 		// if leaf node
 		if node.IsLeaf() {
 			node.DfsInterval.Start = dfsNumber

@@ -11,7 +11,8 @@ alphabet_label_mapper = {
     'ACGT':'DNA',
     'ACDEFGHIKLMNPQRSTVWY':'Protein',
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789':'ASCII',
-    'Byte':'Byte'
+    'Byte':'Byte',
+    'fib':'Fibonacci'
 }
 def get_latest_file(folder_path:str):
     # Get a list of all files in the folder
@@ -49,18 +50,6 @@ def plot_tandem_repeats_all_alphabet(data: pd.DataFrame):
 
             # convert data to latex format for easy copy paste to latex
             #must be on the following format, with the (5.0,5.0) being the error margin for each point
-            """
-            coordinates {
-                (0,23.1)     +- (5.0,5.0) 
-                (10,27.5)    +- (10.5,10.5)
-                (20,32)      +- (7.5,7.5)
-                (30,37.8)    +- (12.0,12.0)
-                (40,44.6)    +- (7.0,7.0)
-                (60,61.8)    +- (8.0,8.0)
-                (80,83.8)    +- (16.0,16.0)
-                (100,114)    +- (14.0,14.0)
-            };
-            """
             print(alphabet)
             print(f"coordinates {{")
             for i in range(len(algorithm_data['InputSize'])):

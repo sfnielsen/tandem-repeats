@@ -65,6 +65,14 @@ func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []Tandem
 
 }
 
+func reverseSlice(slice []int) []int {
+	reverse := make([]int, len(slice))
+	for i, v := range slice {
+		reverse[v] = i
+	}
+	return reverse
+}
+
 // FindTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn) time
 func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 
@@ -72,10 +80,7 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 	idxToDfsTable := getIdxtoDfsTable(st)
 
 	//create Dfs to idx mapping, this is an alternative to leaf lists
-	dfsToIdxTable := make([]int, len(idxToDfsTable))
-	for i, v := range idxToDfsTable {
-		dfsToIdxTable[v] = i
-	}
+	dfsToIdxTable := reverseSlice(idxToDfsTable)
 
 	//add biggest child to each node
 	st.AddBiggestChildToNodes()
