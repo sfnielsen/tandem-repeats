@@ -10,42 +10,41 @@ import (
 	"speciale/utils"
 )
 
-var tandemrepeat_nlogn = utils.AlgorithmBase{
-	Name: "nlogn stoye gusfield",
+var logTandemAlgo = utils.AlgorithmBase{
+	Name: "TandemRepeat Logarithmic",
 	Algorithm: func(args ...interface{}) interface{} {
-		return tandemrepeat.FindAllTandemRepeatsLogarithmic(args[0].(suffixtree.SuffixTreeInterface))
+		return tandemrepeat.FindAllBranchingTandemRepeatsLogarithmic(args[0].(suffixtree.SuffixTreeInterface))
 	},
 	ExpectedComplexity: "nlogn"}
+var logTR utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{logTandemAlgo}
+
+var lineraTandemAlgobase = utils.AlgorithmBase{
+	Name: "TandemRepeat Linear",
+	Algorithm: func(args ...interface{}) interface{} {
+		tandemrepeat.DecorateTreeWithVocabulary(args[0].(suffixtree.SuffixTreeInterface))
+		return []tandemrepeat.TandemRepeat{}
+	},
+	ExpectedComplexity: "n"}
+var linearTR utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{lineraTandemAlgobase}
+
+var naiveSuffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
+	Name: "SuffixTree Naive",
+	Algorithm: func(args ...interface{}) interface{} {
+		return suffixtreeimpl.ConstructNaiveSuffixTree(args[0].(string))
+	},
+	ExpectedComplexity: "n^2"}
+
+var mcCregightSuffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
+	Name: "SuffixTree McCreight",
+	Algorithm: func(args ...interface{}) interface{} {
+		return suffixtreeimpl.ConstructMcCreightSuffixTree(args[0].(string))
+	},
+	ExpectedComplexity: "n"}
 
 func main() {
-	var mccreight utils.AlgorithmInterface = &utils.AlgorithmBase{
-		Name: "McCreight",
-		Algorithm: func(args ...interface{}) interface{} {
-			return suffixtreeimpl.ConstructMcCreightSuffixTree(args[0].(string))
-		},
-		ExpectedComplexity: "n"}
+	functionSlice := []utils.AlgorithmInterface{linearTR, logTR}
 
-	var naive utils.AlgorithmInterface = &utils.AlgorithmBase{
-		Name: "Naive",
-		Algorithm: func(args ...interface{}) interface{} {
-			return suffixtreeimpl.ConstructNaiveSuffixTree(args[0].(string))
-		},
-		ExpectedComplexity: "nlogn"}
-	println(mccreight, naive)
-
-	tandemrepeat_n := utils.AlgorithmBase{
-		Name: "n stoye gusfield",
-		Algorithm: func(args ...interface{}) interface{} {
-			return tandemrepeat.FindAllTandemRepeatsLogarithmic(args[0].(suffixtree.SuffixTreeInterface))
-		},
-		ExpectedComplexity: "n^2"}
-
-	var nstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemrepeat_n}
-	//var nlognstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemrepeat_nlogn}
-
-	functionSlice := []utils.AlgorithmInterface{nstoygus}
-
-	utils.TakeTimeAndSave(functionSlice, 30000, 50, stringgenerators.AlphabetDNA)
+	utils.TakeTimeAndSave(functionSlice, 30000, 10, stringgenerators.AlphabetAB)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}

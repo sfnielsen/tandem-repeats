@@ -16,17 +16,18 @@ import (
 // Preprocessing time: O(n),Space complexity: O(n), Query time: O(1)
 type LCELinear struct {
 	//forward LCE queries
-	suffixTree                  *suffixtree.SuffixTreeInterface
-	L                           []int
-	E                           []int
-	R                           []int
-	blocks                      [][]int
-	LPrime                      []int
-	BPrime                      []int
-	LPrimeST                    *sparseTable
-	NormalizedBlockSparseTables []*sparseTable
-	Leafs                       []*suffixtree.SuffixTreeNode
-	EulerindexToNode            []*suffixtree.SuffixTreeNode
+	suffixTree                   *suffixtree.SuffixTreeInterface
+	L                            []int
+	E                            []int
+	R                            []int
+	blocks                       [][]int
+	LPrime                       []int
+	BPrime                       []int
+	LPrimeST                     *sparseTable
+	NormalizedBlockSparseTables  []*sparseTable
+	blockIdxToNormalizedBlockIdx []int
+	Leafs                        []*suffixtree.SuffixTreeNode
+	EulerindexToNode             []*suffixtree.SuffixTreeNode
 
 	//backward LCE queries
 	//TBD
@@ -88,10 +89,10 @@ func (lce *LCELinear) LCELookup(i, j int) int {
 
 	// case 1:   They are on the same block
 	if block_i == block_j {
-		//find the normalized block
-		normalizedBlock := normalizeBlock(lce.blocks[int(block_i)])
+		//find the normalized block idx
+		normalizedBlockIdx := lce.blockIdxToNormalizedBlockIdx[int(block_i)]
 		//find the normalized block sparse table
-		normalizedBlockSparseTable := lce.NormalizedBlockSparseTables[convertBlockToInt(normalizedBlock)]
+		normalizedBlockSparseTable := lce.NormalizedBlockSparseTables[normalizedBlockIdx]
 		//find the LCA in the normalized block
 		lca := RMQLookup(eulerindex_i%blockSize, eulerindex_j%blockSize, normalizedBlockSparseTable)
 		lcaEulerIdx := int(block_i)*blockSize + lca.index
@@ -99,11 +100,11 @@ func (lce *LCELinear) LCELookup(i, j int) int {
 	} else {
 		// case 2:   They are on different blocks (i < j   always)
 		// find the LCA in the first block
-		lcaBlocki := convertBlockToInt(normalizeBlock(lce.blocks[int(block_i)]))
+		lcaBlocki := lce.blockIdxToNormalizedBlockIdx[int(block_i)]
 		lca1 := RMQLookup(eulerindex_i%blockSize, blockSize-1, lce.NormalizedBlockSparseTables[lcaBlocki])
 		lca1.level += lce.blocks[int(block_i)][0]
 		// find the LCA in the last block
-		lcaBlockj := convertBlockToInt(normalizeBlock(lce.blocks[int(block_j)]))
+		lcaBlockj := lce.blockIdxToNormalizedBlockIdx[int(block_j)]
 		lca2 := RMQLookup(0, eulerindex_j%blockSize, lce.NormalizedBlockSparseTables[lcaBlockj])
 		lca2.level += lce.blocks[int(block_j)][0]
 		// find the LCA between the two blocks
@@ -148,7 +149,6 @@ func PreProcessLCEBothDirections(st suffixtree.SuffixTreeInterface) *LCELinearTw
 	//create backward LCE
 	reversedString := reverseStringWithSentinel(st.GetInputString())
 	reversedSuffixTree := suffixtreeimpl.ConstructMcCreightSuffixTree(reversedString)
-	reversedSuffixTree.AddStringDepth()
 
 	backwardLCE := PreProcessLCE(reversedSuffixTree)
 
@@ -160,7 +160,7 @@ func PreProcessLCEBothDirections(st suffixtree.SuffixTreeInterface) *LCELinearTw
 func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 
 	//create L,E,R arrays
-	L, E, R, EulerindexToNode := createLERArrays(st)
+	L, E, R, EulerindexToNode, leafSlice := createLERArraysAndLeafArrayStack(st)
 	// divide L into blocks
 	blocks := createLBlocks(L)
 	// compute L' and B'
@@ -168,11 +168,9 @@ func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 	// compute sparse table for L'
 	LPrimeSparseTable := computeSparseTable(LPrime)
 	// precompute all possible normalized blocks
-	NormalizedBlockSparseTables := computeNormalizedBlockSparseTables(blocks)
-	// compute leafs of tree
-	leafSlice := st.ComputeLeafs()
+	NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx := computeNormalizedBlockSparseTables(blocks)
 
-	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, leafSlice, EulerindexToNode}
+	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx, leafSlice, EulerindexToNode}
 }
 
 // create the three arrays: L,E,R by doing an euler tour of the suffix tree
@@ -222,6 +220,90 @@ func createLERArrays(st suffixtree.SuffixTreeInterface) ([]int, []int, []int, []
 
 	return L, E, R, EulerindexToNode
 
+}
+
+// create the three arrays: L,E,R by doing an euler tour of the suffix tree using a stack
+// also create EulerindexToNode mapping and an array of all leaf nodes
+func createLERArraysAndLeafArrayStack(st suffixtree.SuffixTreeInterface) ([]int, []int, []int, []*suffixtree.SuffixTreeNode, []*suffixtree.SuffixTreeNode) {
+	stack := suffixtree.Stack{}
+
+	// Push the root node with start flag onto the stack
+	stack.Push(&suffixtree.StackItem{Node: st.GetRoot(), IsStart: true})
+
+	//euler labels
+	nextEulerLabel := 0
+	nextEulerStep := 0
+
+	//tables
+	L := make([]int, 2*st.GetSize()-1)
+	E := make([]int, 2*st.GetSize()-1)
+	R := make([]int, st.GetSize())
+	EulerindexToNode := make([]*suffixtree.SuffixTreeNode, 2*st.GetSize()-1)
+	leafs := make([]*suffixtree.SuffixTreeNode, len(st.GetInputString()))
+
+	// since first iteration is the root and depth needs to start at 0
+	depth := -1
+
+	for len(stack) > 0 {
+		item := stack.PopOrNil()
+		node := item.Node
+
+		if node.IsLeaf() {
+			//We're now entering a new depth of the tree
+			depth += 1
+
+			//process self
+			node.EulerLabel = nextEulerLabel
+			R[nextEulerLabel] = nextEulerStep //make mapping from eulerLabel to the eulertour
+
+			L[nextEulerStep] = depth           //note the depth of current eulerStep
+			E[nextEulerStep] = node.EulerLabel //map eulerStep to eulerLabel
+
+			nextEulerLabel++
+			nextEulerStep++
+
+			EulerindexToNode[node.EulerLabel] = node
+
+			leafs[node.Label] = node //save leaf node
+
+		} else if item.IsStart {
+			//We're now entering a new depth of the tree
+			depth += 1
+
+			item.IsStart = false
+
+			//process self
+			node.EulerLabel = nextEulerLabel
+			R[nextEulerLabel] = nextEulerStep //make mapping from eulerLabel to the eulertour
+
+			L[nextEulerStep] = depth           //note the depth of current eulerStep
+			E[nextEulerStep] = node.EulerLabel //map eulerStep to eulerLabel
+
+			nextEulerLabel++
+			nextEulerStep++
+
+			EulerindexToNode[node.EulerLabel] = node
+
+			//process children
+			for i := len(node.Children) - 1; i >= 0; i-- {
+				if node.Children[i] != nil {
+					stack.Push(item)
+					stack.Push(&suffixtree.StackItem{Node: node.Children[i], IsStart: true})
+				}
+			}
+
+		} else {
+			// We're back up again
+			depth -= 1
+
+			//process self again (each time we return from a subtree)
+			L[nextEulerStep] = depth           //note the depth of current eulerStep
+			E[nextEulerStep] = node.EulerLabel //map eulerStep to eulerLabel
+			nextEulerStep++
+		}
+
+	}
+	return L, E, R, EulerindexToNode, leafs
 }
 
 // create blocks from L array
@@ -323,21 +405,24 @@ func stTupMin(a, b stTuple) stTuple {
 }
 
 // compute all normalized blocks
-func computeNormalizedBlockSparseTables(blocks [][]int) []*sparseTable {
+func computeNormalizedBlockSparseTables(blocks [][]int) ([]*sparseTable, []int) {
 	// Create a 2D slice to store all blocks
 	totalNormalizedBlocks := 1 << uint(len(blocks[0]))
 	normalizedBlocks := make([]*sparseTable, totalNormalizedBlocks)
 
+	blockIdxToNormalizedBlockIdx := make([]int, len(blocks)) //we need a mapping from block index to normalized block index
+
 	// Total number of possible blocks (each element can be + or -)
-	for _, block := range blocks {
+	for idx, block := range blocks {
 		blockAsInt := convertBlockToInt(block)
+		blockIdxToNormalizedBlockIdx[idx] = blockAsInt
 		if normalizedBlocks[blockAsInt] == nil {
 			// subtract the first element from the rest of the block
 			normalizedBlock := normalizeBlock(block)
 			normalizedBlocks[blockAsInt] = computeSparseTable(normalizedBlock)
 		}
 	}
-	return normalizedBlocks
+	return normalizedBlocks, blockIdxToNormalizedBlockIdx
 }
 
 func normalizeBlock(block []int) []int {

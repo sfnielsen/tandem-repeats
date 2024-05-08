@@ -14,9 +14,6 @@ func DecorateTreeAndReturnTandemRepeats(tree suffixtree.SuffixTreeInterface) []T
 // Function that runs algorithm 1a,1b,2 and 3 on a suffix tree and decorates it with the tandem repeat vocabulary
 func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 
-	//FOR DEBUG
-	tree.AddStringDepth()
-
 	// Phase 1
 	// get leftmost covering repeats
 	leftMostCoveringRepeats := Algorithm1(tree)
@@ -34,11 +31,11 @@ func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 
 	// Phase 2
 	// Decorate tree with subset of leftmost covering repeats
-	Algorithm2(tree, leftMostCoveringRepeatsInts)
+	Algorithm2StackMethod(tree, leftMostCoveringRepeatsInts)
 
 	// Phase 3
 	// Decorate tree with entire vocabulary
-	Algorithm3(tree)
+	Algorithm3StackMethod(tree)
 
 }
 
@@ -59,11 +56,11 @@ func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
 	}
 
 	// Compute the blocks and Z-values
-	li := LZDecomposition(tree)
+	li := LZDecompositionStackMethod(tree)
 	blocks := CreateLZBlocks(li)
 
 	// add idx to dfs table
-	idxToDfsTable := getIdxtoDfsTable(tree)
+	idxToDfsTable := getIdxtoDfsTableStackMethod(tree)
 
 	// Do preprecessing for constant time LCE queries
 	lceObject := lce.PreProcessLCEBothDirections(tree)
@@ -104,6 +101,39 @@ func LZDecomposition(tree suffixtree.SuffixTreeInterface) []int {
 	dfs(tree.GetRoot(), 0)
 
 	return li
+}
+
+func LZDecompositionStackMethod(tree suffixtree.SuffixTreeInterface) []int {
+
+	// Initialize arrays to store the lengths of blocks and their starting positions
+	n := len(tree.GetInputString())
+	li := make([]int, n)
+
+	// Perform a depth-first traversal of the suffix tree to compute the LZ decomposition
+	stack := suffixtree.TreeStack{tree.GetRoot()}
+	for len(stack) > 0 {
+		node := stack.PopOrNil()
+		if node == nil {
+			continue
+		}
+
+		for _, child := range node.Children {
+			if child == nil {
+				continue
+			}
+			if node.Label < child.Label {
+				li[child.Label] = node.StringDepth
+			}
+			if child.IsLeaf() {
+				continue
+			}
+			stack.Push(child)
+		}
+
+	}
+
+	return li
+
 }
 
 // create blocks from the LZ decomposition
@@ -220,6 +250,36 @@ func Algorithm2(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts
 
 }
 
+func Algorithm2StackMethod(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts [][]int) {
+
+	//need two-way stack for bottom up traversal
+	stack := suffixtree.Stack{&suffixtree.StackItem{Node: tree.GetRoot(), IsStart: true}}
+	for len(stack) > 0 {
+		item := stack.PopOrNil()
+		node := item.Node
+
+		// Traverse the children of the current node
+		// need to traverse in reverse order
+		if item.IsStart {
+			item.IsStart = false
+			stack.Push(item)
+
+			for i := len(node.Children) - 1; i >= 0; i-- {
+				if node.Children[i] == nil {
+					continue
+				}
+				stack.Push(&suffixtree.StackItem{Node: node.Children[i], IsStart: true})
+			}
+		} else {
+			//now we are going bottom up!
+			//here we can process the node
+			if !(tree.GetRoot() == node) {
+				ProcessNodeAlg2(node, leftMostCoveringRepeatsInts, node.StringDepth)
+			}
+		}
+	}
+}
+
 // Check if we can decorate this node with a tandem repeat from the leftmost covering set
 func ProcessNodeAlg2(node *suffixtree.SuffixTreeNode, leftMostCoveringRepeatsInt [][]int, depth int) {
 	//fmt.Println(node.Label, "hattemand", depth, depth-node.EdgeLength(), leftMostCoveringRepeatsInt[node.Label])
@@ -284,6 +344,44 @@ func Algorithm3(tree suffixtree.SuffixTreeInterface) {
 
 	// Perform depth-first traversal starting from the root of the suffix tree
 	dfs(tree.GetRoot(), 0)
+}
+
+func Algorithm3StackMethod(tree suffixtree.SuffixTreeInterface) {
+
+	stack := suffixtree.Stack{&suffixtree.StackItem{Node: tree.GetRoot(), IsStart: true}}
+
+	for len(stack) > 0 {
+		item := stack.PopOrNil()
+		node := item.Node
+
+		// Traverse the children of the current node
+		// need to traverse in reverse order
+		if item.IsStart {
+			item.IsStart = false
+			stack.Push(item)
+
+			for i := len(node.Children) - 1; i >= 0; i-- {
+				if node.Children[i] == nil {
+					continue
+				}
+				stack.Push(&suffixtree.StackItem{Node: node.Children[i], IsStart: true})
+			}
+		} else {
+			//now we are going bottom up!
+			//here we can process the node
+			if !(tree.GetRoot() == node) {
+				if node.TandemRepeatDeco != nil {
+					//attempt suffix walk
+					for _, v := range node.TandemRepeatDeco {
+						attemptSuffixWalk(tree, node, v)
+
+					}
+				}
+
+			}
+		}
+	}
+
 }
 
 func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.SuffixTreeNode, tandemRepeatLengthOnEdge int) {
@@ -395,7 +493,7 @@ func getAllTandemRepeatsFromDecoratedTree(tree suffixtree.SuffixTreeInterface) [
 	tandemRepeats := make([]TandemRepeat, 0)
 
 	//make a dfs label to idx mapping
-	idxToDfsTable := getIdxtoDfsTable(tree)
+	idxToDfsTable := getIdxtoDfsTableStackMethod(tree)
 	//now reverse it
 	dfsToIdxTable := make([]int, len(idxToDfsTable))
 	for i, k := range idxToDfsTable {

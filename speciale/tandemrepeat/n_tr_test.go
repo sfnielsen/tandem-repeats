@@ -1,8 +1,9 @@
 package tandemrepeat
 
 import (
-	"fmt"
+	"log"
 	"os"
+	"runtime/debug"
 	"runtime/pprof"
 	"speciale/lce"
 	"speciale/suffixtree"
@@ -39,7 +40,7 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 		// Compute the LZ decomposition
 		tree := suffixtreeimpl.ConstructMcCreightSuffixTree(tc.input)
 
-		li := LZDecomposition(tree)
+		li := LZDecompositionStackMethod(tree)
 		lzB := CreateLZBlocks(li)
 		// Compare the computed values with the expected values
 		for i := range li {
@@ -64,10 +65,9 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 // Test that all sets from algorithm 1 are sorted
 func TestAlgorithm1SetsAreSorted(t *testing.T) {
 	randomGenerator_ab.SetSeed(77)
-	input := randomGenerator_ab.GenerateString(1731)
+	input := randomGenerator_ab.GenerateString(1531)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-	st.AddStringDepth()
 	leftMostCoveringSet := Algorithm1(st)
 	for idx_v, v := range leftMostCoveringSet {
 		for i := 0; i < len(v)-1; i++ {
@@ -85,7 +85,6 @@ func TestAlg1OnlyFindsTandemRepeats(t *testing.T) {
 		input := randomGenerator_ab.GenerateString(500)
 		//input := "abaabaabbaaabaaba$"
 		st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-		st.AddStringDepth()
 
 		leftMostCoveringSet := Algorithm1(st)
 		for _, v := range leftMostCoveringSet {
@@ -107,7 +106,6 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 	input := randomGenerator_ab.GenerateString(5000)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-	st.AddStringDepth() //needed for Algorithm1 with constant time LCE
 
 	tandemRepeats := FindAllTandemRepeatsLogarithmic(st)
 	for _, v := range tandemRepeats {
@@ -151,8 +149,6 @@ func TestAlg2OnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
 
 		tree := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 
-		tree.AddStringDepth()
-
 		// Phase 1
 		// get leftmost covering repeats
 		leftMostCoveringRepeats := Algorithm1(tree)
@@ -170,7 +166,7 @@ func TestAlg2OnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
 
 		// Phase 2
 		// Decorate tree with subset of leftmost covering repeats
-		Algorithm2(tree, leftMostCoveringRepeatsInts)
+		Algorithm2StackMethod(tree, leftMostCoveringRepeatsInts)
 
 		//Bottom-up traversal of the suffix tree
 		var dfs func(node *suffixtree.SuffixTreeNode)
@@ -325,7 +321,6 @@ func TestForwardLookup(t *testing.T) {
 	randomGenerator_ab.SetSeed(410)
 	s := randomGenerator_ab.GenerateString(1000)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	st.AddStringDepth()
 	lceObject := lce.PreProcessLCE(st)
 
 	// run through all pairs of i and j
@@ -349,7 +344,6 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 	randomGenerator_ab.SetSeed(40)
 	s := randomGenerator_ab.GenerateString(1634)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	st.AddStringDepth()
 	//stringLength := len(st.GetInputString())
 	lceObject := lce.PreProcessLCEBothDirections(st)
 
@@ -379,18 +373,26 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 
 }
 
+// #####################################################################################
+// #####################################################################################
+// Benchmarking
+// #####################################################################################
+// #####################################################################################
 func BenchmarkExample(b *testing.B) {
+	debug.SetGCPercent(2000)
+	randomGenerator_dna.SetSeed(42)
+	str := randomGenerator_dna.GenerateString(300000)
 
-	str := randomGenerator_ab.GenerateString(400000)
-	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
-
-	f, _ := os.Create("cpu_profile.prof")
-	defer f.Close()
-
-	if err := pprof.StartCPUProfile(f); err != nil {
-		fmt.Println("could not start CPU profile: ", err)
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		log.Fatal("could not create CPU profile: ", err)
 	}
-	DecorateTreeWithVocabulary(st)
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatal("could not start CPU profile: ", err)
+	}
+	suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+	//DecorateTreeWithVocabulary(st)
+
 	defer pprof.StopCPUProfile()
 
 }

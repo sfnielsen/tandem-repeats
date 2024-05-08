@@ -53,6 +53,26 @@ func getIdxtoDfsTable(st suffixtree.SuffixTreeInterface) []int {
 	return idxToDfsTable
 }
 
+func getIdxtoDfsTableStackMethod(st suffixtree.SuffixTreeInterface) []int {
+	var idxToDfsTable []int = make([]int, len(st.GetInputString()))
+
+	stack := suffixtree.TreeStack{st.GetRoot()}
+	for len(stack) > 0 {
+		node := stack.PopOrNil()
+		if node.IsLeaf() {
+			idxToDfsTable[node.Label] = node.DfsInterval.Start
+		} else {
+			for _, child := range node.Children {
+				if child != nil {
+					stack.Push(child)
+				}
+			}
+		}
+	}
+
+	return idxToDfsTable
+}
+
 // FindAllTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn + z) time
 func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 	//find all branching repeats in O(nlogn) time
@@ -65,6 +85,14 @@ func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []Tandem
 
 }
 
+func reverseSlice(slice []int) []int {
+	reverse := make([]int, len(slice))
+	for i, v := range slice {
+		reverse[v] = i
+	}
+	return reverse
+}
+
 // FindTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn) time
 func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 
@@ -72,10 +100,7 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 	idxToDfsTable := getIdxtoDfsTable(st)
 
 	//create Dfs to idx mapping, this is an alternative to leaf lists
-	dfsToIdxTable := make([]int, len(idxToDfsTable))
-	for i, v := range idxToDfsTable {
-		dfsToIdxTable[v] = i
-	}
+	dfsToIdxTable := reverseSlice(idxToDfsTable)
 
 	//add biggest child to each node
 	st.AddBiggestChildToNodes()

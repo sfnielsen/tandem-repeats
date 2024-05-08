@@ -29,7 +29,7 @@ func (st *McCreightSuffixTree) ConstructSuffixTree() {
 
 	}
 	// Add DFS labels
-	st.AddDFSLabels()
+	st.AddDFSLabelsAndLeafBools()
 }
 
 // InsertSuffix inserts the suffix starting at the given index into the suffix tree.
@@ -141,8 +141,7 @@ slowscan:
 	}
 }
 
-// splitEdge splits the edge of the given child node into two edges on inertion of a suffix. This McCreight variant returns the new child node.
-func (st *McCreightSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, startIdx, splitIdx, endIdx, suffixOffset int) *suffixtree.SuffixTreeNode {
+func (st *McCreightSuffixTree) createNewChildAndInternalNode(originalChild *suffixtree.SuffixTreeNode, startIdx, splitIdx, endIdx, suffixOffset int) (*suffixtree.SuffixTreeNode, *suffixtree.SuffixTreeNode) {
 	// Create a new child
 	newChild := &suffixtree.SuffixTreeNode{
 		Label:    suffixOffset,
@@ -161,6 +160,14 @@ func (st *McCreightSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNod
 
 	// Add internal node as parent to new child
 	newChild.Parent = internalNode
+
+	return newChild, internalNode
+}
+
+// splitEdge splits the edge of the given child node into two edges on inertion of a suffix. This McCreight variant returns the new child node.
+func (st *McCreightSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNode, startIdx, splitIdx, endIdx, suffixOffset int) *suffixtree.SuffixTreeNode {
+	// Create a new child
+	newChild, internalNode := st.createNewChildAndInternalNode(originalChild, startIdx, splitIdx, endIdx, suffixOffset)
 
 	// Update parent by removing original child and adding internal node
 	// This is done by overwriting the original child with the internal node

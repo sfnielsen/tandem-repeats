@@ -14,6 +14,7 @@ type TimingResult struct {
 	Algorithm          string
 	RunningTime        time.Duration
 	ExpectedComplexity string
+	Alphabet           string
 }
 
 type SuffixTreeConstructionType func(string) suffixtree.SuffixTreeInterface
@@ -54,7 +55,7 @@ type AlgorithmTandemrepeat struct {
 
 // Altered GetTime algorithm for tandem repeats that first creates a suffix tree and then takes time
 func (a *AlgorithmTandemrepeat) GetTime(args ...interface{}) time.Duration {
-	var st suffixtree.SuffixTreeInterface = suffixtreeimpl.ConstructNaiveSuffixTree(args[0].(string))
+	var st suffixtree.SuffixTreeInterface = suffixtreeimpl.ConstructMcCreightSuffixTree(args[0].(string))
 	start := time.Now()
 	a.Algorithm(st)
 	return time.Since(start)

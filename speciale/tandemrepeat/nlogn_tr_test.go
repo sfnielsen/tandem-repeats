@@ -1,6 +1,9 @@
 package tandemrepeat
 
 import (
+	"log"
+	"os"
+	"runtime/pprof"
 	"speciale/stringgenerators"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
@@ -11,6 +14,7 @@ import (
 var (
 	setupCompleted          bool
 	randomGenerator_protein stringgenerators.StringGenerator
+	randomGenerator_fib     stringgenerators.StringGenerator
 	randomGenerator_ab      stringgenerators.StringGenerator
 	randomGenerator_dna     stringgenerators.StringGenerator
 	randomGenerator_byte    stringgenerators.StringGenerator
@@ -25,6 +29,7 @@ func init() {
 		randomGenerator_dna = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetDNA}
 		randomGenerator_byte = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetByte}
 		randomGenerator_a = &stringgenerators.RandomStringGenerator{Alphabet: stringgenerators.AlphabetA}
+		randomGenerator_fib = &stringgenerators.FibonacciStringGenerator{}
 		setupCompleted = true
 	}
 }
@@ -231,4 +236,32 @@ func TestMcCreightVsNaive(t *testing.T) {
 	if mismatches > 0 {
 		t.Errorf("Total mismatches: %d", mismatches)
 	}
+}
+
+// #####################################################################################
+// #####################################################################################
+// Benchmarking
+// #####################################################################################
+// #####################################################################################
+func BenchmarkBranchingTR(b *testing.B) {
+	trees := make([]suffixtree.SuffixTreeInterface, 0)
+	for i := 0; i < 10; i++ {
+		str := randomGenerator_ab.GenerateString(100000)
+		st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+		trees = append(trees, st)
+	}
+
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		log.Fatal("could not create CPU profile: ", err)
+	}
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatal("could not start CPU profile: ", err)
+	}
+	for i := 0; i < 10; i++ {
+		DecorateTreeWithVocabulary(trees[i%20])
+	}
+
+	defer pprof.StopCPUProfile()
+
 }
