@@ -1,6 +1,9 @@
 package tandemrepeat
 
 import (
+	"fmt"
+	"os"
+	"runtime/pprof"
 	"speciale/lce"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
@@ -202,8 +205,9 @@ func TestAlg2OnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
 func TestDecorateTreeOnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
 
 	randomGenerator_ab.SetSeed(4)
+
 	for i := 0; i < 10; i++ {
-		input := randomGenerator_ab.GenerateString(3000)
+		input := randomGenerator_ab.GenerateString(50000)
 		tree := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 
 		DecorateTreeWithVocabulary(tree)
@@ -235,6 +239,8 @@ func TestDecorateTreeOnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
 		}
 		dfs(tree.GetRoot())
 	}
+	pprof.StopCPUProfile()
+
 }
 
 func TestThatWeReturnAllTandemRepeats(t *testing.T) {
@@ -370,5 +376,21 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 
 		}
 	}
+
+}
+
+func BenchmarkExample(b *testing.B) {
+
+	str := randomGenerator_ab.GenerateString(400000)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+
+	f, _ := os.Create("cpu_profile.prof")
+	defer f.Close()
+
+	if err := pprof.StartCPUProfile(f); err != nil {
+		fmt.Println("could not start CPU profile: ", err)
+	}
+	DecorateTreeWithVocabulary(st)
+	defer pprof.StopCPUProfile()
 
 }
