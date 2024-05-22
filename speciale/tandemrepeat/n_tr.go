@@ -8,7 +8,7 @@ import (
 // Decorate tree with vocabulary in O(n) time and return all tandem repeats in O(z) time
 func DecorateTreeAndReturnTandemRepeats(tree suffixtree.SuffixTreeInterface) []TandemRepeat {
 	DecorateTreeWithVocabulary(tree)
-	return getAllTandemRepeatsFromDecoratedTree(tree)
+	return GetAllTandemRepeatsFromDecoratedTree(tree)
 }
 
 // Function that runs algorithm 1a,1b,2 and 3 on a suffix tree and decorates it with the tandem repeat vocabulary
@@ -488,7 +488,7 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 // #######################################################################################
 
 // function to output all tandem repeats by traverseing subtrees and outputting labels
-func getAllTandemRepeatsFromDecoratedTree(tree suffixtree.SuffixTreeInterface) []TandemRepeat {
+func GetAllTandemRepeatsFromDecoratedTree(tree suffixtree.SuffixTreeInterface) []TandemRepeat {
 
 	tandemRepeats := make([]TandemRepeat, 0)
 

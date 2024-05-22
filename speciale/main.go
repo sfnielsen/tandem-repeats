@@ -41,12 +41,31 @@ var mcCregightSuffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
 	},
 	ExpectedComplexity: "n"}
 
+var linearTrOutput = utils.AlgorithmBase{
+	Name: "TandemRepeat Linear",
+	Algorithm: func(args ...interface{}) interface{} {
+		tandemrepeat.GetAllTandemRepeatsFromDecoratedTree(args[0].(suffixtree.SuffixTreeInterface))
+		return []tandemrepeat.TandemRepeat{}
+	},
+	ExpectedComplexity: "n^2"}
+var linearTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatVOCOutput{linearTrOutput}
+
+var branchingTrOutput = utils.AlgorithmBase{
+	Name: "TandemRepeat Logarithmic",
+	Algorithm: func(args ...interface{}) interface{} {
+		tandemrepeat.GetAllTandemRepeats(args[0].([]tandemrepeat.TandemRepeat), args[1].(suffixtree.SuffixTreeInterface))
+
+		return []tandemrepeat.TandemRepeat{}
+	},
+	ExpectedComplexity: "n^2"}
+var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRAOutput{branchingTrOutput}
+
 func main() {
-	functionSlice := []utils.AlgorithmInterface{logTR}
+	functionSlice := []utils.AlgorithmInterface{braTrOutputStruct}
 
-	utils.TakeTimeAndSave(functionSlice, 200000, 50, stringgenerators.AlphabetA)
+	utils.TakeTimeAndSave(functionSlice, 100000, 50, stringgenerators.AlphabetAB)
 
-	pythonScript := "../visualization_all_alphabets.py"
+	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}
 
 	// Build the command to execute the Python script

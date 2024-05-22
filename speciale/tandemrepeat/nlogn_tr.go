@@ -5,7 +5,7 @@ import (
 )
 
 // get all tandem repeats by left rotating on the branching repeats
-func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeInterface) []TandemRepeat {
+func GetAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeInterface) []TandemRepeat {
 	var allTandemRepeats = make([]TandemRepeat, 0)
 
 	for _, k := range allBranchingRepeats {
@@ -80,7 +80,7 @@ func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []Tandem
 
 	//get all tandem repeats by left rotating on the branching repeats
 	//this is O(z) time (up to O(n^2))
-	allTandemRepeats := getAllTandemRepeats(trBranching, st)
+	allTandemRepeats := GetAllTandemRepeats(trBranching, st)
 	return allTandemRepeats
 
 }
