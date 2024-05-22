@@ -1,6 +1,7 @@
 package tandemrepeat
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -8,6 +9,7 @@ import (
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 	"testing"
+	"unsafe"
 )
 
 // test LZDecomposition
@@ -376,7 +378,7 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 // #####################################################################################
 func BenchmarkExample(b *testing.B) {
 	randomGenerator_a.SetSeed(42)
-	str := randomGenerator_a.GenerateString(500000)
+	str := randomGenerator_a.GenerateString(100000)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
 
 	f, err := os.Create("cpu.prof")
@@ -389,5 +391,12 @@ func BenchmarkExample(b *testing.B) {
 	DecorateTreeWithVocabulary(st)
 
 	defer pprof.StopCPUProfile()
+
+}
+
+func BenchmarkExample2(b *testing.B) {
+	var e suffixtree.SuffixTreeNode
+	fmt.Printf("Size of %T struct: %d bytes", e, unsafe.Sizeof(e))
+	fmt.Println()
 
 }

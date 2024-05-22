@@ -5,9 +5,9 @@ type SuffixTreeNode struct {
 	//standard fields
 	Label    int // for leafs it is the index of the suffix, for internal nodes it is the smallest index of the suffix in the subtree
 	Parent   *SuffixTreeNode
-	StartIdx int                  // start index of the substring in the input string (inclusive)
-	EndIdx   int                  // end index of the substring in the input string (inclusive)
-	Children [256]*SuffixTreeNode // assume ASCII characters
+	StartIdx int               // start index of the substring in the input string (inclusive)
+	EndIdx   int               // end index of the substring in the input string (inclusive)
+	Children []*SuffixTreeNode // size dynamically set to the alphabet size
 
 	// Fields required for McCreight's algorithm
 	SuffixLink *SuffixTreeNode
@@ -22,11 +22,6 @@ type SuffixTreeNode struct {
 	TandemRepeatDeco         []int
 	TandemRepeatDecoComplete map[int]bool
 	StringDepth              int
-
-	L_k           *SuffixTreeNode
-	TrailingZeros int
-	A_v           []bool
-	A_v_int       int
 
 	// Fields required for algorithm: LCE linear
 	EulerLabel int

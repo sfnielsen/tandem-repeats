@@ -404,14 +404,14 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 
 	beta := tandemRepeatLengthOnEdge
 	betaSum := 0 //used to keep track of full length of beta for case where we traverse multiple nodes
-	char := st.GetInputString()[v.StartIdx]
+	char := st.GetInternalString()[v.StartIdx]
 	vMark := uMark.Children[char]
 
 	for beta > 0 {
 		//case where beta ends in a node
 		if vMark.EdgeLength() == beta {
 			//check if child with "alpha" exists
-			char := st.GetInputString()[v.Label]
+			char := st.GetInternalString()[v.Label]
 			if vMark.Children[char] != nil {
 
 				beta = 1 // We just pass vMark, so beta is 1, as we just take a single step down next edge of vMarkMark. (v'')
@@ -445,7 +445,7 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 		}
 		if vMark.EdgeLength() > beta {
 			//check if alpha is present in extension of beta
-			if st.GetInputString()[vMark.StartIdx+beta] == st.GetInputString()[v.Label] {
+			if st.GetInternalString()[vMark.StartIdx+beta] == st.GetInternalString()[v.Label] {
 				//success - continue suffix walk
 
 				if vMark.TandemRepeatDecoComplete == nil {
@@ -464,7 +464,7 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 				v = vMark
 				u = v.Parent
 				uMark = u.SuffixLink
-				vMark = uMark.Children[st.GetInputString()[v.StartIdx]]
+				vMark = uMark.Children[st.GetInternalString()[v.StartIdx]]
 				betaSum = 0
 
 			} else {
@@ -476,7 +476,7 @@ func attemptSuffixWalk(st suffixtree.SuffixTreeInterface, node *suffixtree.Suffi
 			// we need to fastscan further
 			betaSum += vMark.EdgeLength()
 			beta -= vMark.EdgeLength()
-			vMark = vMark.Children[st.GetInputString()[v.StartIdx+betaSum]] //should exist by construction
+			vMark = vMark.Children[st.GetInternalString()[v.StartIdx+betaSum]] //should exist by construction
 		}
 	}
 }
