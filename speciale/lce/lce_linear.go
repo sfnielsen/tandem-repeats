@@ -18,7 +18,6 @@ import (
 type LCELinear struct {
 	//forward LCE queries
 	suffixTree                   *suffixtree.SuffixTreeInterface
-	L                            []int
 	E                            []int
 	R                            []int
 	blocks                       [][]int
@@ -173,7 +172,7 @@ func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 	// precompute all possible normalized blocks
 	NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx := computeNormalizedBlockSparseTables(blocks)
 
-	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx, leafSlice, EulerindexToNode}
+	return &LCELinear{&st, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx, leafSlice, EulerindexToNode}
 }
 
 // create the three arrays: L,E,R by doing an euler tour of the suffix tree
@@ -373,9 +372,11 @@ func computeLPrimeandBPrime(blocks [][]int) ([]int, []int) {
 func computeSparseTable(LPrime []int) *sparseTable {
 	//compute sparse table
 	n := len(LPrime)
+	log2n := bits.Len(uint(n))
 	table := make([][]stTuple, n)
+
 	for i := 0; i < len(LPrime); i++ {
-		table[i] = make([]stTuple, int(math.Ceil(math.Log2(float64(n))))+1)
+		table[i] = make([]stTuple, log2n)
 	}
 
 	//first compute first row (trivial)
@@ -384,10 +385,14 @@ func computeSparseTable(LPrime []int) *sparseTable {
 		table[i][0] = tup
 	}
 
-	//compute the rest of the sparse table
+	// Compute the rest of the sparse table
 	for j := 1; 1<<j <= n; j++ {
-		for i := 0; i+(1<<j) <= n; i++ {
-			table[i][j] = stTupMin(table[i][j-1], table[i+(1<<(j-1))][j-1])
+		// precompute 2^j and 2^(j-1)
+		pow2j := 1 << j
+		pow2jMinus1 := pow2j >> 1
+		//now insert precomputed values
+		for i := 0; i+pow2j <= n; i++ {
+			table[i][j] = stTupMin(table[i][j-1], table[i+pow2jMinus1][j-1])
 		}
 	}
 
@@ -396,14 +401,14 @@ func computeSparseTable(LPrime []int) *sparseTable {
 
 // function to compute the LCE between two indices i and j
 func RMQLookup(i, j int, sparseTable *sparseTable) stTuple {
-	if i == j {
+	diff := uint(j - i)
+	if diff == 0 {
 		return (*sparseTable)[i][0]
 	}
 	var k int
-	if j-i == 1 {
+	if diff == 1 {
 		k = 0
 	} else {
-		diff := uint(j - i)
 		k = bits.Len(diff) - 1
 	}
 
