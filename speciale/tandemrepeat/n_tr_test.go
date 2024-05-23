@@ -377,8 +377,8 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 // #####################################################################################
 // #####################################################################################
 func BenchmarkExample(b *testing.B) {
-	randomGenerator_a.SetSeed(42)
-	str := randomGenerator_a.GenerateString(100000)
+	randomGenerator_ab.SetSeed(42)
+	str := randomGenerator_ab.GenerateString(2000000)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
 
 	f, err := os.Create("cpu.prof")
@@ -388,7 +388,7 @@ func BenchmarkExample(b *testing.B) {
 	if err := pprof.StartCPUProfile(f); err != nil {
 		log.Fatal("could not start CPU profile: ", err)
 	}
-	DecorateTreeWithVocabulary(st)
+	FindAllBranchingTandemRepeatsLogarithmic(st)
 
 	defer pprof.StopCPUProfile()
 

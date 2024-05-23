@@ -97,7 +97,7 @@ func reverseSlice(slice []int) []int {
 func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 
 	//we create the a idx to dfs mapping
-	idxToDfsTable := getIdxtoDfsTable(st)
+	idxToDfsTable := getIdxtoDfsTableStackMethod(st)
 
 	//create Dfs to idx mapping, this is an alternative to leaf lists
 	dfsToIdxTable := reverseSlice(idxToDfsTable)

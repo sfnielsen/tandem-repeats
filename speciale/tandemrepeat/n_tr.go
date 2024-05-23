@@ -63,9 +63,9 @@ func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
 	idxToDfsTable := getIdxtoDfsTableStackMethod(tree)
 
 	// Do preprecessing for constant time LCE queries
-	lceObject := lce.PreProcessLCEBothDirections(tree)
+	//lceObject := lce.PreProcessLCEBothDirections(tree)
 
-	IterateBlocksAndExecuteAlgorithm1aAnd1b(tree, blocks, idxToDfsTable, &leftMostCoveringRepeats, lceObject)
+	IterateBlocksAndExecuteAlgorithm1aAnd1b(tree, blocks, idxToDfsTable, &leftMostCoveringRepeats)
 
 	return leftMostCoveringRepeats
 
@@ -155,7 +155,7 @@ func CreateLZBlocks(li []int) []int {
 	return blocks
 }
 
-func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat, lceObject *lce.LCELinearTwoWays) {
+func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat) {
 	s := tree.GetInputString()
 	for i := 0; i < len(blocks); i++ {
 		h := blocks[i]
@@ -169,18 +169,37 @@ func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface
 		}
 
 		// Process block B for tandem repeats that satisfy condition 2
-		Algorithm1b(s, h, h1, h2, leftMostCoveringRepeats, lceObject)
+		Algorithm1b(s, h, h1, h2, leftMostCoveringRepeats)
 		// Process block B for tandem repeats that satisfy condition 1
-		Algorithm1a(s, h, h1, leftMostCoveringRepeats, lceObject)
+		Algorithm1a(s, h, h1, leftMostCoveringRepeats)
 
 	}
 }
+func longestCommonExtension(s string, i, j int) int {
+	n := len(s) - 1
+	for i < n && j < n && s[i] == s[j] {
+		i++
+		j++
+	}
+	return i
+}
+func longestCommonExtensionBackwards(s string, i, j int) int {
+	length := 0
 
-func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRepeat, lceObject *lce.LCELinearTwoWays) {
+	// Backward comparison
+	for i >= 0 && j >= 0 && s[i] == s[j] {
+		length++
+		i--
+		j--
+	}
+
+	return length
+}
+func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRepeat) {
 	for k := 1; k <= h1-h; k++ {
 		q := h1 - k
-		k1 := lceObject.LCELookupForward(q, h1)
-		k2 := lceObject.LCELookupBackward(q-1, h1-1)
+		k1 := lce.FindLCEForwardSlow(s, q, h1)
+		k2 := lce.FindLCEBackwardSlow(s, q-1, h1-1)
 		start := intMax(q-k2, q-k+1)
 		if k1+k2 >= k && k1 > 0 {
 			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
@@ -189,11 +208,11 @@ func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRep
 
 }
 
-func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]TandemRepeat, lceObject *lce.LCELinearTwoWays) {
+func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]TandemRepeat) {
 	for k := 1; k <= h2-h; k++ {
 		q := h + k
-		k1 := lceObject.LCELookupForward(q, h)
-		k2 := lceObject.LCELookupBackward(q-1, h-1)
+		k1 := lce.FindLCEForwardSlow(s, q, h)
+		k2 := lce.FindLCEBackwardSlow(s, q-1, h-1)
 		start := intMax(h-k2, h-k+1)
 		if k1+k2 >= k && k1 > 0 && start+k <= h1 && k2 > 0 {
 			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)

@@ -74,12 +74,15 @@ func (lceTwoWays *LCELinearTwoWays) LCELookupBackward(i, j int) int {
 
 }
 
+// find the lowest common extension (lowest common ancestor) of i and j
 func (lce *LCELinear) LCELookup(i, j int) int {
-	//find the lowest common ancestor of i and j
+	//get eulerindexes for i and j entries
 	leaf_i := lce.Leafs[i]
 	leaf_j := lce.Leafs[j]
 	eulerindex_i := lce.R[leaf_i.EulerLabel]
 	eulerindex_j := lce.R[leaf_j.EulerLabel]
+
+	//ensure i < j
 	if eulerindex_i > eulerindex_j {
 		eulerindex_i, eulerindex_j = eulerindex_j, eulerindex_i
 	}
@@ -114,9 +117,9 @@ func (lce *LCELinear) LCELookup(i, j int) int {
 		//edgecase when block i and j are adjacent
 		if block_j == block_i+1 {
 			if lca1.level < lca2.level {
-				return lce.EulerindexToNode[lce.E[block_i*blockSize+lca1.index]].StringDepth
+				return lce.EulerindexToNode[lce.E[block_i*blockSize+lca1.index]].StringDepth // lca1 smallest
 			}
-			return lce.EulerindexToNode[lce.E[block_j*blockSize+lca2.index]].StringDepth
+			return lce.EulerindexToNode[lce.E[block_j*blockSize+lca2.index]].StringDepth // lca2 smallest
 		}
 
 		//i and j are not adjacent
@@ -126,14 +129,12 @@ func (lce *LCELinear) LCELookup(i, j int) int {
 		lca2EulerIdx := block_j*blockSize + lca2.index
 		lca3EulerIdx := lce.BPrime[lca3.index]
 
-		if lca1.level < lca2.level {
-			if lca1.level < lca3.level {
-				return lce.EulerindexToNode[lce.E[lca1EulerIdx]].StringDepth
-			}
-		} else if lca2.level < lca3.level {
-			return lce.EulerindexToNode[lce.E[lca2EulerIdx]].StringDepth
+		if lca1.level <= lca2.level && lca1.level <= lca3.level {
+			return lce.EulerindexToNode[lce.E[lca1EulerIdx]].StringDepth // lca1 smallest
+		} else if lca2.level <= lca3.level {
+			return lce.EulerindexToNode[lce.E[lca2EulerIdx]].StringDepth // lca2 smallest
 		}
-		return lce.EulerindexToNode[lce.E[lca3EulerIdx]].StringDepth
+		return lce.EulerindexToNode[lce.E[lca3EulerIdx]].StringDepth // lca3 smallest
 	}
 }
 
