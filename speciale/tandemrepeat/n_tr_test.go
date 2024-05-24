@@ -41,7 +41,7 @@ func TestLZDecompositionOnSimpleStrings(t *testing.T) {
 		// Compute the LZ decomposition
 		tree := suffixtreeimpl.ConstructMcCreightSuffixTree(tc.input)
 
-		li := LZDecompositionStackMethod(tree)
+		li := LZDecompParallel(tree)
 		lzB := CreateLZBlocks(li)
 		// Compare the computed values with the expected values
 		for i := range li {
@@ -388,7 +388,7 @@ func BenchmarkExample(b *testing.B) {
 	if err := pprof.StartCPUProfile(f); err != nil {
 		log.Fatal("could not start CPU profile: ", err)
 	}
-	FindAllBranchingTandemRepeatsLogarithmic(st)
+	DecorateTreeWithVocabulary(st)
 
 	defer pprof.StopCPUProfile()
 

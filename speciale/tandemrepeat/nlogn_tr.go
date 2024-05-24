@@ -103,19 +103,19 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 	dfsToIdxTable := reverseSlice(idxToDfsTable)
 
 	//add biggest child to each node
-	st.AddBiggestChildToNodes()
+	st.AddBiggestChildToNodesStackMethod()
 
 	//store all branching repeats slice
 	allBranchingRepeats := make([]TandemRepeat, 0)
 
 	// now we run stoye and gusfield 'optimized algorithm'
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int) []int
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) []int {
-		depth = depth + node.EdgeLength()
+	stack := suffixtree.TreeStack{st.GetRoot()}
+	for len(stack) > 0 {
+		node := stack.PopOrNil()
 
-		leafList := []int{} // leaflist dynamically added to the node
-
-		for _, child := range node.Children {
+		// iterate children reverse
+		for i := len(node.Children) - 1; i >= 0; i-- {
+			child := node.Children[i]
 			if child == nil {
 				continue
 			}
@@ -129,23 +129,23 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 
 					//step 2b
 					i := dfsToIdxTable[dfsNumber]
-					j := i + depth
+					j := i + node.StringDepth
 					if j < len(st.GetInternalString()) {
 						dfsVal := idxToDfsTable[j]
 						//check if j is in dfs interval
 						if dfsVal >= node.DfsInterval.Start && dfsVal <= node.DfsInterval.End {
 
 							//now check if we are branching
-							if i+2*depth < len(st.GetInternalString()) && st.GetInternalString()[i] != st.GetInternalString()[i+2*depth] {
+							if i+2*node.StringDepth < len(st.GetInternalString()) && st.GetInternalString()[i] != st.GetInternalString()[i+2*node.StringDepth] {
 								//we have a branching repeat, add to slice
-								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, depth, 2})
+								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, node.StringDepth, 2})
 							}
 						}
 					}
 
 					//step 2c
 					j = dfsToIdxTable[dfsNumber]
-					i = j - depth
+					i = j - node.StringDepth
 					if i >= 0 && i < len(st.GetInternalString()) {
 						dfsVal := idxToDfsTable[i]
 						//check if i is in dfs interval
@@ -154,9 +154,9 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 						if dfsVal >= node.BiggestChild.DfsInterval.Start && dfsVal <= node.BiggestChild.DfsInterval.End {
 
 							//now check if we are branching
-							if i+2*depth < len(st.GetInternalString()) && st.GetInternalString()[i] != st.GetInternalString()[i+2*depth] {
+							if i+2*node.StringDepth < len(st.GetInternalString()) && st.GetInternalString()[i] != st.GetInternalString()[i+2*node.StringDepth] {
 								//we have a branching repeat
-								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, depth, 2})
+								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, node.StringDepth, 2})
 							}
 						}
 
@@ -166,16 +166,11 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 
 			// step 1, marking internal nodes is done implicitly by a depth-first traversal
 			if !child.IsLeaf() {
-				dfs(child, depth)
+				stack.Push(child)
 			}
 		}
 
-		//case for internal nodes
-		return leafList
-
 	}
-
-	dfs(st.GetRoot(), 0)
 
 	return allBranchingRepeats
 }

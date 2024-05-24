@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os/exec"
+	"runtime/debug"
 	"speciale/stringgenerators"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
@@ -61,9 +62,10 @@ var branchingTrOutput = utils.AlgorithmBase{
 var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRAOutput{branchingTrOutput}
 
 func main() {
+	debug.SetGCPercent(2000)
 	functionSlice := []utils.AlgorithmInterface{logTR, linearTR}
 
-	utils.TakeTimeAndSave(functionSlice, 2000000, 10, stringgenerators.AlphabetDNA)
+	utils.TakeTimeAndSave(functionSlice, 3000000, 5, stringgenerators.AlphabetProtein)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}

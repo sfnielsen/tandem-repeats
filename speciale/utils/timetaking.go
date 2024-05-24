@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"runtime"
 	"speciale/stringgenerators"
 	"strings"
 	"time"
@@ -60,7 +61,7 @@ func TakeTimeAndSave(functions []AlgorithmInterface, maxSize int, steps int, alp
 			inputString := randomGenerator.GenerateString(i)
 			for _, function := range functions {
 				time := function.GetTime(inputString)
-
+				runtime.GC()
 				results = append(results,
 					TimingResult{
 						InputSize:          i,

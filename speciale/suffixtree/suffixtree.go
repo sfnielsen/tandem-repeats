@@ -18,6 +18,7 @@ type SuffixTreeInterface interface {
 
 	// AddBiggestChildToNodes adds the biggest child to each node in the suffix tree.
 	AddBiggestChildToNodes()
+	AddBiggestChildToNodesStackMethod()
 
 	// Compute leafs of the suffix tree and return them as a slice of nodes
 	ComputeLeafsStackMethod() []*SuffixTreeNode
@@ -54,6 +55,30 @@ func (n *SuffixTree) GetSize() int {
 // GetAlphabetSize returns the size of the alphabet used to construct the suffix tree.
 func (n *SuffixTree) GetAlphabetSize() int {
 	return n.AlphabetSize
+}
+
+func (st *SuffixTree) AddBiggestChildToNodesStackMethod() {
+	stack := TreeStack{st.GetRoot()}
+	for len(stack) > 0 {
+		node := stack.PopOrNil()
+		if node.IsLeaf() {
+			node.BiggestChild = nil
+		} else {
+			var longest int
+			var biggestFoundChild *SuffixTreeNode = nil
+			for _, child := range node.Children {
+				if child != nil {
+					stack.Push(child)
+
+					if child.DfsInterval.End-child.DfsInterval.Start+1 > longest {
+						longest = child.DfsInterval.End - child.DfsInterval.Start + 1
+						biggestFoundChild = child
+					}
+				}
+			}
+			node.BiggestChild = biggestFoundChild
+		}
+	}
 }
 
 func (st *SuffixTree) AddBiggestChildToNodes() {

@@ -3,6 +3,7 @@ package tandemrepeat
 import (
 	"speciale/lce"
 	"speciale/suffixtree"
+	"sync"
 )
 
 // Decorate tree with vocabulary in O(n) time and return all tandem repeats in O(z) time
@@ -28,14 +29,13 @@ func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 
 		}
 	}
-
 	// Phase 2
 	// Decorate tree with subset of leftmost covering repeats
 	Algorithm2StackMethod(tree, leftMostCoveringRepeatsInts)
 
 	// Phase 3
 	// Decorate tree with entire vocabulary
-	Algorithm3StackMethod(tree)
+	Algorithm3DFSStackMethod(tree)
 
 }
 
@@ -44,6 +44,21 @@ func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 // Algorithm 1
 // #######################################################################################
 // #######################################################################################
+
+// Function to simulate LZRoutine
+func LZRoutine(tree suffixtree.SuffixTreeInterface, blocksChan chan<- []int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	li := LZDecompositionStackMethod(tree)
+	blocks := CreateLZBlocks(li)
+	blocksChan <- blocks
+}
+
+// Function to simulate LZRoutine
+func getIdxToDfsTableRoutine(tree suffixtree.SuffixTreeInterface, channel chan<- []int, wg *sync.WaitGroup) {
+	defer wg.Done()
+	idxToDfsTable := getIdxtoDfsTableStackMethod(tree)
+	channel <- idxToDfsTable
+}
 
 // Combines algorithm 1a and 1b to find tandem repeats
 func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
@@ -56,14 +71,27 @@ func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
 	}
 
 	// Compute the blocks and Z-values
-	li := LZDecompositionStackMethod(tree)
-	blocks := CreateLZBlocks(li)
+	blocksChan := make(chan []int)
+	idxToDfsChan := make(chan []int)
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Start the goroutine
+	go LZRoutine(tree, blocksChan, &wg)
 
 	// add idx to dfs table
-	idxToDfsTable := getIdxtoDfsTableStackMethod(tree)
+	go getIdxToDfsTableRoutine(tree, idxToDfsChan, &wg)
 
 	// Do preprecessing for constant time LCE queries
 	//lceObject := lce.PreProcessLCEBothDirections(tree)
+	go func() {
+		wg.Wait()
+		close(blocksChan)
+		close(idxToDfsChan)
+	}()
+	// Capture the return values
+	idxToDfsTable := <-idxToDfsChan
+	blocks := <-blocksChan
 
 	IterateBlocksAndExecuteAlgorithm1aAnd1b(tree, blocks, idxToDfsTable, &leftMostCoveringRepeats)
 
@@ -134,6 +162,81 @@ func LZDecompositionStackMethod(tree suffixtree.SuffixTreeInterface) []int {
 
 	return li
 
+}
+
+// UpdateMessage represents a message to update the li array
+type UpdateMessage struct {
+	Index int
+	Value int
+}
+
+func LZDecompParallel(tree suffixtree.SuffixTreeInterface) []int {
+	// Initialize arrays to store the lengths of blocks and their starting positions
+	n := len(tree.GetInputString())
+	li := make([]int, n)
+
+	var wg sync.WaitGroup
+	updates := make(chan UpdateMessage, 100)
+
+	// Start a goroutine to apply updates to the li array
+	var updateWg sync.WaitGroup
+	updateWg.Add(1)
+	go func() {
+		defer updateWg.Done()
+		for update := range updates {
+			li[update.Index] = update.Value
+		}
+	}()
+
+	// Get the root node and process each child in a separate goroutine
+	root := tree.GetRoot()
+	for _, child := range root.Children {
+		if child == nil {
+			continue
+		}
+		wg.Add(1)
+		go processSubtree(child, updates, &wg)
+	}
+
+	// Close the updates channel once all work is done
+	go func() {
+		wg.Wait()
+		close(updates)
+	}()
+
+	// Wait for the update goroutine to finish
+	updateWg.Wait()
+
+	return li
+}
+
+// Worker function to process nodes in a subtree
+func processSubtree(node *suffixtree.SuffixTreeNode, updates chan UpdateMessage, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	// Stack for DFS
+	stack := suffixtree.TreeStack{node}
+
+	for len(stack) > 0 {
+		currentNode := stack.PopOrNil()
+		if currentNode == nil {
+			continue
+		}
+
+		for _, child := range currentNode.Children {
+			if child == nil {
+				continue
+			}
+			if currentNode.Label < child.Label {
+				updates <- UpdateMessage{Index: child.Label, Value: currentNode.StringDepth}
+			}
+			if child.IsLeaf() {
+				continue
+			}
+			stack.Push(child)
+		}
+
+	}
 }
 
 // create blocks from the LZ decomposition
@@ -268,7 +371,6 @@ func Algorithm2(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts
 	dfs(tree.GetRoot(), 0)
 
 }
-
 func Algorithm2StackMethod(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts [][]int) {
 
 	//need two-way stack for bottom up traversal
@@ -301,7 +403,6 @@ func Algorithm2StackMethod(tree suffixtree.SuffixTreeInterface, leftMostCovering
 
 // Check if we can decorate this node with a tandem repeat from the leftmost covering set
 func ProcessNodeAlg2(node *suffixtree.SuffixTreeNode, leftMostCoveringRepeatsInt [][]int, depth int) {
-	//fmt.Println(node.Label, "hattemand", depth, depth-node.EdgeLength(), leftMostCoveringRepeatsInt[node.Label])
 
 	//the label of any node (internal or leaf) is the smallest index in the subtree
 	pList := leftMostCoveringRepeatsInt[node.Label]
@@ -363,6 +464,30 @@ func Algorithm3(tree suffixtree.SuffixTreeInterface) {
 
 	// Perform depth-first traversal starting from the root of the suffix tree
 	dfs(tree.GetRoot(), 0)
+}
+
+func Algorithm3DFSStackMethod(tree suffixtree.SuffixTreeInterface) {
+	stack := suffixtree.TreeStack{tree.GetRoot()}
+	for len(stack) > 0 {
+		node := stack.PopOrNil()
+
+		for _, child := range node.Children {
+			if child != nil {
+				stack.Push(child)
+			}
+		}
+
+		if !(tree.GetRoot() == node) {
+			if node.TandemRepeatDeco != nil {
+				//attempt suffix walk
+				for _, v := range node.TandemRepeatDeco {
+					attemptSuffixWalk(tree, node, v)
+				}
+			}
+
+		}
+
+	}
 }
 
 func Algorithm3StackMethod(tree suffixtree.SuffixTreeInterface) {

@@ -1,6 +1,7 @@
 package tandemrepeat
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -42,7 +43,7 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 	st := suffixtreeimpl.ConstructNaiveSuffixTree(s)
 	//find the tandem repeats
 	tr := FindAllTandemRepeatsLogarithmic(st)
-
+	fmt.Println(tr)
 	if len(tr) != 2 {
 		t.Errorf("Expected 2 tandem repeat, got %d", len(tr))
 	}
@@ -162,7 +163,7 @@ func TestNaiveTrBiggestChild(t *testing.T) {
 	s := randomGenerator_ab.GenerateString(100)
 	// Create a NaiveTandemRepeat instance
 	st := suffixtreeimpl.ConstructNaiveSuffixTree(s)
-	st.AddBiggestChildToNodes()
+	st.AddBiggestChildToNodesStackMethod()
 	// check that biggest child is not nil for all nodes
 	var dfs func(node *suffixtree.SuffixTreeNode)
 	dfs = func(node *suffixtree.SuffixTreeNode) {
@@ -246,7 +247,7 @@ func TestMcCreightVsNaive(t *testing.T) {
 func BenchmarkBranchingTR(b *testing.B) {
 	trees := make([]suffixtree.SuffixTreeInterface, 0)
 	for i := 0; i < 3; i++ {
-		str := randomGenerator_a.GenerateString(200000)
+		str := randomGenerator_a.GenerateString(1000000)
 		st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
 		trees = append(trees, st)
 	}
