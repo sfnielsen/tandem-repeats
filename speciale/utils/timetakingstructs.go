@@ -14,6 +14,7 @@ type TimingResult struct {
 	Algorithm          string
 	RunningTime        time.Duration
 	ExpectedComplexity string
+	Alphabet           string
 }
 
 type SuffixTreeConstructionType func(string) suffixtree.SuffixTreeInterface
@@ -52,9 +53,36 @@ type AlgorithmTandemrepeat struct {
 	AlgorithmBase
 }
 
+type AlgorithmTandemrepeatBRAOutput struct {
+	AlgorithmBase
+}
+type AlgorithmTandemrepeatVOCOutput struct {
+	AlgorithmBase
+}
+
 // Altered GetTime algorithm for tandem repeats that first creates a suffix tree and then takes time
 func (a *AlgorithmTandemrepeat) GetTime(args ...interface{}) time.Duration {
-	var st suffixtree.SuffixTreeInterface = suffixtreeimpl.ConstructNaiveSuffixTree(args[0].(string))
+	var st suffixtree.SuffixTreeInterface = suffixtreeimpl.ConstructMcCreightSuffixTree(args[0].(string))
+	start := time.Now()
+	a.Algorithm(st)
+	return time.Since(start)
+}
+
+// Altered GetTime algorithm for tandem repeats that first creates a suffix tree and then takes time
+func (a *AlgorithmTandemrepeatBRAOutput) GetTime(args ...interface{}) time.Duration {
+	var st suffixtree.SuffixTreeInterface = suffixtreeimpl.ConstructMcCreightSuffixTree(args[0].(string))
+	trBranching := tandemrepeat.FindAllBranchingTandemRepeatsLogarithmic(st)
+
+	start := time.Now()
+	a.Algorithm(trBranching, st)
+	//tandemrepeat.GetAllTandemRepeats(trBranching, st)
+	return time.Since(start)
+}
+
+// Altered GetTime algorithm for tandem repeats that first creates a suffix tree and then takes time
+func (a *AlgorithmTandemrepeatVOCOutput) GetTime(args ...interface{}) time.Duration {
+	var st suffixtree.SuffixTreeInterface = suffixtreeimpl.ConstructMcCreightSuffixTree(args[0].(string))
+	tandemrepeat.DecorateTreeWithVocabulary(st)
 	start := time.Now()
 	a.Algorithm(st)
 	return time.Since(start)
