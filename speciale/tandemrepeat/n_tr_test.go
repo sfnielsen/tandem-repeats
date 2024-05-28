@@ -1,6 +1,10 @@
 package tandemrepeat
 
 import (
+	"fmt"
+	"log"
+	"os"
+	"runtime/pprof"
 	"speciale/lce"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
@@ -370,5 +374,46 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 
 		}
 	}
+
+}
+func BenchmarkSizes(b *testing.B) {
+	randomGenerator_a.SetSeed(42)
+	str := randomGenerator_a.GenerateString(100000)
+	st_a := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+
+	randomGenerator_ab.SetSeed(42)
+	str = randomGenerator_ab.GenerateString(100000)
+	st_ab := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+
+	randomGenerator_dna.SetSeed(42)
+	str = randomGenerator_dna.GenerateString(100000)
+	st_dna := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+
+	randomGenerator_protein.SetSeed(42)
+	str = randomGenerator_protein.GenerateString(100000)
+	st_prot := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+
+	randomGenerator_byte.SetSeed(42)
+	str = randomGenerator_byte.GenerateString(100000)
+	st_byte := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+
+	fmt.Println(st_a.GetSize(), st_ab.GetSize(), st_dna.GetSize(), st_prot.GetSize(), st_byte.GetSize())
+
+}
+func BenchmarkExample(b *testing.B) {
+	randomGenerator_byte.SetSeed(42)
+	str := randomGenerator_byte.GenerateString(100000)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
+
+	f, err := os.Create("cpu.prof")
+	if err != nil {
+		log.Fatal("could not create CPU profile: ", err)
+	}
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatal("could not start CPU profile: ", err)
+	}
+	DecorateTreeWithVocabulary(st)
+
+	defer pprof.StopCPUProfile()
 
 }
