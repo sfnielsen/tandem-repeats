@@ -55,6 +55,31 @@ def scatterplot_tandem_repeats(data:pd.DataFrame):
     plt.legend()
     plt.show()
 
+def scatterplot_tandem_repeats(data:pd.DataFrame):
+    data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
+
+    # convert runnningtime to numeric, for example 's' means seconds so convert it to ms
+    data['RunningTime'] = data['RunningTime'].apply(lambda x: float(x[:-2]) * 1000 if type(x) == str and x[-2] == 'µ' else x)
+    data['RunningTime'] = data['RunningTime'].apply(lambda x: float(x[:-1]) / 1000 if type(x) == str and x[-1] == 's' else float(x))
+    # Convert 'InputSize' to numeric
+    data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
+
+    # Clean and convert 'RunningTime' to numeric
+    try:
+        data['RunningTime'] = pd.to_numeric(data['RunningTime'].str.replace(r'[^0-9.]', ''), errors='coerce')
+    except AttributeError:
+        pass
+
+    # Plot all data points
+    for algorithm in data['Algorithm'].unique():
+        algorithm_data = data[data['Algorithm'] == algorithm]
+        plt.scatter(algorithm_data['InputSize'], algorithm_data['RunningTime'], label=algorithm, marker='x')
+
+    plt.xlabel('Input Size')
+    plt.ylabel('Running Time (ms)')
+    plt.legend()
+    plt.show()
+
 def plot_expected_time_complexity_test(data:pd.DataFrame):
     data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
 
@@ -95,5 +120,4 @@ def plot_expected_time_complexity_test(data:pd.DataFrame):
 
 folder_path = 'time_csvs'
 latest_file_path = get_latest_file(folder_path)
-plot_tandem_repeats(pd.read_csv(latest_file_path, sep=","))
-plot_expected_time_complexity_test(pd.read_csv(latest_file_path, sep=","))
+scatterplot_tandem_repeats(pd.read_csv(latest_file_path, sep=","))
