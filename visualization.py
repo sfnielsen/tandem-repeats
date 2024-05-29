@@ -67,6 +67,11 @@ def plot_tandem_repeats(data: pd.DataFrame):
     
 
 def scatterplot_tandem_repeats(data:pd.DataFrame):
+    data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
+
+    # convert runnningtime to numeric, for example 's' means seconds so convert it to ms
+    data['RunningTime'] = data['RunningTime'].apply(lambda x: float(x[:-2]) * 1000 if type(x) == str and x[-2] == 'µ' else x)
+    data['RunningTime'] = data['RunningTime'].apply(lambda x: float(x[:-1]) * 1000 if type(x) == str and x[-1] == 's' else float(x))
     # Convert 'InputSize' to numeric
     data['InputSize'] = pd.to_numeric(data['InputSize'], errors='coerce')
 

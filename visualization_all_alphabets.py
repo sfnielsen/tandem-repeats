@@ -12,7 +12,8 @@ alphabet_label_mapper = {
     'ACDEFGHIKLMNPQRSTVWY':'Protein',
     'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789':'ASCII',
     'Byte':'Byte',
-    'fib':'Fibonacci'
+    'fib':'Fibonacci',
+    'max':'Max',
 }
 def get_latest_file(folder_path:str):
     # Get a list of all files in the folder
