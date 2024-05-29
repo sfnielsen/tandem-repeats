@@ -37,14 +37,6 @@ func CreateMaxiAlphabet() string {
 		}
 	}
 
-	// Add Emoji characters (U+1F600 to U+1F64F), excluding '$'
-	for i := 0x1F600; i <= 0x1F64F; i++ {
-		char := string(rune(i))
-		if char != "$" && !strings.Contains(alphabet, char) {
-			alphabet += char
-		}
-	}
-
 	return alphabet
 }
 

@@ -43,9 +43,9 @@ var nlognstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemr
 func main() {
 	functionSlice := []utils.AlgorithmInterface{nstoygus}
 
-	utils.TakeTimeIncreasingAlphabet(functionSlice, 10000)
+	utils.MeasureSizeOfTrees(functionSlice, 200000)
 
-	pythonScript := "../visualization_all_alphabets.py"
+	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}
 
 	// Build the command to execute the Python script

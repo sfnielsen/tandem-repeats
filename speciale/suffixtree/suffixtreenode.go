@@ -5,9 +5,9 @@ type SuffixTreeNode struct {
 	//standard fields
 	Label    int // for leafs it is the index of the suffix, for internal nodes it is the smallest index of the suffix in the subtree
 	Parent   *SuffixTreeNode
-	StartIdx int                   // start index of the substring in the input string (inclusive)
-	EndIdx   int                   // end index of the substring in the input string (inclusive)
-	Children [1400]*SuffixTreeNode // assume ASCII characters
+	StartIdx int                  // start index of the substring in the input string (inclusive)
+	EndIdx   int                  // end index of the substring in the input string (inclusive)
+	Children [256]*SuffixTreeNode // assume ASCII characters
 
 	// Fields required for McCreight's algorithm
 	SuffixLink *SuffixTreeNode

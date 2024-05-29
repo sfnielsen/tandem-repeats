@@ -401,8 +401,8 @@ func BenchmarkSizes(b *testing.B) {
 
 }
 func BenchmarkExample(b *testing.B) {
-	randomGenerator_byte.SetSeed(42)
-	str := randomGenerator_byte.GenerateString(100000)
+	randomGenerator_dna.SetSeed(42)
+	str := randomGenerator_dna.GenerateString(100000)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
 
 	f, err := os.Create("cpu.prof")
