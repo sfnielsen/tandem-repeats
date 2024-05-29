@@ -144,7 +144,7 @@ func MeasureSizeOfTrees(functions []AlgorithmInterface, inputsize int) {
 	//iterate all alphabets
 	for idx := 1; idx < len(maxi_alphabet); idx++ {
 		fmt.Println(idx)
-		for range [5]int{} {
+		for range [2]int{} {
 			// Construct suffix tree
 			inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:idx], inputsize)
 			st := suffixtreeimpl.ConstructMcCreightSuffixTree(inputString)

@@ -1,8 +1,28 @@
 package stringgenerators
 
+import "math/rand"
+
 type StringGenerator interface {
 	GenerateString(n int) string
 	SetSeed(providedSeed int)
+}
+
+func GenerateStringFromGivenAlphabet(alphabet string, n int) string {
+	// Create a byte slice of length n
+	b := make([]byte, n+1)
+	length := len(alphabet)
+	// Iterate over the byte slice and fill it with random characters from the alphabet
+	for i := range b[:n] {
+		// Generate a random index within the range of the alphabet
+		randomIndex := rand.Intn(length)
+		// Select a random character from the alphabet and assign it to the byte slice
+		b[i] = alphabet[randomIndex]
+	}
+	// Add the sentinel character at the end
+	b[n] = '$'
+
+	// Return the byte slice as a string
+	return string(b)
 }
 
 const (
