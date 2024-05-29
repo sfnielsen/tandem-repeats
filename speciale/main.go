@@ -62,7 +62,7 @@ var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRA
 func main() {
 	functionSlice := []utils.AlgorithmInterface{logTR, linearTR}
 
-	utils.MeasureSizeOfTrees(functionSlice, 400000)
+	utils.MeasureSizeOfTrees(functionSlice, 100000)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}
