@@ -60,11 +60,11 @@ var branchingTrOutput = utils.AlgorithmBase{
 var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRAOutput{branchingTrOutput}
 
 func main() {
-	functionSlice := []utils.AlgorithmInterface{logTR, linearTR}
+	functionSlice := []utils.AlgorithmInterface{logTR}
 
-	utils.MeasureSizeOfTrees(functionSlice, 100000)
+	utils.TakeTimeAllAlphabets(functionSlice, 1000000, 20)
 
-	pythonScript := "../visualization.py"
+	pythonScript := "../visualization_all_alphabets.py"
 	//scriptArgs := []string{}
 
 	// Build the command to execute the Python script
