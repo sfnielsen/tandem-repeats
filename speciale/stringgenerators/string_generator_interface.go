@@ -1,8 +1,69 @@
 package stringgenerators
 
+import (
+	"math/rand"
+	"strings"
+)
+
 type StringGenerator interface {
 	GenerateString(n int) string
 	SetSeed(providedSeed int)
+}
+
+func CreateMaxiAlphabet() string {
+	var alphabet string = AlphabetByte
+
+	// Add Latin characters, excluding '$'
+	for i := 0; i < 128; i++ {
+		char := string(rune(i))
+		if char != "$" && !strings.Contains(alphabet, char) {
+			alphabet += char
+		}
+	}
+
+	// Add Greek characters (U+0370 to U+03FF), excluding '$'
+	for i := 0x370; i <= 0x3FF; i++ {
+		char := string(rune(i))
+		if char != "$" && !strings.Contains(alphabet, char) {
+			alphabet += char
+		}
+	}
+
+	// Add Cyrillic characters (U+0400 to U+04FF), excluding '$'
+	for i := 0x400; i <= 0x4FF; i++ {
+		char := string(rune(i))
+		if char != "$" && !strings.Contains(alphabet, char) {
+			alphabet += char
+		}
+	}
+
+	// Add Emoji characters (U+1F600 to U+1F64F), excluding '$'
+	for i := 0x1F600; i <= 0x1F64F; i++ {
+		char := string(rune(i))
+		if char != "$" && !strings.Contains(alphabet, char) {
+			alphabet += char
+		}
+	}
+
+	return alphabet
+}
+
+func GenerateStringFromGivenAlphabet(alphabet string, n int) string {
+	// Create a byte slice of length n
+	b := make([]byte, n+1)
+	length := len(alphabet)
+	// Iterate over the byte slice and fill it with random characters from the alphabet
+	for i := range b[:n] {
+		// Generate a random index within the range of the alphabet
+		randomIndex := rand.Intn(length)
+		// Select a random character from the alphabet and assign it to the byte slice
+		b[i] = alphabet[randomIndex]
+	}
+	// Add the sentinel character at the end
+	b[n] = '$'
+
+	// Return the byte slice as a string
+	return string(b)
 }
 
 const (

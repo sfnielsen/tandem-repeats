@@ -131,3 +131,40 @@ func TakeTimeAllAlphabets(functions []AlgorithmInterface, maxSize int, steps int
 		fmt.Println("Error saving results:", err)
 	}
 }
+
+func TakeTimeIncreasingAlphabet(functions []AlgorithmInterface, inputsize int) {
+	//iterate all alphabettypes
+	maxi_alphabet := stringgenerators.CreateMaxiAlphabet()
+	fmt.Println("alphabet length", len(maxi_alphabet))
+	var results []TimingResult
+	currentTime := time.Now().Format("2006-01-02_15-04-05")
+	filename := fmt.Sprintf("time_csvs/timing_results_%s.csv", currentTime)
+
+	//iterate all alphabets
+	for idx := 1; idx < len(maxi_alphabet); idx++ {
+		fmt.Println(idx)
+		for range [2]int{} {
+			// Construct suffix tree
+			inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:idx], inputsize)
+			for _, function := range functions {
+				time := function.GetTime(inputString)
+
+				results = append(results,
+					TimingResult{
+						InputSize:          idx,
+						Algorithm:          function.GetName(),
+						RunningTime:        time,
+						ExpectedComplexity: function.GetExpectedComplexity(),
+						Alphabet:           "max",
+					})
+			}
+
+		}
+		idx += 9
+
+	}
+	// Save results to a CSV file
+	if err := SaveResults(results, filename); err != nil {
+		fmt.Println("Error saving results:", err)
+	}
+}

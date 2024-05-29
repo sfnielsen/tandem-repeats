@@ -43,7 +43,7 @@ var nlognstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemr
 func main() {
 	functionSlice := []utils.AlgorithmInterface{nstoygus}
 
-	utils.TakeTimeAllAlphabets(functionSlice, 10000, 50)
+	utils.TakeTimeIncreasingAlphabet(functionSlice, 10000)
 
 	pythonScript := "../visualization_all_alphabets.py"
 	//scriptArgs := []string{}

@@ -59,6 +59,9 @@ type AlgorithmTandemrepeatBRAOutput struct {
 type AlgorithmTandemrepeatVOCOutput struct {
 	AlgorithmBase
 }
+type AlgorithmTandemrepeatVariableAlphabet struct {
+	AlgorithmBase
+}
 
 // Altered GetTime algorithm for tandem repeats that first creates a suffix tree and then takes time
 func (a *AlgorithmTandemrepeat) GetTime(args ...interface{}) time.Duration {
