@@ -212,4 +212,4 @@ def plot_expected_time_complexity_test_scatter(data:pd.DataFrame):
 folder_path = 'time_csvs'
 latest_file_path = get_latest_file(folder_path)
 print(latest_file_path)
-plot_expected_time_complexity_test_scatter(pd.read_csv(latest_file_path, sep=","))
+scatterplot_tandem_repeats(pd.read_csv(latest_file_path, sep=","))

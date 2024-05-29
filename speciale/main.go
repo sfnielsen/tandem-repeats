@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os/exec"
-	"speciale/stringgenerators"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 	"speciale/tandemrepeat"
@@ -63,7 +62,7 @@ var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRA
 func main() {
 	functionSlice := []utils.AlgorithmInterface{logTR, linearTR}
 
-	utils.TakeTimeAndSave(functionSlice, 2000000, 10, stringgenerators.AlphabetDNA)
+	utils.MeasureSizeOfTrees(functionSlice, 2000000)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}
