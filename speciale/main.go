@@ -43,7 +43,7 @@ var nlognstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemr
 func main() {
 	functionSlice := []utils.AlgorithmInterface{nstoygus}
 
-	utils.MeasureSizeOfTrees(functionSlice, 200000)
+	utils.TakeTimeAllAlphabets(functionSlice, 100000, 20)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}
