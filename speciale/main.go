@@ -41,11 +41,11 @@ var nstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemrepea
 var nlognstoygus utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{tandemrepeat_nlogn}
 
 func main() {
-	functionSlice := []utils.AlgorithmInterface{nstoygus}
+	functionSlice := []utils.AlgorithmInterface{nlognstoygus}
 
-	utils.TakeTimeAllAlphabets(functionSlice, 100000, 20)
+	utils.TakeTimeAllAlphabets(functionSlice, 100000, 25)
 
-	pythonScript := "../visualization.py"
+	pythonScript := "../visualization_all_alphabets.py"
 	//scriptArgs := []string{}
 
 	// Build the command to execute the Python script

@@ -103,7 +103,7 @@ func TakeTimeAllAlphabets(functions []AlgorithmInterface, maxSize int, steps int
 		for i := maxSize / steps; i < maxSize; i += int(maxSize / steps) {
 			fmt.Println(i)
 			// Run each type 10 times
-			for range [10]int{} {
+			for range [4]int{} {
 				// Construct suffix tree
 				inputString := randomGenerator.GenerateString(i)
 				for _, function := range functions {
