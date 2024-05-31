@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime/debug"
 	"runtime/pprof"
 	"speciale/lce"
 	"speciale/suffixtree"
@@ -377,8 +378,9 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 // #####################################################################################
 // #####################################################################################
 func BenchmarkExample(b *testing.B) {
+	debug.SetGCPercent(5000)
 	randomGenerator_ab.SetSeed(42)
-	str := randomGenerator_ab.GenerateString(2000000)
+	str := randomGenerator_ab.GenerateString(3000000)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
 
 	f, err := os.Create("cpu.prof")
