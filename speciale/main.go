@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os/exec"
-	"runtime/debug"
 	"speciale/stringgenerators"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
@@ -25,7 +24,7 @@ var lineraTandemAlgobase = utils.AlgorithmBase{
 		tandemrepeat.DecorateTreeWithVocabulary(args[0].(suffixtree.SuffixTreeInterface))
 		return []tandemrepeat.TandemRepeat{}
 	},
-	ExpectedComplexity: "n"}
+	ExpectedComplexity: "nlogn"}
 var linearTR utils.AlgorithmInterface = &utils.AlgorithmTandemrepeat{lineraTandemAlgobase}
 
 var naiveSuffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
@@ -62,11 +61,9 @@ var branchingTrOutput = utils.AlgorithmBase{
 var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRAOutput{branchingTrOutput}
 
 func main() {
-	debug.SetGCPercent(5000)
+	functionSlice := []utils.AlgorithmInterface{linearTR}
 
-	functionSlice := []utils.AlgorithmInterface{logTR, linearTR}
-
-	utils.TakeTimeAndSave(functionSlice, 3000000, 10, stringgenerators.AlphabetAB)
+	utils.TakeTimeAndSave(functionSlice, 500000, 40, stringgenerators.AlphabetAB)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}
