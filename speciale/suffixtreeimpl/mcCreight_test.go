@@ -108,19 +108,19 @@ func TestMcCreightSuffixTreeSameAsNaive(t *testing.T) {
 		} else {
 			for _, child := range node.Children {
 				if child != nil {
-					if node2.Children[rune(st.GetInputString()[child.StartIdx])] == nil {
+					if node2.Children[rune(st.GetInternalString()[child.StartIdx])] == nil {
 						t.Errorf("Expected child, got nil")
 					}
-					if node2.Children[rune(st.GetInputString()[child.StartIdx])].Label != child.Label {
-						t.Errorf("Expected label %d, got %d", child.Label, node2.Children[rune(st.GetInputString()[child.StartIdx])].Label)
+					if node2.Children[rune(st.GetInternalString()[child.StartIdx])].Label != child.Label {
+						t.Errorf("Expected label %d, got %d", child.Label, node2.Children[rune(st.GetInternalString()[child.StartIdx])].Label)
 					}
-					if node2.Children[rune(st.GetInputString()[child.StartIdx])].StartIdx != child.StartIdx {
-						t.Errorf("Expected startIdx %d, got %d", child.StartIdx, node2.Children[rune(st.GetInputString()[child.StartIdx])].StartIdx)
+					if node2.Children[rune(st.GetInternalString()[child.StartIdx])].StartIdx != child.StartIdx {
+						t.Errorf("Expected startIdx %d, got %d", child.StartIdx, node2.Children[rune(st.GetInternalString()[child.StartIdx])].StartIdx)
 					}
-					if node2.Children[rune(st.GetInputString()[child.StartIdx])].EndIdx != child.EndIdx {
-						t.Errorf("Expected endIdx %d, got %d", child.EndIdx, node2.Children[rune(st.GetInputString()[child.StartIdx])].EndIdx)
+					if node2.Children[rune(st.GetInternalString()[child.StartIdx])].EndIdx != child.EndIdx {
+						t.Errorf("Expected endIdx %d, got %d", child.EndIdx, node2.Children[rune(st.GetInternalString()[child.StartIdx])].EndIdx)
 					}
-					dfs(child, node2.Children[rune(st.GetInputString()[child.StartIdx])])
+					dfs(child, node2.Children[rune(st.GetInternalString()[child.StartIdx])])
 				}
 			}
 		}

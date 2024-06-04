@@ -2,6 +2,7 @@ package lce
 
 import (
 	"math"
+	"math/bits"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 )
@@ -17,7 +18,6 @@ import (
 type LCELinear struct {
 	//forward LCE queries
 	suffixTree                   *suffixtree.SuffixTreeInterface
-	L                            []int
 	E                            []int
 	R                            []int
 	blocks                       [][]int
@@ -73,65 +73,67 @@ func (lceTwoWays *LCELinearTwoWays) LCELookupBackward(i, j int) int {
 
 }
 
+// find the lowest common extension (lowest common ancestor) of i and j
 func (lce *LCELinear) LCELookup(i, j int) int {
-	//find the lowest common ancestor of i and j
+	//get eulerindexes for i and j entries
 	leaf_i := lce.Leafs[i]
 	leaf_j := lce.Leafs[j]
 	eulerindex_i := lce.R[leaf_i.EulerLabel]
 	eulerindex_j := lce.R[leaf_j.EulerLabel]
+
+	//ensure i < j
 	if eulerindex_i > eulerindex_j {
 		eulerindex_i, eulerindex_j = eulerindex_j, eulerindex_i
 	}
 
 	blockSize := len(lce.blocks[0])
-	block_i := math.Floor(float64(eulerindex_i) / float64(blockSize))
-	block_j := math.Floor(float64(eulerindex_j) / float64(blockSize))
+
+	block_i := eulerindex_i / blockSize
+	block_j := eulerindex_j / blockSize
 
 	// case 1:   They are on the same block
 	if block_i == block_j {
 		//find the normalized block idx
-		normalizedBlockIdx := lce.blockIdxToNormalizedBlockIdx[int(block_i)]
+		normalizedBlockIdx := lce.blockIdxToNormalizedBlockIdx[block_i]
 		//find the normalized block sparse table
 		normalizedBlockSparseTable := lce.NormalizedBlockSparseTables[normalizedBlockIdx]
 		//find the LCA in the normalized block
 		lca := RMQLookup(eulerindex_i%blockSize, eulerindex_j%blockSize, normalizedBlockSparseTable)
-		lcaEulerIdx := int(block_i)*blockSize + lca.index
+		lcaEulerIdx := block_i*blockSize + lca.index
 		return lce.EulerindexToNode[lce.E[lcaEulerIdx]].StringDepth
 	} else {
 		// case 2:   They are on different blocks (i < j   always)
 		// find the LCA in the first block
-		lcaBlocki := lce.blockIdxToNormalizedBlockIdx[int(block_i)]
+		lcaBlocki := lce.blockIdxToNormalizedBlockIdx[block_i]
 		lca1 := RMQLookup(eulerindex_i%blockSize, blockSize-1, lce.NormalizedBlockSparseTables[lcaBlocki])
-		lca1.level += lce.blocks[int(block_i)][0]
+		lca1.level += lce.blocks[block_i][0]
 		// find the LCA in the last block
-		lcaBlockj := lce.blockIdxToNormalizedBlockIdx[int(block_j)]
+		lcaBlockj := lce.blockIdxToNormalizedBlockIdx[block_j]
 		lca2 := RMQLookup(0, eulerindex_j%blockSize, lce.NormalizedBlockSparseTables[lcaBlockj])
-		lca2.level += lce.blocks[int(block_j)][0]
+		lca2.level += lce.blocks[block_j][0]
 		// find the LCA between the two blocks
 
 		//edgecase when block i and j are adjacent
 		if block_j == block_i+1 {
 			if lca1.level < lca2.level {
-				return lce.EulerindexToNode[lce.E[int(block_i)*blockSize+lca1.index]].StringDepth
+				return lce.EulerindexToNode[lce.E[block_i*blockSize+lca1.index]].StringDepth // lca1 smallest
 			}
-			return lce.EulerindexToNode[lce.E[int(block_j)*blockSize+lca2.index]].StringDepth
+			return lce.EulerindexToNode[lce.E[block_j*blockSize+lca2.index]].StringDepth // lca2 smallest
 		}
 
 		//i and j are not adjacent
-		lca3 := RMQLookup(int(block_i)+1, int(block_j)-1, lce.LPrimeST)
+		lca3 := RMQLookup(block_i+1, block_j-1, lce.LPrimeST)
 		// find the LCA of the three LCA's
-		lca1EulerIdx := int(block_i)*blockSize + lca1.index
-		lca2EulerIdx := int(block_j)*blockSize + lca2.index
+		lca1EulerIdx := block_i*blockSize + lca1.index
+		lca2EulerIdx := block_j*blockSize + lca2.index
 		lca3EulerIdx := lce.BPrime[lca3.index]
 
-		if lca1.level < lca2.level {
-			if lca1.level < lca3.level {
-				return lce.EulerindexToNode[lce.E[lca1EulerIdx]].StringDepth
-			}
-		} else if lca2.level < lca3.level {
-			return lce.EulerindexToNode[lce.E[lca2EulerIdx]].StringDepth
+		if lca1.level <= lca2.level && lca1.level <= lca3.level {
+			return lce.EulerindexToNode[lce.E[lca1EulerIdx]].StringDepth // lca1 smallest
+		} else if lca2.level <= lca3.level {
+			return lce.EulerindexToNode[lce.E[lca2EulerIdx]].StringDepth // lca2 smallest
 		}
-		return lce.EulerindexToNode[lce.E[lca3EulerIdx]].StringDepth
+		return lce.EulerindexToNode[lce.E[lca3EulerIdx]].StringDepth // lca3 smallest
 	}
 }
 
@@ -170,7 +172,7 @@ func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 	// precompute all possible normalized blocks
 	NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx := computeNormalizedBlockSparseTables(blocks)
 
-	return &LCELinear{&st, L, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx, leafSlice, EulerindexToNode}
+	return &LCELinear{&st, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx, leafSlice, EulerindexToNode}
 }
 
 // create the three arrays: L,E,R by doing an euler tour of the suffix tree
@@ -306,12 +308,26 @@ func createLERArraysAndLeafArrayStack(st suffixtree.SuffixTreeInterface) ([]int,
 	return L, E, R, EulerindexToNode, leafs
 }
 
+// function to calculate the block size and number of blocks
+// avoiding casting, ceil,log2 etc..
+func calculateBlocksSizeAndAmount(n int) (int, int) {
+
+	log2n := bits.Len(uint(n))
+
+	blockSize := log2n / 2
+
+	numBlocks := (n + blockSize - 1) / blockSize //blocksize-1 to ensure rounding up
+
+	return blockSize, numBlocks
+}
+
 // create blocks from L array
 func createLBlocks(L []int) [][]int {
 	//create blocks
 	n := len(L)
-	blockSize := int(math.Ceil(math.Log2(float64(n)) / 2))
-	numBlocks := int(math.Ceil(float64(n) / float64(blockSize))) //number of blocks
+	//calculate block size
+	blockSize, numBlocks := calculateBlocksSizeAndAmount(n)
+
 	blocks := make([][]int, numBlocks)
 
 	for i := 0; i < len(blocks); i++ {
@@ -356,9 +372,11 @@ func computeLPrimeandBPrime(blocks [][]int) ([]int, []int) {
 func computeSparseTable(LPrime []int) *sparseTable {
 	//compute sparse table
 	n := len(LPrime)
+	log2n := bits.Len(uint(n))
 	table := make([][]stTuple, n)
+
 	for i := 0; i < len(LPrime); i++ {
-		table[i] = make([]stTuple, int(math.Ceil(math.Log2(float64(n))))+1)
+		table[i] = make([]stTuple, log2n)
 	}
 
 	//first compute first row (trivial)
@@ -367,10 +385,14 @@ func computeSparseTable(LPrime []int) *sparseTable {
 		table[i][0] = tup
 	}
 
-	//compute the rest of the sparse table
+	// Compute the rest of the sparse table
 	for j := 1; 1<<j <= n; j++ {
-		for i := 0; i+(1<<j) <= n; i++ {
-			table[i][j] = stTupMin(table[i][j-1], table[i+(1<<(j-1))][j-1])
+		// precompute 2^j and 2^(j-1)
+		pow2j := 1 << j
+		pow2jMinus1 := pow2j >> 1
+		//now insert precomputed values
+		for i := 0; i+pow2j <= n; i++ {
+			table[i][j] = stTupMin(table[i][j-1], table[i+pow2jMinus1][j-1])
 		}
 	}
 
@@ -379,15 +401,15 @@ func computeSparseTable(LPrime []int) *sparseTable {
 
 // function to compute the LCE between two indices i and j
 func RMQLookup(i, j int, sparseTable *sparseTable) stTuple {
-	if i == j {
+	diff := uint(j - i)
+	if diff == 0 {
 		return (*sparseTable)[i][0]
 	}
-	var k uint
-	if j-i == 1 {
+	var k int
+	if diff == 1 {
 		k = 0
 	} else {
-		k = uint(math.Floor((math.Log2(float64(uint(j - i))))))
-
+		k = bits.Len(diff) - 1
 	}
 
 	range1 := (*sparseTable)[i][k]

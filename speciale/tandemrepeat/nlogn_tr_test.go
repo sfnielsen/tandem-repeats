@@ -245,8 +245,8 @@ func TestMcCreightVsNaive(t *testing.T) {
 // #####################################################################################
 func BenchmarkBranchingTR(b *testing.B) {
 	trees := make([]suffixtree.SuffixTreeInterface, 0)
-	for i := 0; i < 10; i++ {
-		str := randomGenerator_ab.GenerateString(100000)
+	for i := 0; i < 3; i++ {
+		str := randomGenerator_a.GenerateString(200000)
 		st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
 		trees = append(trees, st)
 	}
@@ -258,7 +258,7 @@ func BenchmarkBranchingTR(b *testing.B) {
 	if err := pprof.StartCPUProfile(f); err != nil {
 		log.Fatal("could not start CPU profile: ", err)
 	}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 3; i++ {
 		DecorateTreeWithVocabulary(trees[i%20])
 	}
 

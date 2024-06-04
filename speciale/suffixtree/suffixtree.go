@@ -6,7 +6,9 @@ type SuffixTreeInterface interface {
 	ConstructSuffixTree()
 	GetRoot() *SuffixTreeNode
 	GetInputString() string
+	GetInternalString() string
 	GetSize() int
+	GetAlphabetSize() int
 
 	// AddDFSLabels adds DFS labels to the nodes in the suffix tree.
 	AddDFSLabelsAndLeafBools()
@@ -22,9 +24,11 @@ type SuffixTreeInterface interface {
 }
 
 type SuffixTree struct {
-	Root        *SuffixTreeNode
-	InputString string
-	Size        int
+	Root           *SuffixTreeNode
+	InputString    string
+	InternalString string
+	AlphabetSize   int
+	Size           int
 }
 
 // GetRoot returns the root node of the suffix tree.
@@ -37,9 +41,19 @@ func (n *SuffixTree) GetInputString() string {
 	return n.InputString
 }
 
+// GetInternalString returns the internal string used to construct the suffix tree.
+func (n *SuffixTree) GetInternalString() string {
+	return n.InternalString
+}
+
 // GetSize returns the size of the suffix tree.
 func (n *SuffixTree) GetSize() int {
 	return n.Size
+}
+
+// GetAlphabetSize returns the size of the alphabet used to construct the suffix tree.
+func (n *SuffixTree) GetAlphabetSize() int {
+	return n.AlphabetSize
 }
 
 func (st *SuffixTree) AddBiggestChildToNodes() {

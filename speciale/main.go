@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os/exec"
+	"runtime/debug"
 	"speciale/stringgenerators"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
@@ -41,10 +42,31 @@ var mcCregightSuffixTreeAlgo utils.AlgorithmInterface = &utils.AlgorithmBase{
 	},
 	ExpectedComplexity: "n"}
 
-func main() {
-	functionSlice := []utils.AlgorithmInterface{linearTR, logTR}
+var linearTrOutput = utils.AlgorithmBase{
+	Name: "TandemRepeat Linear",
+	Algorithm: func(args ...interface{}) interface{} {
+		tandemrepeat.GetAllTandemRepeatsFromDecoratedTree(args[0].(suffixtree.SuffixTreeInterface))
+		return []tandemrepeat.TandemRepeat{}
+	},
+	ExpectedComplexity: "n^2"}
+var linearTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatVOCOutput{linearTrOutput}
 
-	utils.TakeTimeAndSave(functionSlice, 30000, 10, stringgenerators.AlphabetAB)
+var branchingTrOutput = utils.AlgorithmBase{
+	Name: "TandemRepeat Logarithmic",
+	Algorithm: func(args ...interface{}) interface{} {
+		tandemrepeat.GetAllTandemRepeats(args[0].([]tandemrepeat.TandemRepeat), args[1].(suffixtree.SuffixTreeInterface))
+
+		return []tandemrepeat.TandemRepeat{}
+	},
+	ExpectedComplexity: "n^2"}
+var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRAOutput{branchingTrOutput}
+
+func main() {
+	debug.SetGCPercent(5000)
+
+	functionSlice := []utils.AlgorithmInterface{logTR, linearTR}
+
+	utils.TakeTimeAndSave(functionSlice, 3000000, 10, stringgenerators.AlphabetAB)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}

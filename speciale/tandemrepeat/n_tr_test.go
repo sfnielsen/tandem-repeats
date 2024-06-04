@@ -1,6 +1,7 @@
 package tandemrepeat
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"runtime/debug"
@@ -9,6 +10,7 @@ import (
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 	"testing"
+	"unsafe"
 )
 
 // test LZDecomposition
@@ -394,5 +396,12 @@ func BenchmarkExample(b *testing.B) {
 	//DecorateTreeWithVocabulary(st)
 
 	defer pprof.StopCPUProfile()
+
+}
+
+func BenchmarkExample2(b *testing.B) {
+	var e suffixtree.SuffixTreeNode
+	fmt.Printf("Size of %T struct: %d bytes", e, unsafe.Sizeof(e))
+	fmt.Println()
 
 }

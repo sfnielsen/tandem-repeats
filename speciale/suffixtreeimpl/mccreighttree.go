@@ -17,13 +17,14 @@ func (st *McCreightSuffixTree) ConstructSuffixTree() {
 		Label:    0,
 		Parent:   st.Root,
 		StartIdx: 0,
-		EndIdx:   len(st.InputString) - 1,
+		EndIdx:   len(st.InternalString) - 1,
+		Children: make([]*suffixtree.SuffixTreeNode, st.AlphabetSize),
 	}
-	st.Root.Children[rune(st.InputString[0])] = newNode
+	st.Root.Children[rune(st.InternalString[0])] = newNode
 	previousI := newNode
 
 	// now we insert the rest of the suffixes iteratively
-	for i := 1; i < len(st.InputString); i++ {
+	for i := 1; i < len(st.InternalString); i++ {
 		// Insert all suffixes of inputString into the suffix tree
 		previousI = st.insertSuffix(i, previousI)
 
@@ -34,7 +35,7 @@ func (st *McCreightSuffixTree) ConstructSuffixTree() {
 
 // InsertSuffix inserts the suffix starting at the given index into the suffix tree.
 func (st *McCreightSuffixTree) insertSuffix(suffixStartIdx int, previousI *suffixtree.SuffixTreeNode) *suffixtree.SuffixTreeNode {
-	suffix := st.InputString[suffixStartIdx:]
+	suffix := st.InternalString[suffixStartIdx:]
 
 	// variables to keep track of the current node and the depth of the fast scan
 	var currentNode *suffixtree.SuffixTreeNode
@@ -64,7 +65,7 @@ func (st *McCreightSuffixTree) insertSuffix(suffixStartIdx int, previousI *suffi
 		currentNode = previousI.Parent.Parent.SuffixLink
 
 		//we need to know the depth from going up from previousI to parent,parent and then jumping the suffixlink
-		depth = (len(st.InputString) - suffixStartIdx) - previousI.EdgeLength() - previousI.Parent.EdgeLength()
+		depth = (len(st.InternalString) - suffixStartIdx) - previousI.EdgeLength() - previousI.Parent.EdgeLength()
 		fsEndDepth = depth + previousI.Parent.EdgeLength()
 	}
 
@@ -89,7 +90,7 @@ func (st *McCreightSuffixTree) insertSuffix(suffixStartIdx int, previousI *suffi
 		// Case B: the edge is longer than the remaining fast scan length
 		currentNode.EdgeLength() > fsEndDepth-depth {
 			// we split the edge and insert the suffix
-			newI := st.splitEdge(currentNode, suffixStartIdx+depth, fsEndDepth-depth, len(st.InputString)-1, suffixStartIdx)
+			newI := st.splitEdge(currentNode, suffixStartIdx+depth, fsEndDepth-depth, len(st.InternalString)-1, suffixStartIdx)
 			//new internal node created is s(h(i-1)), so we update suffix link of h(i-1) to be newChild.Parent
 			previousI.Parent.SuffixLink = newI.Parent
 			return newI
@@ -118,9 +119,9 @@ slowscan:
 			currentEdgeSize := child.EdgeLength()
 
 			for j := 0; j < currentEdgeSize; j++ {
-				if suffix[depth+j] != st.InputString[child.StartIdx+j] {
+				if suffix[depth+j] != st.InternalString[child.StartIdx+j] {
 					// If the characters do not match, split the edge and insert the suffix
-					return st.splitEdge(child, suffixStartIdx+depth, j, len(st.InputString)-1, suffixStartIdx)
+					return st.splitEdge(child, suffixStartIdx+depth, j, len(st.InternalString)-1, suffixStartIdx)
 				}
 			}
 			currentNode = child
@@ -133,7 +134,8 @@ slowscan:
 				Label:    suffixStartIdx,
 				Parent:   currentNode,
 				StartIdx: suffixStartIdx + depth,
-				EndIdx:   len(st.InputString) - 1,
+				EndIdx:   len(st.InternalString) - 1,
+				Children: make([]*suffixtree.SuffixTreeNode, st.AlphabetSize),
 			}
 			currentNode.Children[rune(suffix[depth])] = newNode
 			return newNode
@@ -148,6 +150,7 @@ func (st *McCreightSuffixTree) createNewChildAndInternalNode(originalChild *suff
 		Parent:   nil,
 		StartIdx: startIdx + splitIdx,
 		EndIdx:   endIdx,
+		Children: make([]*suffixtree.SuffixTreeNode, st.AlphabetSize),
 	}
 
 	// Create a new internal node
@@ -156,6 +159,7 @@ func (st *McCreightSuffixTree) createNewChildAndInternalNode(originalChild *suff
 		Parent:   originalChild.Parent,
 		StartIdx: originalChild.StartIdx,
 		EndIdx:   originalChild.StartIdx + splitIdx - 1,
+		Children: make([]*suffixtree.SuffixTreeNode, st.AlphabetSize),
 	}
 
 	// Add internal node as parent to new child
@@ -171,15 +175,15 @@ func (st *McCreightSuffixTree) splitEdge(originalChild *suffixtree.SuffixTreeNod
 
 	// Update parent by removing original child and adding internal node
 	// This is done by overwriting the original child with the internal node
-	originalChild.Parent.Children[rune(st.InputString[internalNode.StartIdx])] = internalNode
+	originalChild.Parent.Children[rune(st.InternalString[internalNode.StartIdx])] = internalNode
 
 	// Update original child
 	originalChild.Parent = internalNode
 	originalChild.StartIdx += splitIdx
 
 	// Add original child and new child to internal node
-	internalNode.Children[rune(st.InputString[originalChild.StartIdx])] = originalChild
-	internalNode.Children[rune(st.InputString[newChild.StartIdx])] = newChild
+	internalNode.Children[rune(st.InternalString[originalChild.StartIdx])] = originalChild
+	internalNode.Children[rune(st.InternalString[newChild.StartIdx])] = newChild
 
 	return newChild
 }
@@ -192,18 +196,22 @@ func ConstructMcCreightSuffixTree(inputString string) suffixtree.SuffixTreeInter
 		inputString += "$"
 	}
 
+	//create internal representation of string
+	internalString, alphabetSize := suffixtree.InputStringToInternalString(inputString)
+
 	// Create a root node
 	root := &suffixtree.SuffixTreeNode{
 		Label:    -1,
 		StartIdx: -1,
 		EndIdx:   -2,
+		Children: make([]*suffixtree.SuffixTreeNode, alphabetSize),
 		//parent is nil by default
-		//Children is an array of pointers to SuffixTreeNode which is initialized on creation
+
 	}
 	root.SuffixLink = root
 
 	// Create a McCreightSuffixTree instance
-	var st suffixtree.SuffixTreeInterface = &McCreightSuffixTree{suffixtree.SuffixTree{Root: root, InputString: inputString, Size: 0}}
+	var st suffixtree.SuffixTreeInterface = &McCreightSuffixTree{suffixtree.SuffixTree{Root: root, InputString: inputString, InternalString: internalString, AlphabetSize: alphabetSize, Size: 0}}
 
 	// Construct the suffix tree
 	st.ConstructSuffixTree()

@@ -5,7 +5,7 @@ import (
 )
 
 // get all tandem repeats by left rotating on the branching repeats
-func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeInterface) []TandemRepeat {
+func GetAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeInterface) []TandemRepeat {
 	var allTandemRepeats = make([]TandemRepeat, 0)
 
 	for _, k := range allBranchingRepeats {
@@ -14,7 +14,7 @@ func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.Suffi
 		// left rotate until we no longer have a tandem repeat (or we reach the start of the string)
 		for k.Start-i-1 >= 0 {
 			i += 1
-			if st.GetInputString()[k.Start-i] == st.GetInputString()[(k.Start-i)+2*(k.Length)] {
+			if st.GetInternalString()[k.Start-i] == st.GetInternalString()[(k.Start-i)+2*(k.Length)] {
 				allTandemRepeats = append(allTandemRepeats, TandemRepeat{k.Start - i, k.Length, 2})
 			} else {
 				break
@@ -29,7 +29,7 @@ func getAllTandemRepeats(allBranchingRepeats []TandemRepeat, st suffixtree.Suffi
 // GetTandemRepeatSubstring returns the substring of the tandem repeat
 func getIdxtoDfsTable(st suffixtree.SuffixTreeInterface) []int {
 	//create table
-	var idxToDfsTable []int = make([]int, len(st.GetInputString()))
+	var idxToDfsTable []int = make([]int, len(st.GetInternalString()))
 
 	//fill table with another dfs...
 	//this can be done during construction or in another dfs...
@@ -54,7 +54,7 @@ func getIdxtoDfsTable(st suffixtree.SuffixTreeInterface) []int {
 }
 
 func getIdxtoDfsTableStackMethod(st suffixtree.SuffixTreeInterface) []int {
-	var idxToDfsTable []int = make([]int, len(st.GetInputString()))
+	var idxToDfsTable []int = make([]int, len(st.GetInternalString()))
 
 	stack := suffixtree.TreeStack{st.GetRoot()}
 	for len(stack) > 0 {
@@ -80,7 +80,7 @@ func FindAllTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []Tandem
 
 	//get all tandem repeats by left rotating on the branching repeats
 	//this is O(z) time (up to O(n^2))
-	allTandemRepeats := getAllTandemRepeats(trBranching, st)
+	allTandemRepeats := GetAllTandemRepeats(trBranching, st)
 	return allTandemRepeats
 
 }
@@ -97,7 +97,7 @@ func reverseSlice(slice []int) []int {
 func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 
 	//we create the a idx to dfs mapping
-	idxToDfsTable := getIdxtoDfsTable(st)
+	idxToDfsTable := getIdxtoDfsTableStackMethod(st)
 
 	//create Dfs to idx mapping, this is an alternative to leaf lists
 	dfsToIdxTable := reverseSlice(idxToDfsTable)
@@ -130,13 +130,13 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 					//step 2b
 					i := dfsToIdxTable[dfsNumber]
 					j := i + depth
-					if j < len(st.GetInputString()) {
+					if j < len(st.GetInternalString()) {
 						dfsVal := idxToDfsTable[j]
 						//check if j is in dfs interval
 						if dfsVal >= node.DfsInterval.Start && dfsVal <= node.DfsInterval.End {
 
 							//now check if we are branching
-							if i+2*depth < len(st.GetInputString()) && st.GetInputString()[i] != st.GetInputString()[i+2*depth] {
+							if i+2*depth < len(st.GetInternalString()) && st.GetInternalString()[i] != st.GetInternalString()[i+2*depth] {
 								//we have a branching repeat, add to slice
 								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, depth, 2})
 							}
@@ -146,7 +146,7 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 					//step 2c
 					j = dfsToIdxTable[dfsNumber]
 					i = j - depth
-					if i >= 0 && i < len(st.GetInputString()) {
+					if i >= 0 && i < len(st.GetInternalString()) {
 						dfsVal := idxToDfsTable[i]
 						//check if i is in dfs interval
 						//this check is simplified compared to the paper
@@ -154,7 +154,7 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 						if dfsVal >= node.BiggestChild.DfsInterval.Start && dfsVal <= node.BiggestChild.DfsInterval.End {
 
 							//now check if we are branching
-							if i+2*depth < len(st.GetInputString()) && st.GetInputString()[i] != st.GetInputString()[i+2*depth] {
+							if i+2*depth < len(st.GetInternalString()) && st.GetInternalString()[i] != st.GetInternalString()[i+2*depth] {
 								//we have a branching repeat
 								allBranchingRepeats = append(allBranchingRepeats, TandemRepeat{i, depth, 2})
 							}
