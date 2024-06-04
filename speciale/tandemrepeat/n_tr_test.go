@@ -70,7 +70,7 @@ func TestAlgorithm1SetsAreSorted(t *testing.T) {
 	input := randomGenerator_ab.GenerateString(1531)
 	//input := "abaabaabbaaabaaba$"
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
-	leftMostCoveringSet := Algorithm1(st)
+	leftMostCoveringSet, _, _ := Algorithm1(st)
 	for idx_v, v := range leftMostCoveringSet {
 		for i := 0; i < len(v)-1; i++ {
 			if !(v[i].Length < v[i+1].Length) {
@@ -88,7 +88,7 @@ func TestAlg1OnlyFindsTandemRepeats(t *testing.T) {
 		//input := "abaabaabbaaabaaba$"
 		st := suffixtreeimpl.ConstructMcCreightSuffixTree(input)
 
-		leftMostCoveringSet := Algorithm1(st)
+		leftMostCoveringSet, _, _ := Algorithm1(st)
 		for _, v := range leftMostCoveringSet {
 			for _, v2 := range v {
 				if input[v2.Start:v2.Start+v2.Length] != input[v2.Start+v2.Length:v2.Start+2*v2.Length] {
@@ -114,7 +114,7 @@ func TestAllRepeatTypesOfLinearAlgoPhase1(t *testing.T) {
 		allRepeats[GetTandemRepeatSubstring(v, input)] = v
 	}
 
-	leftMostCoveringSet := Algorithm1(st)
+	leftMostCoveringSet, _, _ := Algorithm1(st)
 	// add all repeats from nested slice "leftmostcoveringset" to a single slice of tandemrepeats so we can input to getALlTandemRepeats
 	var BranchingTandemRepeatTypesPhase1 []TandemRepeat
 	for _, v := range leftMostCoveringSet {
@@ -153,7 +153,7 @@ func TestAlg2OnlyDecoratesTreeWithTandemRepeats(t *testing.T) {
 
 		// Phase 1
 		// get leftmost covering repeats
-		leftMostCoveringRepeats := Algorithm1(tree)
+		leftMostCoveringRepeats, _, _ := Algorithm1(tree)
 
 		//hacky way to get rid of tandem repeats and have ints instead.
 		//Could be improved at a later point
@@ -323,7 +323,7 @@ func TestForwardLookup(t *testing.T) {
 	randomGenerator_ab.SetSeed(410)
 	s := randomGenerator_ab.GenerateString(1000)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
-	lceObject := lce.PreProcessLCE(st)
+	lceObject, _ := lce.PreProcessLCE(st)
 
 	// run through all pairs of i and j
 	for i := 0; i < len(s)-1; i++ {
@@ -347,7 +347,7 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 	s := randomGenerator_ab.GenerateString(1634)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
 	//stringLength := len(st.GetInputString())
-	lceObject := lce.PreProcessLCEBothDirections(st)
+	lceObject, _ := lce.PreProcessLCEBothDirections(st)
 
 	// run through all pairs of i and j
 	for i := 1; i < len(s)-1; i++ {
@@ -384,6 +384,7 @@ func BenchmarkExample(b *testing.B) {
 	debug.SetGCPercent(2000)
 	randomGenerator_dna.SetSeed(42)
 	str := randomGenerator_dna.GenerateString(300000)
+	st := suffixtreeimpl.ConstructMcCreightSuffixTree(str)
 
 	f, err := os.Create("cpu.prof")
 	if err != nil {
@@ -392,8 +393,7 @@ func BenchmarkExample(b *testing.B) {
 	if err := pprof.StartCPUProfile(f); err != nil {
 		log.Fatal("could not start CPU profile: ", err)
 	}
-	suffixtreeimpl.ConstructMcCreightSuffixTree(str)
-	//DecorateTreeWithVocabulary(st)
+	DecorateTreeWithVocabulary(st)
 
 	defer pprof.StopCPUProfile()
 

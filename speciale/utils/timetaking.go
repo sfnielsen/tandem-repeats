@@ -6,6 +6,7 @@ import (
 	"os"
 	"speciale/stringgenerators"
 	"speciale/suffixtreeimpl"
+	"speciale/tandemrepeat"
 	"strings"
 	"time"
 )
@@ -133,18 +134,30 @@ func TakeTimeAllAlphabets(functions []AlgorithmInterface, maxSize int, steps int
 	}
 }
 
-func MeasureSizeOfTrees(functions []AlgorithmInterface, inputsize int) {
+func MeasureSizeOfTrees(inputsize int) {
 	//iterate all alphabettypes
 	maxi_alphabet := stringgenerators.AlphabetByte
 	fmt.Println("alphabet length", len(maxi_alphabet))
 	var results []TimingResult
 	currentTime := time.Now().Format("2006-01-02_15-04-05")
 	filename := fmt.Sprintf("time_csvs/timing_results_%s.csv", currentTime)
-
+	for range [2]int{} {
+		// Construct suffix tree
+		inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:2], inputsize)
+		st := suffixtreeimpl.ConstructMcCreightSuffixTree(inputString)
+		results = append(results,
+			TimingResult{
+				InputSize:          2,
+				Algorithm:          "Size of tree",
+				RunningTime:        time.Duration(st.GetSize()),
+				ExpectedComplexity: "n",
+				Alphabet:           "Byte",
+			})
+	}
 	//iterate all alphabets
 	for idx := 1; idx < len(maxi_alphabet); idx++ {
 		fmt.Println(idx)
-		for range [2]int{} {
+		for range [10]int{} {
 			// Construct suffix tree
 			inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:idx], inputsize)
 			st := suffixtreeimpl.ConstructMcCreightSuffixTree(inputString)
@@ -153,6 +166,153 @@ func MeasureSizeOfTrees(functions []AlgorithmInterface, inputsize int) {
 					InputSize:          idx,
 					Algorithm:          "Size of tree",
 					RunningTime:        time.Duration(st.GetSize()),
+					ExpectedComplexity: "n",
+					Alphabet:           "Byte",
+				})
+
+		}
+		idx += 4
+
+	}
+	// Save results to a CSV file
+	if err := SaveResults(results, filename); err != nil {
+		fmt.Println("Error saving results:", err)
+	}
+}
+
+func DfsAndLookuptime(inputsize int) {
+	//iterate all alphabettypes
+	maxi_alphabet := stringgenerators.AlphabetByte
+	fmt.Println("alphabet length", len(maxi_alphabet))
+	var results []TimingResult
+	currentTime := time.Now().Format("2006-01-02_15-04-05")
+	filename := fmt.Sprintf("time_csvs/timing_results_%s.csv", currentTime)
+	for range [15]int{} {
+		// Construct suffix tree
+		inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:2], inputsize)
+		st := suffixtreeimpl.ConstructMcCreightSuffixTree(inputString)
+		dfstime, lookuptime, dfstimebefore := tandemrepeat.DecorateTreeWithVocabulary(st)
+		results = append(results,
+			TimingResult{
+				InputSize:          2,
+				Algorithm:          "Linear",
+				RunningTime:        time.Duration(dfstime),
+				ExpectedComplexity: "n",
+				Alphabet:           "Dfs",
+			})
+		results = append(results,
+			TimingResult{
+				InputSize:          2,
+				Algorithm:          "Linear",
+				RunningTime:        time.Duration(lookuptime),
+				ExpectedComplexity: "n",
+				Alphabet:           "Lookup",
+			})
+		results = append(results,
+			TimingResult{
+				InputSize:          2,
+				Algorithm:          "Linear",
+				RunningTime:        time.Duration(dfstimebefore),
+				ExpectedComplexity: "n",
+				Alphabet:           "dfs before",
+			})
+	}
+	//iterate all alphabets
+	for idx := 1; idx < len(maxi_alphabet); idx++ {
+		fmt.Println(idx)
+		for range [5]int{} {
+			// Construct suffix tree
+			inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:idx], inputsize)
+			st := suffixtreeimpl.ConstructMcCreightSuffixTree(inputString)
+			dfstime, lookuptime, dfstimebefore := tandemrepeat.DecorateTreeWithVocabulary(st)
+			results = append(results,
+				TimingResult{
+					InputSize:          idx,
+					Algorithm:          "Linear",
+					RunningTime:        time.Duration(dfstime),
+					ExpectedComplexity: "n",
+					Alphabet:           "Dfs",
+				})
+			results = append(results,
+				TimingResult{
+					InputSize:          idx,
+					Algorithm:          "Linear",
+					RunningTime:        time.Duration(lookuptime),
+					ExpectedComplexity: "n",
+					Alphabet:           "Lookup",
+				})
+			results = append(results,
+				TimingResult{
+					InputSize:          idx,
+					Algorithm:          "Linear",
+					RunningTime:        time.Duration(dfstimebefore),
+					ExpectedComplexity: "n",
+					Alphabet:           "dfs before",
+				})
+		}
+		idx += 4
+
+	}
+	// Save results to a CSV file
+	if err := SaveResults(results, filename); err != nil {
+		fmt.Println("Error saving results:", err)
+	}
+}
+
+func AverageChildrenIncreasingAlphabetSize(inputsize int) {
+	//iterate all alphabettypes
+	maxi_alphabet := stringgenerators.AlphabetByte
+	fmt.Println("alphabet length", len(maxi_alphabet))
+	var results []TimingResult
+	currentTime := time.Now().Format("2006-01-02_15-04-05")
+	filename := fmt.Sprintf("time_csvs/timing_results_%s.csv", currentTime)
+	for range [2]int{} {
+		// Construct suffix tree
+		inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:2], inputsize)
+		st := suffixtreeimpl.ConstructMcCreightSuffixTree(inputString)
+		childrenCount := DfsCountChildren(st)
+
+		//calculate average number of children
+		average := 0
+		for i, count := range childrenCount {
+			average += i * count
+		}
+		average = average / st.GetSize()
+
+		results = append(results,
+			TimingResult{
+				InputSize:          2,
+				Algorithm:          "Size of tree",
+				RunningTime:        time.Duration(average),
+				ExpectedComplexity: "n",
+				Alphabet:           "Byte",
+			})
+	}
+	//iterate all alphabets
+	for idx := 1; idx < len(maxi_alphabet); idx++ {
+		fmt.Println(idx)
+		for range [5]int{} {
+			// Construct suffix tree
+			inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:idx], inputsize)
+			st := suffixtreeimpl.ConstructMcCreightSuffixTree(inputString)
+			childrenCount := DfsCountChildren(st)
+			//calculate average number of children
+			average := 0.0
+			for i, count := range childrenCount {
+				if i == 1 {
+					continue
+				}
+				average += float64(i * count)
+			}
+			average = average / float64(st.GetSize()-inputsize)
+			fmt.Println(average)
+			//calculate average number of children
+
+			results = append(results,
+				TimingResult{
+					InputSize:          idx,
+					Algorithm:          "Size of tree",
+					RunningTime:        time.Duration(average),
 					ExpectedComplexity: "n",
 					Alphabet:           "Byte",
 				})

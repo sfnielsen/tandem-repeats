@@ -5,6 +5,7 @@ import (
 	"math/bits"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
+	"time"
 )
 
 // #######################################################################################
@@ -144,25 +145,27 @@ func (lce *LCELinear) LCELookup(i, j int) int {
 // #######################################################################################
 
 // main function for linear time LCE preprocessing in both directions
-func PreProcessLCEBothDirections(st suffixtree.SuffixTreeInterface) *LCELinearTwoWays {
+func PreProcessLCEBothDirections(st suffixtree.SuffixTreeInterface) (*LCELinearTwoWays, int) {
 	//create forward LCE
-	forwardLCE := PreProcessLCE(st)
-
+	total := 0
+	forwardLCE, time_taken := PreProcessLCE(st)
+	total += time_taken
 	//create backward LCE
 	reversedString := reverseStringWithSentinel(st.GetInputString())
 	reversedSuffixTree := suffixtreeimpl.ConstructMcCreightSuffixTree(reversedString)
+	backwardLCE, time_taken := PreProcessLCE(reversedSuffixTree)
+	total += time_taken
 
-	backwardLCE := PreProcessLCE(reversedSuffixTree)
-
-	return &LCELinearTwoWays{forward: forwardLCE, backward: backwardLCE}
+	return &LCELinearTwoWays{forward: forwardLCE, backward: backwardLCE}, total
 
 }
 
 // main function for the LCE linear time preprocessing (in one direction)
-func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
-
+func PreProcessLCE(st suffixtree.SuffixTreeInterface) (*LCELinear, int) {
+	timer := time.Now()
 	//create L,E,R arrays
 	L, E, R, EulerindexToNode, leafSlice := createLERArraysAndLeafArrayStack(st)
+	total := int(time.Since(timer).Milliseconds())
 	// divide L into blocks
 	blocks := createLBlocks(L)
 	// compute L' and B'
@@ -172,7 +175,7 @@ func PreProcessLCE(st suffixtree.SuffixTreeInterface) *LCELinear {
 	// precompute all possible normalized blocks
 	NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx := computeNormalizedBlockSparseTables(blocks)
 
-	return &LCELinear{&st, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx, leafSlice, EulerindexToNode}
+	return &LCELinear{&st, E, R, blocks, LPrime, BPrime, LPrimeSparseTable, NormalizedBlockSparseTables, blockIdxToNormalizedBlockIdx, leafSlice, EulerindexToNode}, total
 }
 
 // create the three arrays: L,E,R by doing an euler tour of the suffix tree

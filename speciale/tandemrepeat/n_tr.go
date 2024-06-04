@@ -3,6 +3,7 @@ package tandemrepeat
 import (
 	"speciale/lce"
 	"speciale/suffixtree"
+	"time"
 )
 
 // Decorate tree with vocabulary in O(n) time and return all tandem repeats in O(z) time
@@ -12,11 +13,11 @@ func DecorateTreeAndReturnTandemRepeats(tree suffixtree.SuffixTreeInterface) []T
 }
 
 // Function that runs algorithm 1a,1b,2 and 3 on a suffix tree and decorates it with the tandem repeat vocabulary
-func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
+func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) (int, int, int) {
 
 	// Phase 1
 	// get leftmost covering repeats
-	leftMostCoveringRepeats := Algorithm1(tree)
+	leftMostCoveringRepeats, lookuptime, dfstime := Algorithm1(tree)
 
 	//hacky way to get rid of tandem repeats and have ints instead.
 	//Could be improved at a later point
@@ -31,12 +32,17 @@ func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 
 	// Phase 2
 	// Decorate tree with subset of leftmost covering repeats
+	now := time.Now()
+	yaw := dfstime
 	Algorithm2StackMethod(tree, leftMostCoveringRepeatsInts)
-
+	yaw += int(time.Since(now).Milliseconds())
 	// Phase 3
 	// Decorate tree with entire vocabulary
+	now = time.Now()
 	Algorithm3StackMethod(tree)
+	yaw += int(time.Since(now).Milliseconds())
 
+	return yaw, lookuptime, dfstime
 }
 
 // #######################################################################################
@@ -46,7 +52,7 @@ func DecorateTreeWithVocabulary(tree suffixtree.SuffixTreeInterface) {
 // #######################################################################################
 
 // Combines algorithm 1a and 1b to find tandem repeats
-func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
+func Algorithm1(tree suffixtree.SuffixTreeInterface) ([][]TandemRepeat, int, int) {
 	s := tree.GetInputString()
 	leftMostCoveringRepeats := make([][]TandemRepeat, len(s))
 
@@ -54,20 +60,28 @@ func Algorithm1(tree suffixtree.SuffixTreeInterface) [][]TandemRepeat {
 	for i := range leftMostCoveringRepeats {
 		leftMostCoveringRepeats[i] = make([]TandemRepeat, 0)
 	}
-
+	total_time_spent_dfs := 0
+	now := time.Now()
 	// Compute the blocks and Z-values
 	li := LZDecompositionStackMethod(tree)
+	total_time_spent_dfs += int(time.Since(now).Milliseconds())
+
 	blocks := CreateLZBlocks(li)
 
 	// add idx to dfs table
+	now = time.Now()
 	idxToDfsTable := getIdxtoDfsTableStackMethod(tree)
-
+	total_time_spent_dfs += int(time.Since(now).Milliseconds())
 	// Do preprecessing for constant time LCE queries
-	//lceObject := lce.PreProcessLCEBothDirections(tree)
+	lceObject, time_taken_preprocess := lce.PreProcessLCEBothDirections(tree)
+	total_time_spent_dfs += time_taken_preprocess
 
-	IterateBlocksAndExecuteAlgorithm1aAnd1b(tree, blocks, idxToDfsTable, &leftMostCoveringRepeats)
+	total_lookup_time := 0
+	now_lookup := time.Now()
+	IterateBlocksAndExecuteAlgorithm1aAnd1b(tree, blocks, idxToDfsTable, &leftMostCoveringRepeats, lceObject)
+	total_lookup_time += int(time.Since(now_lookup).Milliseconds())
 
-	return leftMostCoveringRepeats
+	return leftMostCoveringRepeats, total_lookup_time, total_time_spent_dfs
 
 }
 
@@ -155,7 +169,7 @@ func CreateLZBlocks(li []int) []int {
 	return blocks
 }
 
-func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat) {
+func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface, blocks []int, idxToDfsTable []int, leftMostCoveringRepeats *[][]TandemRepeat, lce *lce.LCELinearTwoWays) {
 	s := tree.GetInputString()
 	for i := 0; i < len(blocks); i++ {
 		h := blocks[i]
@@ -169,9 +183,9 @@ func IterateBlocksAndExecuteAlgorithm1aAnd1b(tree suffixtree.SuffixTreeInterface
 		}
 
 		// Process block B for tandem repeats that satisfy condition 2
-		Algorithm1b(s, h, h1, h2, leftMostCoveringRepeats)
+		Algorithm1b(s, h, h1, h2, leftMostCoveringRepeats, lce)
 		// Process block B for tandem repeats that satisfy condition 1
-		Algorithm1a(s, h, h1, leftMostCoveringRepeats)
+		Algorithm1a(s, h, h1, leftMostCoveringRepeats, lce)
 
 	}
 }
@@ -195,11 +209,11 @@ func longestCommonExtensionBackwards(s string, i, j int) int {
 
 	return length
 }
-func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRepeat) {
+func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRepeat, lce *lce.LCELinearTwoWays) {
 	for k := 1; k <= h1-h; k++ {
 		q := h1 - k
-		k1 := lce.FindLCEForwardSlow(s, q, h1)
-		k2 := lce.FindLCEBackwardSlow(s, q-1, h1-1)
+		k1 := lce.LCELookupForward(q, h1)
+		k2 := lce.LCELookupBackward(q-1, h1-1)
 		start := intMax(q-k2, q-k+1)
 		if k1+k2 >= k && k1 > 0 {
 			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
@@ -208,11 +222,11 @@ func Algorithm1a(s string, h int, h1 int, leftMostCoveringRepeats *[][]TandemRep
 
 }
 
-func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]TandemRepeat) {
+func Algorithm1b(s string, h int, h1 int, h2 int, leftMostCoveringRepeats *[][]TandemRepeat, lce *lce.LCELinearTwoWays) {
 	for k := 1; k <= h2-h; k++ {
 		q := h + k
-		k1 := lce.FindLCEForwardSlow(s, q, h)
-		k2 := lce.FindLCEBackwardSlow(s, q-1, h-1)
+		k1 := lce.LCELookupForward(q, h)
+		k2 := lce.LCELookupBackward(q-1, h-1)
 		start := intMax(h-k2, h-k+1)
 		if k1+k2 >= k && k1 > 0 && start+k <= h1 && k2 > 0 {
 			addToLeftMostCoveringRepeats(leftMostCoveringRepeats, start, k)
@@ -270,7 +284,6 @@ func Algorithm2(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts
 }
 
 func Algorithm2StackMethod(tree suffixtree.SuffixTreeInterface, leftMostCoveringRepeatsInts [][]int) {
-
 	//need two-way stack for bottom up traversal
 	stack := suffixtree.Stack{&suffixtree.StackItem{Node: tree.GetRoot(), IsStart: true}}
 	for len(stack) > 0 {
@@ -366,7 +379,6 @@ func Algorithm3(tree suffixtree.SuffixTreeInterface) {
 }
 
 func Algorithm3StackMethod(tree suffixtree.SuffixTreeInterface) {
-
 	stack := suffixtree.Stack{&suffixtree.StackItem{Node: tree.GetRoot(), IsStart: true}}
 
 	for len(stack) > 0 {
@@ -393,7 +405,6 @@ func Algorithm3StackMethod(tree suffixtree.SuffixTreeInterface) {
 					//attempt suffix walk
 					for _, v := range node.TandemRepeatDeco {
 						attemptSuffixWalk(tree, node, v)
-
 					}
 				}
 

@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"os/exec"
-	"runtime/debug"
-	"speciale/stringgenerators"
 	"speciale/suffixtree"
 	"speciale/suffixtreeimpl"
 	"speciale/tandemrepeat"
@@ -62,13 +60,12 @@ var branchingTrOutput = utils.AlgorithmBase{
 var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRAOutput{branchingTrOutput}
 
 func main() {
-	debug.SetGCPercent(5000)
 
-	functionSlice := []utils.AlgorithmInterface{logTR, linearTR}
+	//functionSlice := []utils.AlgorithmInterface{logTR, linearTR}
 
-	utils.TakeTimeAndSave(functionSlice, 3000000, 10, stringgenerators.AlphabetAB)
+	utils.DfsAndLookuptime(200000)
 
-	pythonScript := "../visualization.py"
+	pythonScript := "../visualization_all_alphabets.py"
 	//scriptArgs := []string{}
 
 	// Build the command to execute the Python script
