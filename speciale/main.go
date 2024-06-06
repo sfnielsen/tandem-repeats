@@ -61,9 +61,9 @@ var branchingTrOutput = utils.AlgorithmBase{
 var braTrOutputStruct utils.AlgorithmInterface = &utils.AlgorithmTandemrepeatBRAOutput{branchingTrOutput}
 
 func main() {
-	functionSlice := []utils.AlgorithmInterface{linearTR}
+	functionSlice := []utils.AlgorithmInterface{linearTR, logTR}
 
-	utils.TakeTimeAndSave(functionSlice, 500000, 40, stringgenerators.AlphabetAB)
+	utils.TakeTimeAndSave(functionSlice, 1000000, 10, stringgenerators.AlphabetByte)
 
 	pythonScript := "../visualization.py"
 	//scriptArgs := []string{}

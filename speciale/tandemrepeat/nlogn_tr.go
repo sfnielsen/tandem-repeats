@@ -59,6 +59,7 @@ func getIdxtoDfsTableStackMethod(st suffixtree.SuffixTreeInterface) []int {
 	stack := suffixtree.TreeStack{st.GetRoot()}
 	for len(stack) > 0 {
 		node := stack.PopOrNil()
+
 		if node.IsLeaf() {
 			idxToDfsTable[node.Label] = node.DfsInterval.Start
 		} else {
@@ -71,6 +72,31 @@ func getIdxtoDfsTableStackMethod(st suffixtree.SuffixTreeInterface) []int {
 	}
 
 	return idxToDfsTable
+}
+
+func getIdxtoDfsTableStackMethodExtra(st suffixtree.SuffixTreeInterface) ([]int, []*suffixtree.SuffixTreeNode) {
+	var idxToDfsTable []int = make([]int, len(st.GetInternalString()))
+
+	traversalOrder := make([]*suffixtree.SuffixTreeNode, st.GetSize())
+	itr := 0
+	stack := suffixtree.TreeStack{st.GetRoot()}
+	for len(stack) > 0 {
+		node := stack.PopOrNil()
+		traversalOrder[itr] = node
+		itr++
+
+		if node.IsLeaf() {
+			idxToDfsTable[node.Label] = node.DfsInterval.Start
+		} else {
+			for _, child := range node.Children {
+				if child != nil {
+					stack.Push(child)
+				}
+			}
+		}
+	}
+
+	return idxToDfsTable, traversalOrder
 }
 
 // FindAllTandemRepeatsLogarithmic finds tandem repeats in a suffix tree in O(nlogn + z) time
@@ -97,23 +123,22 @@ func reverseSlice(slice []int) []int {
 func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface) []TandemRepeat {
 
 	//we create the a idx to dfs mapping
-	idxToDfsTable := getIdxtoDfsTableStackMethod(st)
+	idxToDfsTable, traversalOrder := getIdxtoDfsTableStackMethodExtra(st)
 
 	//create Dfs to idx mapping, this is an alternative to leaf lists
 	dfsToIdxTable := reverseSlice(idxToDfsTable)
 
 	//add biggest child to each node
-	st.AddBiggestChildToNodes()
+	st.AddBiggestChildToNodesExtra(traversalOrder)
 
 	//store all branching repeats slice
 	allBranchingRepeats := make([]TandemRepeat, 0)
-
 	// now we run stoye and gusfield 'optimized algorithm'
-	var dfs func(node *suffixtree.SuffixTreeNode, depth int) []int
-	dfs = func(node *suffixtree.SuffixTreeNode, depth int) []int {
-		depth = depth + node.EdgeLength()
-
-		leafList := []int{} // leaflist dynamically added to the node
+	for _, node := range traversalOrder {
+		if node.IsLeaf() {
+			continue
+		}
+		depth := node.StringDepth
 
 		for _, child := range node.Children {
 			if child == nil {
@@ -164,18 +189,9 @@ func FindAllBranchingTandemRepeatsLogarithmic(st suffixtree.SuffixTreeInterface)
 				}
 			}
 
-			// step 1, marking internal nodes is done implicitly by a depth-first traversal
-			if !child.IsLeaf() {
-				dfs(child, depth)
-			}
 		}
 
-		//case for internal nodes
-		return leafList
-
 	}
-
-	dfs(st.GetRoot(), 0)
 
 	return allBranchingRepeats
 }

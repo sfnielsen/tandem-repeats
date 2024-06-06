@@ -18,7 +18,7 @@ type SuffixTreeInterface interface {
 
 	// AddBiggestChildToNodes adds the biggest child to each node in the suffix tree.
 	AddBiggestChildToNodes()
-
+	AddBiggestChildToNodesExtra(traversalOrder []*SuffixTreeNode)
 	// Compute leafs of the suffix tree and return them as a slice of nodes
 	ComputeLeafsStackMethod() []*SuffixTreeNode
 }
@@ -78,6 +78,27 @@ func (st *SuffixTree) AddBiggestChildToNodes() {
 		}
 	}
 	dfs(st.Root)
+}
+
+func (st *SuffixTree) AddBiggestChildToNodesExtra(traversalOrder []*SuffixTreeNode) {
+	for _, node := range traversalOrder {
+		if node.IsLeaf() {
+			node.BiggestChild = nil
+		} else {
+			var longest int
+			var biggestFoundChild *SuffixTreeNode = nil
+			for _, child := range node.Children {
+				if child != nil {
+
+					if child.DfsInterval.End-child.DfsInterval.Start+1 > longest {
+						longest = child.DfsInterval.End - child.DfsInterval.Start + 1
+						biggestFoundChild = child
+					}
+				}
+			}
+			node.BiggestChild = biggestFoundChild
+		}
+	}
 }
 
 // Adds DFS labels.

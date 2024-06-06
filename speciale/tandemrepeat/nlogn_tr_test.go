@@ -1,6 +1,7 @@
 package tandemrepeat
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -42,15 +43,15 @@ func TestFindTandemRepeatsLogarithmicVerySimpleExample(t *testing.T) {
 	st := suffixtreeimpl.ConstructNaiveSuffixTree(s)
 	//find the tandem repeats
 	tr := FindAllTandemRepeatsLogarithmic(st)
-
+	fmt.Println(tr)
 	if len(tr) != 2 {
 		t.Errorf("Expected 2 tandem repeat, got %d", len(tr))
 	}
 	//extract the string from the tandem repeat and verify that it is correct ab$
-	if GetTandemRepeatSubstring(tr[0], s) != "baba" && GetTandemRepeatSubstring(tr[1], s) != "ba" {
+	if GetTandemRepeatSubstring(tr[0], s) != "kk" && GetTandemRepeatSubstring(tr[1], s) != "k" {
 		t.Errorf("Expected tandem repeat to be 'ba'")
 	}
-	if GetTandemRepeatSubstring(tr[0], s) != "k" && GetTandemRepeatSubstring(tr[1], s) != "kk" {
+	if GetTandemRepeatSubstring(tr[0], s) != "baba" && GetTandemRepeatSubstring(tr[1], s) != "ba" {
 		t.Errorf("Expected tandem repeat to be 'k'")
 
 	}
