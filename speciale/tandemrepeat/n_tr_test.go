@@ -319,8 +319,8 @@ func rightRotation(allBranchingRepeats []TandemRepeat, st suffixtree.SuffixTreeI
 }
 
 func TestForwardLookup(t *testing.T) {
-	randomGenerator_ab.SetSeed(410)
-	s := randomGenerator_ab.GenerateString(1000)
+	randomGenerator_a.SetSeed(410)
+	s := randomGenerator_a.GenerateString(1000)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
 	lceObject := lce.PreProcessLCE(st)
 
@@ -328,7 +328,7 @@ func TestForwardLookup(t *testing.T) {
 	for i := 0; i < len(s)-1; i++ {
 		for j := i + 1; j < len(s); j++ {
 			// find the LCE using the slow method
-			realLength := lce.FindLCEForwardSlow(s, i, j)
+			realLength := lce.FindLCEForwardSlow(s, i, j, st.GetAlphabetSize())
 			// find the LCE using the LCELookup method
 			lce := lceObject.LCELookup(i, j)
 
@@ -342,9 +342,11 @@ func TestForwardLookup(t *testing.T) {
 
 // Test that LCE backward (and forward) works
 func TestBackwardAndForwardLookup(t *testing.T) {
-	randomGenerator_ab.SetSeed(40)
-	s := randomGenerator_ab.GenerateString(1634)
+	randomGenerator_a.SetSeed(40)
+	s := randomGenerator_a.GenerateString(1634)
 	st := suffixtreeimpl.ConstructMcCreightSuffixTree(s)
+	fmt.Println(st.GetAlphabetSize())
+
 	//stringLength := len(st.GetInputString())
 	lceObject := lce.PreProcessLCEBothDirections(st)
 
@@ -353,8 +355,8 @@ func TestBackwardAndForwardLookup(t *testing.T) {
 		for j := i + 1; j < len(s); j++ {
 
 			// find the LCE using the slow method
-			realLengthFW := lce.FindLCEForwardSlow(s, i, j)
-			realLengthBW := lce.FindLCEBackwardSlow(s, i-1, j-1)
+			realLengthFW := lce.FindLCEForwardSlow(s, i, j, st.GetAlphabetSize())
+			realLengthBW := lce.FindLCEBackwardSlow(s, i-1, j-1, st.GetAlphabetSize())
 			// find the LCE using the LCELookup method
 			//lca := lceObject.backward.LCELookup(stringLength-j-1, stringLength-i-1)
 
