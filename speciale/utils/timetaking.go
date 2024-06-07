@@ -6,6 +6,7 @@ import (
 	"os"
 	"speciale/stringgenerators"
 	"speciale/suffixtreeimpl"
+	"speciale/tandemrepeat"
 	"strings"
 	"time"
 )
@@ -160,6 +161,55 @@ func MeasureSizeOfTrees(functions []AlgorithmInterface, inputsize int) {
 		}
 		idx += 4
 
+	}
+	// Save results to a CSV file
+	if err := SaveResults(results, filename); err != nil {
+		fmt.Println("Error saving results:", err)
+	}
+}
+func RunningtimeIncreasingAlphabetSize(inputsize int) {
+	//iterate all alphabettypes
+	maxi_alphabet := stringgenerators.AlphabetByte
+	fmt.Println("alphabet length", len(maxi_alphabet))
+	var results []TimingResult
+	currentTime := time.Now().Format("2006-01-02_15-04-05")
+	filename := fmt.Sprintf("time_csvs/timing_results_%s.csv", currentTime)
+	//iterate all alphabets
+	for idx := 1; idx < len(maxi_alphabet); idx++ {
+		fmt.Println(idx)
+		for range [5]int{} {
+			// Construct suffix tree
+			inputString := stringgenerators.GenerateStringFromGivenAlphabet(maxi_alphabet[:idx], inputsize)
+			st := suffixtreeimpl.ConstructMcCreightSuffixTree(inputString)
+
+			now := time.Now()
+			tandemrepeat.DecorateTreeWithVocabulary(st)
+			elapsed := time.Since(now)
+
+			results = append(results,
+				TimingResult{
+					InputSize:          idx,
+					Algorithm:          "linear",
+					RunningTime:        elapsed,
+					ExpectedComplexity: "n",
+					Alphabet:           "Byte",
+				})
+
+			now = time.Now()
+			tandemrepeat.FindAllBranchingTandemRepeatsLogarithmic(st)
+			elapsed = time.Since(now)
+
+			results = append(results,
+				TimingResult{
+					InputSize:          idx,
+					Algorithm:          "branching",
+					RunningTime:        elapsed,
+					ExpectedComplexity: "n",
+					Alphabet:           "Byte",
+				})
+
+		}
+		idx += 1
 	}
 	// Save results to a CSV file
 	if err := SaveResults(results, filename); err != nil {
