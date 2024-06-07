@@ -83,15 +83,17 @@ def scatterplot_tandem_repeats(data:pd.DataFrame):
         pass
 
     # Plot all data points
-    for algorithm in data['Alphabet'].unique():
-        algorithm_data = data[data['Alphabet'] == algorithm]
-        plt.scatter(algorithm_data['InputSize'], algorithm_data['RunningTime'], label=algorithm, marker='x')
-        print(f"coordinates {{")
-        for i in range(len(algorithm_data['InputSize'])):
-            # upper lower bound is the +- part
-            print(f"({algorithm_data['InputSize'].iloc[i]},{round(algorithm_data['RunningTime'].iloc[i]*100000,2)})")
+    for algorithm in data['Algorithm'].unique():
+        algorithm_data = data[data['Algorithm'] == algorithm]
+        for alphabet in data['Alphabet'].unique():
+            alphabet_data = algorithm_data[algorithm_data['Alphabet'] == alphabet]
+            plt.scatter(alphabet_data['InputSize'], alphabet_data['RunningTime'], label=algorithm, marker='x')
+            print(f"coordinates {{")
+            for i in range(len(alphabet_data['InputSize'])):
+                # upper lower bound is the +- part
+                print(f"({alphabet_data['InputSize'].iloc[i]},{round(alphabet_data['RunningTime'].iloc[i]*100000,2)})")
 
-        print(f"}};")
+            print(f"}};")
 
 
     plt.xlabel('Input Size')
